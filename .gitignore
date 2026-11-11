@@ -1,0 +1,61 @@
+# =============================================================================
+# .gitignore — Projet Cartographie IMF DRS-SFD
+# Exclut les fichiers générés, les secrets et les artefacts de build
+# =============================================================================
+
+# --- Environnements virtuels Python ---
+backend/.venv/
+backend/venv/
+backend/env/
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+.Python
+
+# --- Variables d'environnement (SECRETS — ne jamais versionner) ---
+.env
+.env.local
+.env.*.local
+backend/.env
+frontend/.env
+frontend/.env.local
+frontend/.env.production
+
+# --- Django ---
+backend/staticfiles/
+backend/mediafiles/
+backend/*.log
+backend/db.sqlite3
+
+# --- Node.js / Frontend ---
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.vite/
+
+# --- Éditeurs et IDE ---
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# --- Couverture de tests ---
+backend/.coverage
+backend/htmlcov/
+frontend/coverage/
+
+# --- Outils de qualité ---
+backend/.mypy_cache/
+backend/.ruff_cache/
+frontend/.eslintcache
+
+# --- Logs ---
+*.log
+logs/
+
+# --- Fichiers temporaires ---
+*.tmp
+*.bak

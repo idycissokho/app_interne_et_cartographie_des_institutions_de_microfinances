@@ -1,0 +1,27 @@
+# =============================================================================
+# requirements/development.txt
+# Dépendances supplémentaires pour l'environnement de développement local
+# =============================================================================
+
+-r base.txt
+
+# Serveur de développement avec rechargement automatique
+django-extensions==3.2.3
+
+# Barre de débogage Django (profiling requêtes, SQL, etc.)
+django-debug-toolbar==4.4.6
+
+# Analyse statique du code Python (style PEP 8)
+ruff==0.5.7
+
+# Vérification des types Python
+mypy==1.11.2
+django-stubs==5.0.4
+djangorestframework-stubs==3.15.0
+
+# Tests
+pytest==8.3.3
+pytest-django==4.9.0
+pytest-cov==5.0.0
+factory-boy==3.3.1
+faker==28.0.0

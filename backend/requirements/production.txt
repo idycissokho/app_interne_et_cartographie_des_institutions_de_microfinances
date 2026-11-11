@@ -1,0 +1,12 @@
+# =============================================================================
+# requirements/production.txt
+# Dépendances supplémentaires pour l'environnement de production
+# =============================================================================
+
+-r base.txt
+
+# Serveur WSGI de production
+gunicorn==22.0.0
+
+# Compression des fichiers statiques
+whitenoise==6.7.0

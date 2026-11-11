@@ -1,0 +1,136 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Page-1" id="tjsELLQQ4OZ81pS3mEMV">
+    <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="S7Li7vJkomNapjHrrTO8-1" parent="1" style="swimlane;whiteSpace=wrap;html=1;startSize=60;strokeColor=light-dark(#000000,#FFFFFF);fontSize=16;fontFamily=Times New Roman;strokeWidth=2;" value="&lt;font style=&quot;font-size: 23px;&quot;&gt;&amp;nbsp;Application interne DRS-SFD ( V1)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="680" width="440" x="360" as="geometry" />
+        </mxCell>
+        <mxCell id="S7Li7vJkomNapjHrrTO8-2" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;labelPerimeter=1;fontFamily=Times New Roman;fontSize=16;strokeWidth=2;" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;Direction de la DRS-SFD&lt;/font&gt;" vertex="1">
+          <mxGeometry height="70" width="41" x="-100" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="S7Li7vJkomNapjHrrTO8-11" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;labelPerimeter=1;fontFamily=Times New Roman;fontSize=16;strokeWidth=2;" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;Division Supervision&lt;/font&gt;" vertex="1">
+          <mxGeometry height="70" width="41" x="-100" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="S7Li7vJkomNapjHrrTO8-12" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;labelPerimeter=1;fontFamily=Times New Roman;fontStyle=1;fontSize=16;strokeWidth=2;" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;Division Analyse Financière&lt;/font&gt;" vertex="1">
+          <mxGeometry height="70" width="41" x="-100" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="S7Li7vJkomNapjHrrTO8-13" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;labelPerimeter=1;fontFamily=Times New Roman;fontSize=16;strokeWidth=2;" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;Cellule Cartographie / SIG&lt;/font&gt;" vertex="1">
+          <mxGeometry height="70" width="41" x="-100" y="430" as="geometry" />
+        </mxCell>
+        <mxCell id="S7Li7vJkomNapjHrrTO8-14" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;labelPerimeter=1;fontFamily=Times New Roman;fontSize=16;strokeWidth=2;" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;Cellule Conventions &amp;amp; Fonds Injectés&lt;/font&gt;" vertex="1">
+          <mxGeometry height="70" width="41" x="-100" y="570" as="geometry" />
+        </mxCell>
+        <mxCell id="c74AtMNJLfV4wkK_MtQT-1" edge="1" parent="1" style="endArrow=none;html=1;rounded=0;defaultLabelBackgroundColor=page;fontSize=16;fontFamily=Times New Roman;strokeWidth=2;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="-40" y="120" as="sourcePoint" />
+            <mxPoint x="360" y="120" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c74AtMNJLfV4wkK_MtQT-2" edge="1" parent="1" style="endArrow=none;html=1;rounded=0;defaultLabelBackgroundColor=page;fontSize=16;fontFamily=Times New Roman;strokeWidth=2;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="-39" y="240" as="sourcePoint" />
+            <mxPoint x="360" y="240" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c74AtMNJLfV4wkK_MtQT-3" edge="1" parent="1" style="endArrow=none;html=1;rounded=0;defaultLabelBackgroundColor=page;fontSize=16;fontFamily=Times New Roman;strokeWidth=2;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="-40" y="360" as="sourcePoint" />
+            <mxPoint x="360" y="360" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c74AtMNJLfV4wkK_MtQT-4" edge="1" parent="1" style="endArrow=none;html=1;rounded=0;defaultLabelBackgroundColor=page;fontSize=16;fontFamily=Times New Roman;strokeWidth=2;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="-40" y="480" as="sourcePoint" />
+            <mxPoint x="360" y="480" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c74AtMNJLfV4wkK_MtQT-5" edge="1" parent="1" style="endArrow=none;html=1;rounded=0;defaultLabelBackgroundColor=page;fontSize=16;fontFamily=Times New Roman;strokeWidth=2;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="-40" y="600" as="sourcePoint" />
+            <mxPoint x="360" y="600" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c74AtMNJLfV4wkK_MtQT-6" parent="1" style="swimlane;whiteSpace=wrap;html=1;startSize=60;strokeColor=light-dark(#000000,#FFFFFF);fontSize=16;fontFamily=Times New Roman;strokeWidth=2;" value="&lt;font style=&quot;font-size: 23px;&quot;&gt;Application interne DRS-SFD&amp;nbsp;&lt;/font&gt;&lt;span style=&quot;font-size: 23px;&quot;&gt;( V2)&lt;/span&gt;" vertex="1">
+          <mxGeometry height="680" width="440" x="360" y="800" as="geometry" />
+        </mxCell>
+        <mxCell id="c74AtMNJLfV4wkK_MtQT-7" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;labelPerimeter=1;fontFamily=Times New Roman;fontSize=16;strokeWidth=2;" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;Direction de la DRS-SFD&lt;/font&gt;" vertex="1">
+          <mxGeometry height="70" width="41" x="-100" y="870" as="geometry" />
+        </mxCell>
+        <mxCell id="c74AtMNJLfV4wkK_MtQT-8" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;labelPerimeter=1;fontFamily=Times New Roman;fontSize=16;strokeWidth=2;" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;Division Supervision&lt;/font&gt;" vertex="1">
+          <mxGeometry height="70" width="41" x="-100" y="990" as="geometry" />
+        </mxCell>
+        <mxCell id="c74AtMNJLfV4wkK_MtQT-9" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;labelPerimeter=1;fontFamily=Times New Roman;fontStyle=1;fontSize=16;strokeWidth=2;" value="&lt;span style=&quot;font-size: 18px;&quot;&gt;Division Analyse Financière&lt;/span&gt;" vertex="1">
+          <mxGeometry height="70" width="41" x="-100" y="1110" as="geometry" />
+        </mxCell>
+        <mxCell id="c74AtMNJLfV4wkK_MtQT-10" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;labelPerimeter=1;fontFamily=Times New Roman;fontSize=16;strokeWidth=2;" value="&lt;span style=&quot;font-size: 18px;&quot;&gt;Cellule Cartographie / SIG&lt;/span&gt;" vertex="1">
+          <mxGeometry height="70" width="41" x="-100" y="1230" as="geometry" />
+        </mxCell>
+        <mxCell id="c74AtMNJLfV4wkK_MtQT-11" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;labelPerimeter=1;fontFamily=Times New Roman;fontSize=16;strokeWidth=2;" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;Cellule Conventions &amp;amp; Fonds Injectés&lt;/font&gt;" vertex="1">
+          <mxGeometry height="70" width="41" x="-100" y="1370" as="geometry" />
+        </mxCell>
+        <mxCell id="c74AtMNJLfV4wkK_MtQT-12" edge="1" parent="1" style="endArrow=none;html=1;rounded=0;defaultLabelBackgroundColor=page;fontSize=16;fontFamily=Times New Roman;strokeWidth=2;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="-40" y="920" as="sourcePoint" />
+            <mxPoint x="360" y="920" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c74AtMNJLfV4wkK_MtQT-13" edge="1" parent="1" style="endArrow=none;html=1;rounded=0;defaultLabelBackgroundColor=page;fontSize=16;fontFamily=Times New Roman;strokeWidth=2;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="-39" y="1040" as="sourcePoint" />
+            <mxPoint x="360" y="1040" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c74AtMNJLfV4wkK_MtQT-14" edge="1" parent="1" style="endArrow=none;html=1;rounded=0;defaultLabelBackgroundColor=page;fontSize=16;fontFamily=Times New Roman;strokeWidth=2;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="-40" y="1160" as="sourcePoint" />
+            <mxPoint x="360" y="1160" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c74AtMNJLfV4wkK_MtQT-15" edge="1" parent="1" style="endArrow=none;html=1;rounded=0;defaultLabelBackgroundColor=page;fontSize=16;fontFamily=Times New Roman;strokeWidth=2;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="-40" y="1280" as="sourcePoint" />
+            <mxPoint x="360" y="1280" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c74AtMNJLfV4wkK_MtQT-16" edge="1" parent="1" style="endArrow=none;html=1;rounded=0;defaultLabelBackgroundColor=page;fontSize=16;fontFamily=Times New Roman;strokeWidth=2;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="-40" y="1400" as="sourcePoint" />
+            <mxPoint x="360" y="1400" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c74AtMNJLfV4wkK_MtQT-20" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;labelPerimeter=1;fontFamily=Times New Roman;fontSize=16;strokeWidth=2;" value="&lt;div&gt;&lt;font style=&quot;font-size: 19px;&quot;&gt;Bailleurs de fonds (PADESS, DER, FONGIP…)&lt;/font&gt;&lt;span style=&quot;font-size: 20px;&quot;&gt;&lt;/span&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="70" width="41" x="1120" y="960" as="geometry" />
+        </mxCell>
+        <mxCell id="c74AtMNJLfV4wkK_MtQT-21" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;labelPerimeter=1;fontFamily=Times New Roman;fontStyle=1;fontSize=16;strokeWidth=2;" value="&lt;font style=&quot;font-size: 19px;&quot;&gt;Ministère des Finances&lt;/font&gt;" vertex="1">
+          <mxGeometry height="70" width="41" x="1120" y="1090" as="geometry" />
+        </mxCell>
+        <mxCell id="c74AtMNJLfV4wkK_MtQT-22" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;labelPerimeter=1;fontFamily=Times New Roman;fontSize=16;strokeWidth=2;" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;Grand public&lt;/font&gt;" vertex="1">
+          <mxGeometry height="70" width="41" x="1120" y="1220" as="geometry" />
+        </mxCell>
+        <mxCell id="c74AtMNJLfV4wkK_MtQT-23" edge="1" parent="1" style="endArrow=none;html=1;rounded=0;defaultLabelBackgroundColor=page;fontSize=16;fontFamily=Times New Roman;strokeWidth=2;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="800" y="1020" as="sourcePoint" />
+            <mxPoint x="1090" y="1020" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c74AtMNJLfV4wkK_MtQT-24" edge="1" parent="1" style="endArrow=none;html=1;rounded=0;defaultLabelBackgroundColor=page;fontSize=16;fontFamily=Times New Roman;strokeWidth=2;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="800" y="1144.5" as="sourcePoint" />
+            <mxPoint x="1090" y="1144.5" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c74AtMNJLfV4wkK_MtQT-25" edge="1" parent="1" style="endArrow=none;html=1;rounded=0;defaultLabelBackgroundColor=page;fontSize=16;fontFamily=Times New Roman;strokeWidth=2;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="800" y="1254.5" as="sourcePoint" />
+            <mxPoint x="1090" y="1254.5" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c74AtMNJLfV4wkK_MtQT-26" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;strokeWidth=2;fontFamily=Times New Roman;" value="&lt;span&gt;&lt;font style=&quot;font-size: 37px;&quot;&gt;Application Web de Cartographie et de Gouvernance des IMF du Sénégal (DRS-SFD)&lt;/font&gt;&lt;/span&gt;&lt;span class=&quot;&quot;&gt;&lt;sup class=&quot;superscript&quot;&gt;&lt;/sup&gt;&lt;/span&gt;" vertex="1">
+          <mxGeometry height="30" width="870" x="-59" y="-200" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
