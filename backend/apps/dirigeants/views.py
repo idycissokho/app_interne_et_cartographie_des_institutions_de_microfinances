@@ -13,10 +13,11 @@ from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import Dirigeant, Mandat
 from .serializers import DirigeantListSerializer, DirigeantDetailSerializer, MandatSerializer
+from apps.audit.mixins import AuditMixin
 from apps.authentication.permissions import IsSuperviseurOrAdmin
 
 
-class DirigeantListCreateView(generics.ListCreateAPIView):
+class DirigeantListCreateView(AuditMixin, generics.ListCreateAPIView):
     """GET  /api/v1/dirigeants/  — Liste des dirigeants actifs.
     POST /api/v1/dirigeants/  — Création (SUPERVISEUR/ADMIN requis).
     """
@@ -36,11 +37,13 @@ class DirigeantListCreateView(generics.ListCreateAPIView):
         return [IsAuthenticated()]
 
 
-class DirigeantDetailView(generics.RetrieveUpdateDestroyAPIView):
+class DirigeantDetailView(AuditMixin, generics.RetrieveUpdateDestroyAPIView):
     """GET/PUT/PATCH/DELETE /api/v1/dirigeants/<uuid>/"""
 
     queryset = Dirigeant.objects.filter(is_active=True)
     serializer_class = DirigeantDetailSerializer
+    # OBJ-09 : traçabilité des consultations des fiches dirigeants
+    audit_consultation = True
 
     def get_permissions(self):
         if self.request.method in ("PUT", "PATCH", "DELETE"):
@@ -53,7 +56,7 @@ class DirigeantDetailView(generics.RetrieveUpdateDestroyAPIView):
         instance.save(update_fields=["is_active"])
 
 
-class MandatListCreateView(generics.ListCreateAPIView):
+class MandatListCreateView(AuditMixin, generics.ListCreateAPIView):
     """GET  /api/v1/dirigeants/<uuid>/mandats/  — Mandats actifs d'un dirigeant.
     POST /api/v1/dirigeants/<uuid>/mandats/  — Création (SUPERVISEUR/ADMIN requis).
     """
@@ -79,10 +82,11 @@ class MandatListCreateView(generics.ListCreateAPIView):
         serializer.save(dirigeant_id=self.kwargs["dirigeant_pk"])
 
 
-class MandatDetailView(generics.RetrieveUpdateDestroyAPIView):
+class MandatDetailView(AuditMixin, generics.RetrieveUpdateDestroyAPIView):
     """GET/PUT/PATCH/DELETE /api/v1/dirigeants/<uuid>/mandats/<uuid>/"""
 
     serializer_class = MandatSerializer
+    audit_consultation = True
 
     def get_queryset(self):
         return Mandat.objects.filter(

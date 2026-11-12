@@ -7,6 +7,8 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from apps.audit.models import JournalAudit
+
 from .serializers import ChangePasswordSerializer, LoginSerializer, UtilisateurSerializer
 
 audit_logger = logging.getLogger("audit")
@@ -38,6 +40,9 @@ class LoginView(APIView):
         refresh["nom_complet"] = user.nom_complet
 
         audit_logger.info("LOGIN user=%s ip=%s", user.email, ip)
+        JournalAudit.enregistrer(
+            user, JournalAudit.Action.CONNEXION, f"authentication.Utilisateur:{user.pk}", {"ip": ip}
+        )
 
         return Response(
             {
@@ -74,6 +79,9 @@ class LogoutView(APIView):
             )
 
         audit_logger.info("LOGOUT user=%s", request.user.email)
+        JournalAudit.enregistrer(
+            request.user, JournalAudit.Action.DECONNEXION, f"authentication.Utilisateur:{request.user.pk}"
+        )
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -113,6 +121,11 @@ class ChangePasswordView(APIView):
         serializer.save()
 
         audit_logger.info("PASSWORD_CHANGED user=%s", request.user.email)
+        JournalAudit.enregistrer(
+            request.user,
+            JournalAudit.Action.CHANGEMENT_MOT_DE_PASSE,
+            f"authentication.Utilisateur:{request.user.pk}",
+        )
         return Response(
             {"detail": "Mot de passe modifié avec succès."},
             status=status.HTTP_200_OK,

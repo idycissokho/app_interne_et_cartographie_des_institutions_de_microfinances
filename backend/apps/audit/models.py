@@ -14,7 +14,19 @@ from django.conf import settings
 class JournalAudit(models.Model):
     """Entrée immuable du journal d'audit des actions utilisateurs."""
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    class Action:
+        """Libellés d'actions normalisés (le champ reste libre pour l'extensibilité)."""
+
+        CREATION = "CREATION"
+        MODIFICATION = "MODIFICATION"
+        SUPPRESSION = "SUPPRESSION"
+        CONSULTATION = "CONSULTATION"
+        CONNEXION = "CONNEXION"
+        DECONNEXION = "DECONNEXION"
+        CHANGEMENT_MOT_DE_PASSE = "CHANGEMENT_MOT_DE_PASSE"
+        IMPORTATION = "IMPORTATION"
+
+    id =models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     utilisateur = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,

@@ -16,10 +16,11 @@ from .serializers import (
     ZoneGeographiqueDetailSerializer,
     ZoneGeographiqueGeoSerializer,
 )
+from apps.audit.mixins import AuditMixin
 from apps.authentication.permissions import IsAdmin
 
 
-class ZoneGeographiqueListCreateView(generics.ListCreateAPIView):
+class ZoneGeographiqueListCreateView(AuditMixin, generics.ListCreateAPIView):
     """GET  /api/v1/cartographie/zones/  — Liste des zones géographiques.
     POST /api/v1/cartographie/zones/  — Création (ADMIN uniquement).
     """
@@ -41,7 +42,7 @@ class ZoneGeographiqueListCreateView(generics.ListCreateAPIView):
         return [IsAuthenticated()]
 
 
-class ZoneGeographiqueDetailView(generics.RetrieveUpdateDestroyAPIView):
+class ZoneGeographiqueDetailView(AuditMixin, generics.RetrieveUpdateDestroyAPIView):
     """GET/PUT/PATCH/DELETE /api/v1/cartographie/zones/<uuid>/"""
 
     queryset = ZoneGeographique.objects.filter(is_active=True)

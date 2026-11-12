@@ -10,10 +10,11 @@ from rest_framework import generics, filters
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import ImportationFichier
 from .serializers import ImportationFichierSerializer
+from apps.audit.mixins import AuditMixin
 from apps.authentication.permissions import IsSuperviseurOrAdmin
 
 
-class ImportationListCreateView(generics.ListCreateAPIView):
+class ImportationListCreateView(AuditMixin, generics.ListCreateAPIView):
     """GET  /api/v1/importation/  — Liste des imports de l'utilisateur connecté.
     POST /api/v1/importation/  — Upload d'un fichier CSV/Excel (SUPERVISEUR/ADMIN requis).
     """

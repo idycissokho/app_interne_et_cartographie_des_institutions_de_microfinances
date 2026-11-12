@@ -11,10 +11,11 @@ from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import IMF
 from .serializers import IMFListSerializer, IMFDetailSerializer
+from apps.audit.mixins import AuditMixin
 from apps.authentication.permissions import IsSuperviseurOrAdmin
 
 
-class IMFListCreateView(generics.ListCreateAPIView):
+class IMFListCreateView(AuditMixin, generics.ListCreateAPIView):
     """GET  /api/v1/imf/  — Liste des IMF actives avec filtres, recherche et pagination.
     POST /api/v1/imf/  — Création d'une nouvelle IMF (SUPERVISEUR ou ADMIN requis).
     """
@@ -35,7 +36,7 @@ class IMFListCreateView(generics.ListCreateAPIView):
         return [IsAuthenticated()]
 
 
-class IMFDetailView(generics.RetrieveUpdateDestroyAPIView):
+class IMFDetailView(AuditMixin, generics.RetrieveUpdateDestroyAPIView):
     """GET    /api/v1/imf/<uuid>/  — Détail d'une IMF.
     PUT/PATCH /api/v1/imf/<uuid>/  — Modification (SUPERVISEUR ou ADMIN requis).
     DELETE    /api/v1/imf/<uuid>/  — Suppression logique : is_active=False.

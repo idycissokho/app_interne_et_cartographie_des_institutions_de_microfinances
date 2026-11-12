@@ -12,10 +12,11 @@ from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import PointService
 from .serializers import PointServiceListSerializer, PointServiceDetailSerializer, PointServiceGeoSerializer
+from apps.audit.mixins import AuditMixin
 from apps.authentication.permissions import IsSuperviseurOrAdmin
 
 
-class PointServiceListCreateView(generics.ListCreateAPIView):
+class PointServiceListCreateView(AuditMixin, generics.ListCreateAPIView):
     queryset = PointService.objects.filter(is_active=True).select_related("imf")
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ["imf", "type_point", "statut_point", "statut_reglementaire"]
@@ -31,7 +32,7 @@ class PointServiceListCreateView(generics.ListCreateAPIView):
         return [IsAuthenticated()]
 
 
-class PointServiceDetailView(generics.RetrieveUpdateDestroyAPIView):
+class PointServiceDetailView(AuditMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = PointService.objects.filter(is_active=True).select_related("imf")
     serializer_class = PointServiceDetailSerializer
 
