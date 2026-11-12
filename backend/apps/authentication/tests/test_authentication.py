@@ -1,3 +1,10 @@
+"""
+authentication/tests/test_authentication.py
+===========================================
+Tests d'intégration du module authentification.
+Couverture : login, logout, profil, changement de mot de passe, modèle Utilisateur.
+"""
+
 import pytest
 from django.urls import reverse
 from rest_framework import status
@@ -7,6 +14,11 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from apps.authentication.models import Utilisateur
 
 from .factories import AdminFactory, SuperviseurFactory, UtilisateurFactory
+
+
+# ---------------------------------------------------------------------------
+# Fixtures
+# ---------------------------------------------------------------------------
 
 
 @pytest.fixture

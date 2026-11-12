@@ -1,3 +1,11 @@
+"""
+imf/urls.py
+===========
+Routes du module IMF :
+  GET/POST  /api/v1/imf/          — Liste et création
+  GET/PUT/PATCH/DELETE /api/v1/imf/<uuid>/ — Détail, modification, suppression logique
+"""
+
 from django.urls import path
 from .views import IMFListCreateView, IMFDetailView
 

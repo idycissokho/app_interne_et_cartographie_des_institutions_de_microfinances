@@ -1,3 +1,12 @@
+"""
+authentication/serializers.py
+=============================
+Sérialiseurs du module authentification :
+- LoginSerializer       : validation des identifiants email/password
+- UtilisateurSerializer : représentation du profil utilisateur
+- ChangePasswordSerializer : changement de mot de passe sécurisé
+"""
+
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
@@ -6,6 +15,8 @@ from .models import Utilisateur
 
 
 class LoginSerializer(serializers.Serializer):
+    """Valide les identifiants et retourne l'objet utilisateur authentifié."""
+
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
 
@@ -24,6 +35,8 @@ class LoginSerializer(serializers.Serializer):
 
 
 class UtilisateurSerializer(serializers.ModelSerializer):
+    """Sérialise le profil utilisateur — lecture et mise à jour partielle (nom/prénom)."""
+
     nom_complet = serializers.CharField(read_only=True)
 
     class Meta:
@@ -36,6 +49,8 @@ class UtilisateurSerializer(serializers.ModelSerializer):
 
 
 class ChangePasswordSerializer(serializers.Serializer):
+    """Valide et applique le changement de mot de passe de l'utilisateur connecté."""
+
     ancien_mot_de_passe = serializers.CharField(write_only=True)
     nouveau_mot_de_passe = serializers.CharField(write_only=True)
     confirmation = serializers.CharField(write_only=True)

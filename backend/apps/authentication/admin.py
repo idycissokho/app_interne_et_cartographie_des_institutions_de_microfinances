@@ -1,3 +1,10 @@
+"""
+authentication/admin.py
+=======================
+Enregistrement du modèle Utilisateur dans l'interface d'administration Django.
+Hérite de UserAdmin pour conserver la gestion native des mots de passe.
+"""
+
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
@@ -6,6 +13,8 @@ from .models import Utilisateur
 
 @admin.register(Utilisateur)
 class UtilisateurAdmin(UserAdmin):
+    """Interface d'administration pour le modèle Utilisateur custom."""
+
     list_display = ("email", "nom", "prenom", "role", "is_active", "date_creation")
     list_filter = ("role", "is_active", "is_staff")
     search_fields = ("email", "nom", "prenom")

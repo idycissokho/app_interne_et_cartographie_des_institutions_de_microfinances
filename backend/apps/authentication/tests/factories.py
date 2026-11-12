@@ -1,3 +1,10 @@
+"""
+authentication/tests/factories.py
+=================================
+Factory Boy — générateurs de données de test pour le modèle Utilisateur.
+Trois factories disponibles : CONSULTANT (défaut), ADMIN, SUPERVISEUR.
+"""
+
 import factory
 from factory.django import DjangoModelFactory
 
@@ -5,6 +12,8 @@ from apps.authentication.models import Utilisateur
 
 
 class UtilisateurFactory(DjangoModelFactory):
+    """Factory de base — crée un utilisateur avec le rôle CONSULTANT."""
+
     class Meta:
         model = Utilisateur
 
@@ -22,10 +31,14 @@ class UtilisateurFactory(DjangoModelFactory):
 
 
 class AdminFactory(UtilisateurFactory):
+    """Factory pour un utilisateur ADMIN avec accès staff et superuser."""
+
     role = Utilisateur.Role.ADMIN
     is_staff = True
     is_superuser = True
 
 
 class SuperviseurFactory(UtilisateurFactory):
+    """Factory pour un utilisateur SUPERVISEUR."""
+
     role = Utilisateur.Role.SUPERVISEUR
