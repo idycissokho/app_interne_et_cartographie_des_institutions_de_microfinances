@@ -53,6 +53,7 @@ THIRD_PARTY_APPS = [
     "corsheaders",
     "django_filters",
     "drf_spectacular",
+    "rest_framework_gis"
 ]
 
 # Chaque domaine fonctionnel est isolé dans sa propre application
