@@ -10,13 +10,15 @@ Vues DRF des modules Dirigeant et Mandat :
 
 from django.db.models import Count, Prefetch, Q
 from django.shortcuts import get_object_or_404
-from rest_framework import generics, filters
-from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
-from .models import Dirigeant, Mandat
-from .serializers import DirigeantListSerializer, DirigeantDetailSerializer, MandatSerializer
+from rest_framework import filters, generics
+from rest_framework.permissions import IsAuthenticated
+
 from apps.audit.mixins import AuditMixin
 from apps.authentication.permissions import IsSuperviseurOrAdmin
+
+from .models import Dirigeant, Mandat
+from .serializers import DirigeantDetailSerializer, DirigeantListSerializer, MandatSerializer
 
 
 class DirigeantListCreateView(AuditMixin, generics.ListCreateAPIView):

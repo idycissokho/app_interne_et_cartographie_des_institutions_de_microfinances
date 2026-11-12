@@ -1,5 +1,6 @@
 from django.urls import path
-from .views import PointServiceListCreateView, PointServiceDetailView, PointServiceGeoView
+
+from .views import PointServiceDetailView, PointServiceGeoView, PointServiceListCreateView
 
 app_name = "points_service"
 

@@ -5,6 +5,7 @@ Enregistrement des modèles Dirigeant et Mandat dans l'interface d'administratio
 """
 
 from django.contrib import admin
+
 from .models import Dirigeant, Mandat
 
 

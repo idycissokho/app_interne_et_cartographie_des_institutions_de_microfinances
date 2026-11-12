@@ -9,7 +9,13 @@ Routes du module dirigeants :
 """
 
 from django.urls import path
-from .views import DirigeantListCreateView, DirigeantDetailView, MandatListCreateView, MandatDetailView
+
+from .views import (
+    DirigeantDetailView,
+    DirigeantListCreateView,
+    MandatDetailView,
+    MandatListCreateView,
+)
 
 app_name = "dirigeants"
 

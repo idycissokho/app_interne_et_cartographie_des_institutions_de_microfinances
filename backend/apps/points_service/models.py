@@ -7,8 +7,10 @@ avec sa localisation géospatiale PostGIS.
 """
 
 import uuid
+
 from django.contrib.gis.db import models as gis_models
 from django.db import models
+
 from apps.imf.models import IMF
 
 

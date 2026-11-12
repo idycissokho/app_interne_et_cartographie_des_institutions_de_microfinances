@@ -6,7 +6,9 @@ Sérialiseurs du module importation :
 """
 
 from rest_framework import serializers
+
 from .models import ImportationFichier
+from .services import valider_fichier
 
 
 class ImportationFichierSerializer(serializers.ModelSerializer):
@@ -27,3 +29,7 @@ class ImportationFichierSerializer(serializers.ModelSerializer):
             "nb_lignes_importees", "nb_lignes_erreur", "rapport_erreurs",
             "date_creation", "date_modification",
         ]
+
+    def validate_fichier(self, fichier):
+        valider_fichier(fichier)
+        return fichier

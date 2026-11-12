@@ -25,6 +25,7 @@ class JournalAudit(models.Model):
         DECONNEXION = "DECONNEXION"
         CHANGEMENT_MOT_DE_PASSE = "CHANGEMENT_MOT_DE_PASSE"
         IMPORTATION = "IMPORTATION"
+        EXPORTATION = "EXPORTATION"
 
     id =models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     utilisateur = models.ForeignKey(

@@ -7,8 +7,9 @@ Permet de suivre le statut du traitement et les erreurs éventuelles.
 """
 
 import uuid
-from django.db import models
+
 from django.conf import settings
+from django.db import models
 
 
 class ImportationFichier(models.Model):

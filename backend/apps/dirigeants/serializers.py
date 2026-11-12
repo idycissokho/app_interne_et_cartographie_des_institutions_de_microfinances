@@ -8,6 +8,7 @@ Sérialiseurs des modules Dirigeant et Mandat :
 """
 
 from rest_framework import serializers
+
 from .models import Dirigeant, Mandat
 
 
