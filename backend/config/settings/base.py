@@ -53,7 +53,7 @@ THIRD_PARTY_APPS = [
     "corsheaders",
     "django_filters",
     "drf_spectacular",
-    "rest_framework_gis"
+    "rest_framework_gis",  # Support GeoJSON pour le module cartographie
 ]
 
 # Chaque domaine fonctionnel est isolé dans sa propre application
