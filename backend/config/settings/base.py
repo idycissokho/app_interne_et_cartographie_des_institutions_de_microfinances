@@ -20,7 +20,11 @@ import environ
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 env = environ.Env()
-environ.Env.read_env(BASE_DIR / ".env")
+# backend/.env en priorité, sinon le .env racine (partagé avec docker-compose).
+for _env_file in (BASE_DIR / ".env", BASE_DIR.parent / ".env"):
+    if _env_file.is_file():
+        environ.Env.read_env(_env_file)
+        break
 
 
 # ---------------------------------------------------------------------------

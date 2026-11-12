@@ -1,36 +1,45 @@
-from rest_framework import generics, filters
-from rest_framework.permissions import IsAuthenticated
-from django_filters.rest_framework import DjangoFilterBackend
+"""
+points_service/serializers.py
+==============================
+Sérialiseurs du module points de service :
+- PointServiceListSerializer  : liste allégée
+- PointServiceDetailSerializer: détail complet
+"""
+
+from rest_framework import serializers
+from rest_framework_gis.serializers import GeoFeatureModelSerializer
 from .models import PointService
-from .serializers import PointServiceListSerializer, PointServiceDetailSerializer
-from apps.authentication.permissions import IsSuperviseurOrAdmin
 
 
-class PointServiceListCreateView(generics.ListCreateAPIView):
-    queryset = PointService.objects.filter(is_active=True).select_related("imf")
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ["imf", "type_point", "statut_point", "statut_reglementaire"]
-    search_fields = ["nom", "adresse"]
-    ordering_fields = ["nom", "date_ouverture", "encours"]
+class PointServiceListSerializer(serializers.ModelSerializer):
+    """Sérialiseur allégé pour les listes."""
 
-    def get_serializer_class(self):
-        return PointServiceDetailSerializer if self.request.method == "POST" else PointServiceListSerializer
+    imf_nom = serializers.CharField(source="imf.nom", read_only=True)
 
-    def get_permissions(self):
-        if self.request.method == "POST":
-            return [IsSuperviseurOrAdmin()]
-        return [IsAuthenticated()]
+    class Meta:
+        model = PointService
+        fields = ["id", "nom", "imf", "imf_nom", "type_point", "statut_point", "statut_reglementaire", "is_active"]
 
 
-class PointServiceDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = PointService.objects.filter(is_active=True).select_related("imf")
-    serializer_class = PointServiceDetailSerializer
+class PointServiceDetailSerializer(serializers.ModelSerializer):
+    """Sérialiseur complet pour le détail, la création et la modification."""
 
-    def get_permissions(self):
-        if self.request.method in ("PUT", "PATCH", "DELETE"):
-            return [IsSuperviseurOrAdmin()]
-        return [IsAuthenticated()]
+    imf_nom = serializers.CharField(source="imf.nom", read_only=True)
 
-    def perform_destroy(self, instance):
-        instance.is_active = False
-        instance.save(update_fields=["is_active"])
+    class Meta:
+        model = PointService
+        fields = [
+            "id", "imf", "imf_nom", "nom", "type_point", "statut_point", "statut_reglementaire",
+            "adresse", "telephone", "email", "localisation", "encours",
+            "is_active", "date_creation", "date_modification",
+        ]
+        read_only_fields = ["id", "date_creation", "date_modification"]
+
+
+class PointServiceGeoSerializer(GeoFeatureModelSerializer):
+    """Sérialiseur GeoJSON pour l'affichage cartographique."""
+
+    class Meta:
+        model = PointService
+        geo_field = "localisation"
+        fields = ["id", "nom", "imf", "type_point", "statut_point"]
