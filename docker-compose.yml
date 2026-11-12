@@ -28,9 +28,9 @@ services:
     environment:
       # Identifiants lus depuis le fichier .env à la racine du projet.
       # Ne jamais coder ces valeurs en dur ici.
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      - POSTGRES_DB=cartographie_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=Endtoend2002
 
     volumes:
       # Volume nommé pour la persistance des données entre les redémarrages.

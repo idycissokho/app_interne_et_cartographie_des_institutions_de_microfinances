@@ -1,76 +1,39 @@
-# =============================================================================
-# backend/Dockerfile
-# Image Docker pour le backend Django — Cartographie IMF DRS-SFD
-#
-# Étapes :
-#   builder : installe les dépendances Python + bibliothèques système C
-#   final   : image légère d'exécution uniquement
-# =============================================================================
+# Utilisation d'une image Python stable
+FROM python:3.11-slim-bookworm
 
-FROM python:3.12-slim AS builder
+# Éviter que Python écrive des fichiers .pyc et forcer l'affichage des logs en temps réel
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
 
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
-
-WORKDIR /app
-
-# Dépendances système nécessaires à psycopg2 et GeoDjango (GDAL, GEOS, PROJ)
+# Installation des dépendances système pour GeoDjango et PostgreSQL
+# On utilise les versions -dev pour garantir la compatibilité avec l'OS
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
+    binutils \
     libpq-dev \
     gdal-bin \
     libgdal-dev \
     libgeos-dev \
     libproj-dev \
+    gcc \
+    python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements/ requirements/
-
-RUN pip install --upgrade pip && \
-    pip install --no-cache-dir -r requirements/development.txt
-
-
-# =============================================================================
-# Image finale
-# =============================================================================
-FROM python:3.12-slim
-
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
-
+# Définition du dossier de travail
 WORKDIR /app
 
-# Bibliothèques runtime uniquement (sans outils de compilation)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq5 \
-    gdal-bin \
-    libgdal32 \
-    libgeos-c1v5 \
-    libproj25 \
-    && rm -rf /var/lib/apt/lists/*
+# Installation des dépendances Python
+# On copie d'abord les fichiers de requirements pour profiter du cache Docker
+COPY requirements/ /app/requirements/
+# Si tu as un fichier requirements.txt unique, adapte cette ligne
+RUN pip install --upgrade pip
+# Installation des dépendances (ajuste le chemin selon ton fichier exact)
+RUN pip install -r requirements/base.txt || pip install -r requirements.txt
 
-# Copie des packages Python depuis le builder
-COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
-COPY --from=builder /usr/local/bin /usr/local/bin
+# Copie du reste du code du projet
+COPY . /app/
 
-COPY . .
-
-# Utilisateur non-root pour la sécurité (principe du moindre privilège)
-RUN addgroup --system django && \
-    adduser --system --ingroup django django && \
-    chown -R django:django /app
-
-USER django
-
+# On expose le port 8000 pour Django
 EXPOSE 8000
 
-# Applique les migrations puis démarre Gunicorn
-CMD ["sh", "-c", \
-    "python manage.py migrate --noinput && \
-     python manage.py collectstatic --noinput && \
-     gunicorn config.wsgi:application \
-       --bind 0.0.0.0:8000 \
-       --workers 2 \
-       --timeout 120 \
-       --access-logfile - \
-       --error-logfile -"]
+# Commande pour lancer l'application
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

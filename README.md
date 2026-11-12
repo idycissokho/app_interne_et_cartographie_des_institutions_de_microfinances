@@ -1,89 +1,64 @@
-# Cartographie des Institutions de Microfinance du Sénégal
 
-Application web institutionnelle de cartographie et de gouvernance des IMF,
-développée pour la Direction de la Réglementation et de la Supervision des
-Systèmes Financiers Décentralisés (DRS-SFD) — Ministère des Finances et du Budget.
+Cartographie des Institutions de Microfinance du Sénégal
+Application web institutionnelle de cartographie et de gouvernance des IMF, développée pour la Direction de la Réglementation et de la Supervision des Systèmes Financiers Décentralisés (DRS-SFD) — Ministère des Finances et du Budget.
 
----
+🌍 Présentation du Projet
+Cette application est un outil stratégique permettant à la DRS-SFD de centraliser, visualiser et superviser l'ensemble des Institutions de Microfinance (IMF) opérant sur le territoire sénégalais.
 
-## Présentation
+Fonctionnalités clés :
 
-Cette application permet à la DRS-SFD de centraliser, visualiser et superviser
-l'ensemble des Institutions de Microfinance (IMF) opérant sur le territoire
-sénégalais, leurs points de service, leurs dirigeants et leurs mandats.
+Cartographie interactive : Visualisation géographique des IMF et de leurs points de service.
+Gouvernance : Gestion des dirigeants, des mandats et des structures administratives.
+Supervision : Suivi et audit des données institutionnelles.
+Importation de données : Outils de chargement massif pour l'initialisation du système.
+🛠 Architecture Technique
+Couche	Technologie
+Frontend	React 18, TypeScript, Vite
+Backend	Python 3.11, Django 5.2 LTS, DRF
+Base de données	PostgreSQL 16, PostGIS (Extension Spatiale)
+Serveur	Nginx (reverse proxy), Gunicorn (WSGI)
+Déploiement	Docker & Docker Compose
+🚀 Installation et Démarrage avec Docker
+Le projet est entièrement conteneurisé. L'utilisation de Docker est la méthode recommandée pour garantir un environnement identique pour tous les développeurs.
 
----
+1. Prérequis
+Docker et Docker Compose installés.
+2. Configuration des variables d'environnement
+Avant de lancer le projet, configurez vos secrets :
 
-## Architecture technique
-
-| Couche       | Technologie                              |
-|--------------|------------------------------------------|
-| Frontend     | React 18, TypeScript, Vite               |
-| Backend      | Python 3.12, Django 5.2 LTS, DRF         |
-| Base de données | PostgreSQL 16, PostGIS                |
-| Serveur      | Nginx (reverse proxy), Gunicorn (WSGI)   |
-| Déploiement  | Intranet DRS-SFD                         |
-
----
-
-## Organisation du dépôt
-
-```
-/
-├── backend/        # API Django REST Framework
-├── frontend/       # Application React TypeScript
-├── docs/           # Documentation technique du projet
-└── .github/        # Workflows CI/CD (à venir)
-```
-
----
-
-## Démarrage rapide
-
-### Prérequis
-
-- Python 3.12+
-- Node.js 20 LTS+
-- PostgreSQL 16+ avec extension PostGIS
-- Git
-
-### Backend
-
-```bash
+Run
 cd backend
-python -m venv .venv
-# Windows
-.venv\Scripts\activate
-pip install -r requirements/development.txt
 cp .env.example .env
-# Renseigner les variables dans .env
-python manage.py migrate
-python manage.py runserver
-```
+(Modifiez le fichier .env avec votre SECRET_KEY et vos identifiants POSTGRES).
 
-### Frontend
+3. Lancement du projet
+Depuis la racine du projet :
 
-```bash
-cd frontend
-npm install
-cp .env.example .env.local
-# Renseigner les variables dans .env.local
-npm run dev
-```
+Run
+docker-compose up --build
+4. Initialisation de la base de données
+Run
+# Appliquer les migrations
+docker-compose exec backend python manage.py migrate
 
----
+# Créer l'administrateur
+docker-compose exec backend python manage.py createsuperuser
+L'application sera alors accessible sur http://localhost:8000.
 
-## Documentation
+📂 Organisation du dépôt
 
-La documentation technique complète est disponible dans le dossier `docs/`.
+Apply
+/
+├── backend/        # API Django REST Framework (Conteneurisé)
+├── frontend/       # Application React TypeScript (Conteneurisé)
+├── docs/           # Documentation technique du projet
+└── docker-compose.yml # Orchestration des services
+📖 Documentation
+La documentation technique complète est disponible dans le dossier docs/.
 
-- `docs/architecture.md` — Décisions architecturales
-- `docs/conventions.md` — Conventions de code
-- `docs/api.md` — Documentation de l'API (à compléter)
+docs/architecture.md — Décisions architecturales
+docs/conventions.md — Conventions de code
+docs/api.md — Documentation de l'API
+📈 Statut du projet
+Version : V1 — En cours de développement initial Dernière mise à jour : Janvier 2026
 
----
-
-## Statut du projet
-
-Version : V1 — En cours de développement initial
-Dernière mise à jour : Janvier 2026
