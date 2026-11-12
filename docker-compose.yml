@@ -1,0 +1,147 @@
+# =============================================================================
+# docker-compose.yml
+# Orchestration des services pour l'environnement de développement local.
+#
+# Services :
+#   - db       : PostgreSQL 16 avec extension PostGIS (données géospatiales)
+#   - backend  : Django 5.2 via Gunicorn (API REST)
+#   - nginx    : Reverse proxy HTTP (développement)
+#
+# Usage :
+#   docker compose up --build       # Premier démarrage
+#   docker compose up -d            # Démarrage en arrière-plan
+#   docker compose down             # Arrêt et suppression des conteneurs
+#   docker compose logs -f backend  # Suivi des logs du backend
+# =============================================================================
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # Base de données PostgreSQL 16 + PostGIS
+  # Image officielle postgis/postgis qui inclut PostgreSQL + l'extension PostGIS
+  # préinstallée, évitant une configuration manuelle de l'extension.
+  # ---------------------------------------------------------------------------
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: cartographie_imf_db
+
+    environment:
+      # Identifiants lus depuis le fichier .env à la racine du projet.
+      # Ne jamais coder ces valeurs en dur ici.
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+
+    volumes:
+      # Volume nommé pour la persistance des données entre les redémarrages.
+      - postgres_data:/var/lib/postgresql/data
+      # Script d'initialisation exécuté une seule fois à la création du volume.
+      # Active l'extension PostGIS sur la base de données du projet.
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+    ports:
+      # Expose PostgreSQL sur le port 5432 de la machine hôte pour permettre
+      # la connexion depuis un client SQL (DBeaver, pgAdmin, etc.).
+      - "5432:5432"
+
+    healthcheck:
+      # Vérifie que PostgreSQL accepte les connexions avant de démarrer le backend.
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+    restart: unless-stopped
+
+    networks:
+      - imf_network
+
+  # ---------------------------------------------------------------------------
+  # Backend Django — API REST
+  # Construit depuis le Dockerfile du dossier backend/.
+  # Démarre uniquement après que la base de données soit prête (healthcheck).
+  # ---------------------------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cartographie_imf_backend
+
+    # Variables d'environnement transmises au conteneur Django.
+    # Toutes les valeurs sensibles proviennent du fichier .env.
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.development
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS}
+      DJANGO_CSRF_TRUSTED_ORIGINS: ${DJANGO_CSRF_TRUSTED_ORIGINS}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      # À l'intérieur du réseau Docker, le service db est accessible par son nom.
+      DB_HOST: db
+      DB_PORT: 5432
+
+    volumes:
+      # Monte le code source en temps réel pour le rechargement automatique.
+      - ./backend:/app
+      # Volume séparé pour les fichiers médias uploadés (justificatifs, etc.).
+      - media_files:/app/mediafiles
+
+    ports:
+      # Expose Gunicorn sur le port 8000 de la machine hôte.
+      - "8000:8000"
+
+    depends_on:
+      db:
+        # Attend que le healthcheck de la base de données soit satisfait.
+        condition: service_healthy
+
+    restart: unless-stopped
+
+    networks:
+      - imf_network
+
+  # ---------------------------------------------------------------------------
+  # Nginx — Reverse proxy
+  # Sert les fichiers statiques et redirige les requêtes API vers Gunicorn.
+  # En développement, simplifie l'accès à l'application sur le port 80.
+  # ---------------------------------------------------------------------------
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: cartographie_imf_nginx
+
+    volumes:
+      # Configuration Nginx personnalisée pour le projet.
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      # Fichiers statiques collectés par Django (collectstatic).
+      - ./backend/staticfiles:/var/www/static:ro
+      # Fichiers médias uploadés.
+      - media_files:/var/www/media:ro
+
+    ports:
+      - "80:80"
+
+    depends_on:
+      - backend
+
+    restart: unless-stopped
+
+    networks:
+      - imf_network
+
+# =============================================================================
+# Volumes nommés — persistance des données entre les redémarrages
+# =============================================================================
+volumes:
+  postgres_data:
+    driver: local
+  media_files:
+    driver: local
+
+# =============================================================================
+# Réseau interne — isolation des services
+# =============================================================================
+networks:
+  imf_network:
+    driver: bridge
