@@ -8,6 +8,8 @@ Vues DRF des modules Dirigeant et Mandat :
 - MandatDetailView         : détail, modification, soft delete d'un mandat
 """
 
+from django.db.models import Count, Prefetch, Q
+from django.shortcuts import get_object_or_404
 from rest_framework import generics, filters
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
@@ -22,8 +24,11 @@ class DirigeantListCreateView(AuditMixin, generics.ListCreateAPIView):
     POST /api/v1/dirigeants/  — Création (SUPERVISEUR/ADMIN requis).
     """
 
-    queryset = Dirigeant.objects.filter(is_active=True)
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    queryset = Dirigeant.objects.filter(is_active=True).annotate(
+        nb_mandats_actifs=Count("mandats", filter=Q(mandats__is_active=True))
+    ).order_by("nom", "prenom")
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = {"mandats__fonction_mandat": ["exact"], "mandats__imf": ["exact"]}
     search_fields = ["nom", "prenom", "email_professionnel"]
     ordering_fields = ["nom", "prenom"]
 
@@ -40,7 +45,9 @@ class DirigeantListCreateView(AuditMixin, generics.ListCreateAPIView):
 class DirigeantDetailView(AuditMixin, generics.RetrieveUpdateDestroyAPIView):
     """GET/PUT/PATCH/DELETE /api/v1/dirigeants/<uuid>/"""
 
-    queryset = Dirigeant.objects.filter(is_active=True)
+    queryset = Dirigeant.objects.filter(is_active=True).prefetch_related(
+        Prefetch("mandats", queryset=Mandat.objects.filter(is_active=True).select_related("imf"))
+    )
     serializer_class = DirigeantDetailSerializer
     # OBJ-09 : traçabilité des consultations des fiches dirigeants
     audit_consultation = True
@@ -70,7 +77,7 @@ class MandatListCreateView(AuditMixin, generics.ListCreateAPIView):
         """Filtre les mandats par dirigeant via l'UUID dans l'URL."""
         return Mandat.objects.filter(
             dirigeant_id=self.kwargs["dirigeant_pk"], is_active=True
-        ).select_related("imf")
+        ).select_related("imf", "dirigeant")
 
     def get_permissions(self):
         if self.request.method == "POST":
@@ -78,8 +85,9 @@ class MandatListCreateView(AuditMixin, generics.ListCreateAPIView):
         return [IsAuthenticated()]
 
     def perform_create(self, serializer):
-        """Rattache automatiquement le mandat au dirigeant de l'URL."""
-        serializer.save(dirigeant_id=self.kwargs["dirigeant_pk"])
+        """Rattache automatiquement le mandat au dirigeant (actif) de l'URL."""
+        dirigeant = get_object_or_404(Dirigeant, pk=self.kwargs["dirigeant_pk"], is_active=True)
+        serializer.save(dirigeant=dirigeant)
 
 
 class MandatDetailView(AuditMixin, generics.RetrieveUpdateDestroyAPIView):
@@ -91,7 +99,7 @@ class MandatDetailView(AuditMixin, generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         return Mandat.objects.filter(
             dirigeant_id=self.kwargs["dirigeant_pk"], is_active=True
-        )
+        ).select_related("imf", "dirigeant")
 
     def get_permissions(self):
         if self.request.method in ("PUT", "PATCH", "DELETE"):
@@ -102,3 +110,20 @@ class MandatDetailView(AuditMixin, generics.RetrieveUpdateDestroyAPIView):
         """Soft delete."""
         instance.is_active = False
         instance.save(update_fields=["is_active"])
+
+
+class MandatsParIMFView(generics.ListAPIView):
+    """GET /api/v1/imf/<uuid>/mandats/ — Onglet « Dirigeants » de la fiche IMF (DIR-08).
+
+    Filtrable par fonction (DIR-09) : ?fonction_mandat=DG
+    """
+
+    serializer_class = MandatSerializer
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ["fonction_mandat", "statut_mandat"]
+    ordering_fields = ["date_debut", "fonction_mandat"]
+
+    def get_queryset(self):
+        return Mandat.objects.filter(
+            imf_id=self.kwargs["imf_pk"], is_active=True, dirigeant__is_active=True
+        ).select_related("imf", "dirigeant")

@@ -42,10 +42,37 @@ class PointService(models.Model):
         default=StatutReglementaire.EN_COURS,
     )
     adresse = models.CharField(max_length=500, blank=True)
+    region = models.ForeignKey(
+        "cartographie.ZoneGeographique",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="points_region",
+        limit_choices_to={"type_zone": "REGION"},
+    )
+    departement = models.ForeignKey(
+        "cartographie.ZoneGeographique",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="points_departement",
+        limit_choices_to={"type_zone": "DEPARTEMENT"},
+    )
+    commune = models.ForeignKey(
+        "cartographie.ZoneGeographique",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="points_commune",
+        limit_choices_to={"type_zone": "COMMUNE"},
+    )
+    date_ouverture = models.DateField(null=True, blank=True)
     telephone = models.CharField(max_length=20, blank=True)
     email = models.EmailField(blank=True)
     localisation = gis_models.PointField(geography=True, null=True, blank=True)
     encours = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    depots = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
+    nombre_membres = models.PositiveIntegerField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
     date_creation = models.DateTimeField(auto_now_add=True)
     date_modification = models.DateTimeField(auto_now=True)
@@ -57,3 +84,15 @@ class PointService(models.Model):
 
     def __str__(self):
         return f"{self.nom} ({self.imf})"
+
+    def save(self, *args, **kwargs):
+        """Complète region/departement/commune à partir du GPS s'ils ne sont pas renseignés."""
+        if self.localisation and not (self.region_id and self.departement_id and self.commune_id):
+            from apps.cartographie.models import ZoneGeographique
+
+            for champ, zone in ZoneGeographique.localiser(self.localisation).items():
+                if zone is not None and getattr(self, f"{champ}_id") is None:
+                    setattr(self, champ, zone)
+            if kwargs.get("update_fields") is not None:
+                kwargs["update_fields"] = {*kwargs["update_fields"], "region", "departement", "commune"}
+        super().save(*args, **kwargs)

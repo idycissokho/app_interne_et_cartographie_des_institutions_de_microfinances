@@ -8,4 +8,4 @@ class PointServiceAdmin(admin.GISModelAdmin):
     list_filter = ("type_point", "statut_point", "statut_reglementaire", "is_active")
     search_fields = ("nom", "adresse", "imf__nom")
     readonly_fields = ("id", "date_creation", "date_modification")
-    raw_id_fields = ("imf",)
+    raw_id_fields = ("imf", "region", "departement", "commune")

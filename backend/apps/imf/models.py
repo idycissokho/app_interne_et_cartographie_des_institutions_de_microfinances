@@ -1,13 +1,34 @@
 """
 imf/models.py
 =============
-Modèle IMF (Institution de Microfinance).
+Modèles IMF (Institution de Microfinance) et Bailleur.
 Représente une institution agréée ou en cours d'agrément sur le territoire sénégalais.
 La suppression est logique (soft delete via is_active=False).
 """
 
 import uuid
+
+from django.contrib.gis.db import models as gis_models
 from django.db import models
+
+
+class Bailleur(models.Model):
+    """Bailleur de fonds / partenaire associé à une ou plusieurs IMF (PADESS, DER, FONGIP…)."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    nom = models.CharField(max_length=255, unique=True)
+    sigle = models.CharField(max_length=50, blank=True)
+    is_active = models.BooleanField(default=True)
+    date_creation = models.DateTimeField(auto_now_add=True)
+    date_modification = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Bailleur"
+        verbose_name_plural = "Bailleurs"
+        ordering = ["nom"]
+
+    def __str__(self):
+        return self.sigle or self.nom
 
 
 class IMF(models.Model):
@@ -38,9 +59,13 @@ class IMF(models.Model):
         verbose_name="Statut réglementaire",
     )
     adresse_siege = models.CharField(max_length=500, verbose_name="Adresse du siège")
+    localisation_siege = gis_models.PointField(
+        geography=True, null=True, blank=True, verbose_name="Coordonnées GPS du siège"
+    )
     telephone = models.CharField(max_length=20, blank=True)
     email = models.EmailField(blank=True)
     site_web = models.URLField(blank=True)
+    bailleurs = models.ManyToManyField(Bailleur, blank=True, related_name="imfs")
     is_active = models.BooleanField(default=True)
     date_creation = models.DateTimeField(auto_now_add=True)
     date_modification = models.DateTimeField(auto_now=True)
@@ -60,3 +85,9 @@ class IMF(models.Model):
     def verifier_statut_actif(self) -> bool:
         """Retourne True si l'IMF est agréée et non désactivée."""
         return self.statut_reglementaire == self.StatutReglementaire.AGREE and self.is_active
+
+    def obtenir_coordonnees_gps(self) -> dict | None:
+        """Retourne {"latitude", "longitude"} du siège, ou None si non renseigné."""
+        if not self.localisation_siege:
+            return None
+        return {"latitude": self.localisation_siege.y, "longitude": self.localisation_siege.x}

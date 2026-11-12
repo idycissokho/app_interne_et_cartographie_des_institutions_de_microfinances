@@ -13,7 +13,8 @@ from .models import ZoneGeographique
 class ZoneGeographiqueAdmin(admin.GISModelAdmin):
     """Interface d'administration pour les zones géographiques."""
 
-    list_display = ("nom", "code", "type_zone", "is_active")
+    list_display = ("nom", "code", "type_zone", "parent", "is_active")
+    raw_id_fields = ("parent",)
     list_filter = ("type_zone", "is_active")
     search_fields = ("nom", "code")
     readonly_fields = ("id", "date_creation", "date_modification")
