@@ -1,0 +1,203 @@
+{
+  "info": {
+    "name": "Cartographie IMF — DRS-SFD",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8000" },
+    { "key": "access_token", "value": "" },
+    { "key": "refresh_token", "value": "" },
+    { "key": "imf_id", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.collectionVariables.set('access_token', res.access);",
+                  "pm.collectionVariables.set('refresh_token', res.refresh);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/api/v1/auth/login/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@drs-sfd.sn\",\n  \"password\": \"AdminPass123!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.collectionVariables.set('access_token', res.access);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/api/v1/auth/token/refresh/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh\": \"{{refresh_token}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": "{{base_url}}/api/v1/auth/logout/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh\": \"{{refresh_token}}\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IMF",
+      "item": [
+        {
+          "name": "Lister les IMF",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/imf/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "imf", ""],
+              "query": [
+                { "key": "search", "value": "CMS", "disabled": true },
+                { "key": "type_imf", "value": "MUTUELLE", "disabled": true },
+                { "key": "statut_reglementaire", "value": "AGREE", "disabled": true },
+                { "key": "ordering", "value": "nom", "disabled": true },
+                { "key": "page", "value": "1", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Créer une IMF",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) pm.collectionVariables.set('imf_id', res.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": "{{base_url}}/api/v1/imf/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Crédit Mutuel du Sénégal\",\n  \"sigle\": \"CMS\",\n  \"type_imf\": \"MUTUELLE\",\n  \"statut_reglementaire\": \"AGREE\",\n  \"adresse_siege\": \"24 Avenue Léopold Sédar Senghor, Dakar\",\n  \"telephone\": \"+221 33 889 00 00\",\n  \"email\": \"contact@cms.sn\",\n  \"site_web\": \"https://www.cms.sn\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Détail d'une IMF",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/api/v1/imf/{{imf_id}}/"
+          }
+        },
+        {
+          "name": "Modifier une IMF (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": "{{base_url}}/api/v1/imf/{{imf_id}}/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"telephone\": \"+221 33 889 11 11\",\n  \"site_web\": \"https://www.cms.sn\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Modifier une IMF (PUT)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": "{{base_url}}/api/v1/imf/{{imf_id}}/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Crédit Mutuel du Sénégal\",\n  \"sigle\": \"CMS\",\n  \"type_imf\": \"MUTUELLE\",\n  \"statut_reglementaire\": \"AGREE\",\n  \"adresse_siege\": \"24 Avenue Léopold Sédar Senghor, Dakar\",\n  \"telephone\": \"+221 33 889 11 11\",\n  \"email\": \"contact@cms.sn\",\n  \"site_web\": \"https://www.cms.sn\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Supprimer une IMF (soft delete)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/api/v1/imf/{{imf_id}}/"
+          }
+        },
+        {
+          "name": "Filtrer par type COOPERATIVE",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/imf/?type_imf=COOPERATIVE",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "imf", ""],
+              "query": [{ "key": "type_imf", "value": "COOPERATIVE" }]
+            }
+          }
+        },
+        {
+          "name": "Recherche par nom/sigle",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/imf/?search=CMS",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "imf", ""],
+              "query": [{ "key": "search", "value": "CMS" }]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
