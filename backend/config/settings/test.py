@@ -12,8 +12,9 @@ ALLOWED_HOSTS = ["testserver", "localhost", "127.0.0.1"]
 CORS_ALLOWED_ORIGINS = []
 CSRF_TRUSTED_ORIGINS = []
 
-# Désactive les migrations pour accélérer les tests
-# Les tables sont créées directement depuis les modèles
+# Désactive les migrations pour les apps locales uniquement.
+# Les apps tierces (dont token_blacklist) gardent leurs migrations
+# pour que leurs tables soient créées correctement.
 MIGRATION_MODULES = {app.split(".")[-1]: None for app in LOCAL_APPS}  # noqa: F405
 
 # Hashage de mot de passe minimal pour accélérer les tests
