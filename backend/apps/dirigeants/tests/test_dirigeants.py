@@ -61,3 +61,11 @@ def test_onglet_dirigeants_fiche_imf_filtre_par_fonction(client_consultant, imf,
 
     resp = client_consultant.get(f"/api/v1/imf/{imf.pk}/mandats/?fonction_mandat=DG")
     assert [m["dirigeant_nom_complet"] for m in resp.data["results"]] == ["Moussa Ndiaye"]
+
+
+def test_onglet_dirigeants_journalise(client_consultant, imf):
+    from apps.audit.models import JournalAudit
+
+    client_consultant.get(f"/api/v1/imf/{imf.pk}/mandats/")
+    entree = JournalAudit.objects.get()
+    assert entree.action == "CONSULTATION" and entree.objet_concerne == f"imf.IMF:{imf.pk}"

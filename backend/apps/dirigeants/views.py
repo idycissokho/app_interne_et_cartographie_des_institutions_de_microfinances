@@ -134,6 +134,19 @@ class MandatsParIMFView(generics.ListAPIView):
             imf_id=self.kwargs["imf_pk"], is_active=True, dirigeant__is_active=True
         ).select_related("imf", "dirigeant")
 
+    def list(self, request, *args, **kwargs):
+        """OBJ-09 : l'onglet « Dirigeants » d'une fiche IMF est une consultation journalisée."""
+        from apps.audit.models import JournalAudit
+
+        response = super().list(request, *args, **kwargs)
+        JournalAudit.enregistrer(
+            request.user,
+            JournalAudit.Action.CONSULTATION,
+            f"imf.IMF:{self.kwargs['imf_pk']}",
+            {"libelle": "Dirigeants de l'IMF"},
+        )
+        return response
+
 
 def _region_imf():
     from apps.points_service.models import PointService

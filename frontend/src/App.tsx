@@ -9,6 +9,7 @@ import { Audit } from "./pages/Audit";
 import { CarteMacro } from "./pages/CarteMacro";
 import { CarteMicro } from "./pages/CarteMicro";
 import { Connexion } from "./pages/Connexion";
+import { Consultation } from "./pages/Consultation";
 import { Supervision } from "./pages/Supervision";
 import { TableauDeBord } from "./pages/TableauDeBord";
 
@@ -42,7 +43,7 @@ export function App() {
           <Route path="/carte/macro" element={<Protege><CarteMacro /></Protege>} />
           <Route path="/carte/micro" element={<Protege><CarteMicro /></Protege>} />
           <Route path="/supervision" element={<Protege roles={GESTION}><Supervision /></Protege>} />
-          <Route path="/consultation" element={<Protege><AVenir active="consultation" /></Protege>} />
+          <Route path="/consultation" element={<Protege><Consultation /></Protege>} />
           <Route path="/imf" element={<Protege roles={GESTION}><AVenir active="imf" /></Protege>} />
           <Route path="/imf/nouveau" element={<Protege roles={GESTION}><AVenir active="imf" /></Protege>} />
           <Route path="/imf/:id/modifier" element={<Protege roles={GESTION}><AVenir active="imf" /></Protege>} />
