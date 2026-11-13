@@ -218,3 +218,12 @@ select.di-input{cursor:pointer;padding-right:10px}
   .tb-carte { height: 240px !important; }
 }
 @media (max-width: 760px) { .cm-carte { height: 300px !important; } }
+@media (max-width: 760px) {
+  .mi-cadre { min-height: 0 !important; }
+  .mi-filtres { max-width: none !important; border-right: none !important; border-bottom: 1px solid #F1ECE0; }
+  .mi-zone { display: flex; flex-direction: column; gap: 12px; padding: 16px 12px; }
+  .mi-carte-pos { position: relative !important; inset: auto !important; height: 300px; }
+  .mi-sheet { position: relative !important; top: auto !important; right: auto !important; width: 100% !important; max-width: none !important; order: 3; }
+  .mi-legende { position: relative !important; left: auto !important; bottom: auto !important; margin-right: 0 !important; order: 2; }
+  .mi-zoom { position: absolute !important; top: 16px; bottom: auto !important; right: 16px !important; }
+}
