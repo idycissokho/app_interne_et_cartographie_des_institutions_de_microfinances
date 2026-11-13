@@ -228,3 +228,7 @@ select.di-input{cursor:pointer;padding-right:10px}
   .mi-zoom { position: absolute !important; top: 16px; bottom: auto !important; right: 16px !important; }
 }
 @media (max-width: 760px) { .su-carte { height: 260px !important; flex-basis: 100% !important; } }
+@media (max-width: 760px) {
+  .fi-barre { margin: 6px -16px 0 -16px !important; padding: 14px 16px !important; }
+  .fi-sommaire { position: static !important; max-width: none !important; flex-direction: row !important; overflow-x: auto; }
+}

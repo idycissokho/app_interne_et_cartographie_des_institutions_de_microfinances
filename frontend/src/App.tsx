@@ -9,6 +9,7 @@ import { Audit } from "./pages/Audit";
 import { CarteMacro } from "./pages/CarteMacro";
 import { CarteMicro } from "./pages/CarteMicro";
 import { Connexion } from "./pages/Connexion";
+import { FormulaireIMF } from "./pages/FormulaireIMF";
 import { Institutions } from "./pages/Institutions";
 import { Consultation } from "./pages/Consultation";
 import { Supervision } from "./pages/Supervision";
@@ -46,8 +47,8 @@ export function App() {
           <Route path="/supervision" element={<Protege roles={GESTION}><Supervision /></Protege>} />
           <Route path="/consultation" element={<Protege><Consultation /></Protege>} />
           <Route path="/imf" element={<Protege roles={GESTION}><Institutions /></Protege>} />
-          <Route path="/imf/nouveau" element={<Protege roles={GESTION}><AVenir active="imf" /></Protege>} />
-          <Route path="/imf/:id/modifier" element={<Protege roles={GESTION}><AVenir active="imf" /></Protege>} />
+          <Route path="/imf/nouveau" element={<Protege roles={GESTION}><FormulaireIMF /></Protege>} />
+          <Route path="/imf/:id/modifier" element={<Protege roles={GESTION}><FormulaireIMF /></Protege>} />
           <Route path="/points-service" element={<Protege roles={GESTION}><AVenir active="points" /></Protege>} />
           <Route path="/dirigeants" element={<Protege roles={GESTION}><AVenir active="dirigeants" /></Protege>} />
           <Route path="/donnees" element={<Protege roles={GESTION}><AVenir active="import" /></Protege>} />
