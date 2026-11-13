@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manuel Carto IMF</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<style>
+/* Manuel : une page par écran — capture annotée, puis les gestes numérotés juste en dessous. */
+:root{--bg:#FAF7F0;--paper:#FFFFFF;--line:#E7E0CF;--fg:#13213A;--muted:#5E6779;--night:#0B1424;--gold:#C9A44C;--gold-t:#8A6A1F;--gold-soft:#F6EDD3;
+--font:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0B1424;--paper:#13213A;--line:#24365A;--fg:#EEE8DA;--muted:#A6B0C3;--night:#060C17;--gold:#D4B05A;--gold-t:#E5C672;--gold-soft:#2A2B26;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0B1424;--paper:#13213A;--line:#24365A;--fg:#EEE8DA;--muted:#A6B0C3;--night:#060C17;--gold:#D4B05A;--gold-t:#E5C672;--gold-soft:#2A2B26;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);font-size:15px;line-height:1.55}
+.wrap{max-width:1120px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2{margin:0;text-wrap:balance;line-height:1.15}
+img{display:block;max-width:100%;height:auto}
+
+.cover{background:var(--night);color:#F4EFE3}
+.cover .wrap{padding-block:44px 40px;display:grid;gap:22px}
+.brand{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.brand img{height:52px;width:auto;background:#fff;border-radius:10px;padding:6px 10px}
+.brand span{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#F3D98C;font-weight:700}
+.cover h1{font-size:clamp(30px,4.4vw,46px);font-weight:800;letter-spacing:-.02em}
+.cover h1 b{color:var(--gold)}
+.cover p{margin:0;color:#C6CEDB;max-width:62ch}
+.how{display:flex;flex-wrap:wrap;gap:18px;font-size:13.5px;color:#DCE2EC}
+.how span{display:inline-flex;align-items:center;gap:8px}
+.how .dot{width:24px;height:24px;border-radius:50%;background:var(--gold);color:#0B1424;font-weight:800;display:inline-grid;place-items:center;font-size:13px;border:2px solid #fff}
+.how .box{width:26px;height:16px;border:3px solid var(--gold);border-radius:4px}
+.how .go{color:var(--gold);font-weight:800}
+
+.toc{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px}
+.toc a{display:grid;grid-template-columns:auto 1fr;gap:0 12px;text-decoration:none;color:#E9EDF3;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px 12px}
+.toc a:hover{border-color:var(--gold)}
+.toc .n{grid-row:span 2;color:var(--gold);font-weight:800;font-variant-numeric:tabular-nums}
+.toc .t{font-weight:700;font-size:14px}
+.toc .q{font-size:12px;color:#9FAABD}
+
+.block{padding-block:44px 0}
+.block h2{font-size:24px;font-weight:800;margin-bottom:6px}
+.block .sub{color:var(--muted);margin:0 0 18px}
+.flowscroll{overflow-x:auto;padding-bottom:8px}
+.flow{display:flex;align-items:center;min-width:max-content;gap:0}
+.th{margin:0;width:190px;flex:0 0 auto}
+.th img{border-radius:8px;border:1px solid var(--line);box-shadow:0 4px 14px rgba(11,20,36,.10)}
+.th figcaption{font-weight:700;font-size:13.5px;margin-top:8px;text-align:center}
+.fa{flex:0 0 130px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:0 8px 26px}
+.fa span{font-size:11.5px;font-weight:600;color:var(--gold-t);text-align:center;line-height:1.3}
+.fa i{display:block;width:100%;height:3px;background:var(--gold);position:relative;border-radius:2px}
+.fa i::after{content:"";position:absolute;right:-3px;top:-6px;border-left:12px solid var(--gold);border-top:7.5px solid transparent;border-bottom:7.5px solid transparent}
+
+.screen{padding-block:56px 0}
+.sh{display:grid;gap:6px;margin-bottom:16px}
+.num{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-t)}
+.sh h2{font-size:clamp(24px,3vw,32px);font-weight:800;letter-spacing:-.01em}
+.meta{display:flex;flex-wrap:wrap;gap:8px 22px;font-size:13.5px;color:var(--muted)}
+.meta em{font-style:normal;font-weight:700;color:var(--fg);margin-right:6px}
+.shot{margin:0;border-radius:14px;overflow:hidden;border:1px solid var(--line);box-shadow:0 10px 30px rgba(11,20,36,.12);background:var(--paper)}
+.steps{list-style:none;margin:18px 0 0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 22px}
+.steps li{display:grid;grid-template-columns:30px 1fr;gap:12px;align-items:start;padding:10px 0;border-bottom:1px solid var(--line)}
+.steps b{width:30px;height:30px;border-radius:50%;background:var(--gold);color:#0B1424;display:grid;place-items:center;font-size:14px;font-weight:800;border:2px solid var(--night)}
+.steps p{margin:3px 0 0;min-width:0}
+.go{color:var(--gold-t);font-weight:800}
+
+footer{margin-top:64px;border-top:1px solid var(--line)}
+footer .wrap{padding-block:20px 36px;font-size:12.5px;color:var(--muted);display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
+@media (max-width:720px){.steps{grid-template-columns:1fr}}
+@media print{
+  :root{--bg:#fff;--paper:#fff;--fg:#13213A;--muted:#5E6779;--line:#E7E0CF;--gold-t:#8A6A1F}
+  body{font-size:11pt}
+  .cover,.toc a{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .screen{break-before:page;padding-block:0}
+  .shot{box-shadow:none;break-inside:avoid}
+  .steps li{break-inside:avoid;padding:6px 0}
+  .block{break-before:page} .block + .block{break-before:avoid}
+  .shot{border:1px solid var(--line);border-radius:8px}
+  .shot img{max-height:158mm;width:auto;margin:0 auto}
+  .steps{gap:0 18px;margin-top:10px;font-size:9.5pt;line-height:1.4}
+  .steps li{padding:5px 0;grid-template-columns:24px 1fr;gap:9px}
+  .steps b{width:24px;height:24px;font-size:11px}
+  .sh{margin-bottom:10px} .sh h2{font-size:20pt}
+  .flowscroll{overflow:visible}
+  .flow{min-width:0;flex-wrap:wrap;row-gap:16px}
+  .th{width:118px} .fa{flex-basis:92px;padding-bottom:22px} .fa span{font-size:8pt}
+  .steps b,.how .dot{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+@page{size:A4;margin:14mm 12mm}
+</style>
+</head>
+<body>
+
+
+<header class="cover"><div class="wrap">
+  <div class="brand"><img src="images/logo-drs-sfd.png" alt="DRS-SFD"><span>Ministère des Finances et du Budget · DRS-SFD</span></div>
+  <h1>Manuel d'utilisation <b>Carto IMF</b></h1>
+  <p>Chaque écran de la plateforme, avec ce qu'il faut cliquer ou remplir.</p>
+  <div class="how">
+    <span><span class="box"></span>zone à utiliser</span>
+    <span><span class="dot">1</span>numéro expliqué sous l'image</span>
+    <span><span class="go">→</span>page qui s'ouvre après le clic</span>
+  </div>
+  <nav class="toc" aria-label="Sommaire"><a href="#e1"><span class="n">01</span><span class="t">Se connecter</span><span class="q">Tous les profils</span></a><a href="#e2"><span class="n">02</span><span class="t">Tableau de bord</span><span class="q">Tous les profils</span></a><a href="#e3"><span class="n">03</span><span class="t">Carte macro</span><span class="q">Tous les profils</span></a><a href="#e4"><span class="n">04</span><span class="t">Carte micro</span><span class="q">Tous les profils</span></a><a href="#e5"><span class="n">05</span><span class="t">Espace consultation</span><span class="q">Consultant</span></a><a href="#e6"><span class="n">06</span><span class="t">Espace supervision</span><span class="q">Superviseur et Administrateur</span></a><a href="#e7"><span class="n">07</span><span class="t">Institutions (IMF)</span><span class="q">Superviseur et Administrateur</span></a><a href="#e8"><span class="n">08</span><span class="t">Créer ou modifier une IMF</span><span class="q">Superviseur et Administrateur</span></a><a href="#e9"><span class="n">09</span><span class="t">Ajouter un point de service</span><span class="q">Superviseur et Administrateur</span></a><a href="#e10"><span class="n">10</span><span class="t">Enregistrer un dirigeant et son mandat</span><span class="q">Superviseur et Administrateur</span></a><a href="#e11"><span class="n">11</span><span class="t">Importer et exporter</span><span class="q">Superviseur et Administrateur</span></a></nav>
+</div></header>
+
+<main class="wrap">
+  <section class="block">
+    <h2>Parcours rapide : consulter une IMF</h2>
+    <p class="sub">Tous les profils.</p>
+    <div class="flowscroll"><div class="flow"><figure class="th"><img src="images/01-connexion.jpg" alt="Se connecter"><figcaption>Se connecter</figcaption></figure><div class="fa"><span>« Se connecter »</span><i></i></div><figure class="th"><img src="images/02-tableau-de-bord.jpg" alt="Tableau de bord"><figcaption>Tableau de bord</figcaption></figure><div class="fa"><span>« Ouvrir la carte macro »</span><i></i></div><figure class="th"><img src="images/03-carte-macro.jpg" alt="Carte macro"><figcaption>Carte macro</figcaption></figure><div class="fa"><span>clic sur une région ▸ « Voir les points »</span><i></i></div><figure class="th"><img src="images/04-carte-micro.jpg" alt="Carte micro"><figcaption>Carte micro</figcaption></figure><div class="fa"><span>clic sur un point ▸ « Ouvrir la fiche IMF »</span><i></i></div><figure class="th"><img src="images/06-espace-consultation.jpg" alt="Fiche IMF"><figcaption>Fiche IMF</figcaption></figure></div></div>
+  </section>
+  <section class="block" style="padding-top:28px">
+    <h2>Parcours rapide : enregistrer une nouvelle IMF</h2>
+    <p class="sub">Superviseur et Administrateur.</p>
+    <div class="flowscroll"><div class="flow"><figure class="th"><img src="images/07-institutions.jpg" alt="Liste des IMF"><figcaption>Liste des IMF</figcaption></figure><div class="fa"><span>« Nouvelle IMF »</span><i></i></div><figure class="th"><img src="images/08-formulaire-imf.jpg" alt="Fiche IMF"><figcaption>Fiche IMF</figcaption></figure><div class="fa"><span>« Enregistrer et ajouter un point »</span><i></i></div><figure class="th"><img src="images/09-points-de-service.jpg" alt="Points de service"><figcaption>Points de service</figcaption></figure><div class="fa"><span>menu ▸ Dirigeants ▸ « Nouveau mandat »</span><i></i></div><figure class="th"><img src="images/10-dirigeants.jpg" alt="Dirigeants"><figcaption>Dirigeants</figcaption></figure></div></div>
+  </section>
+  
+<section class="screen" id="e1">
+  <header class="sh">
+    <span class="num">Écran 01</span>
+    <h2>Se connecter</h2>
+    <div class="meta"><span><em>Qui</em>Tous les profils</span><span><em>Pour y aller</em>C&#x27;est la première page qui s&#x27;ouvre.</span></div>
+  </header>
+  <figure class="shot"><img src="images/01-connexion.jpg" alt="Écran Se connecter annoté" loading="lazy"></figure>
+  <ol class="steps"><li><b>1</b><p>Saisis ton email professionnel.</p></li><li><b>2</b><p>Saisis ton mot de passe.</p></li><li><b>3</b><p>Mot de passe oublié ? Clique ici pour en recevoir un nouveau.</p></li><li><b>4</b><p>Coche cette case pour rester connecté sur ton poste.</p></li><li><b>5</b><p>Clique sur « Se connecter » <span class="go">→</span> tu arrives sur le Tableau de bord.</p></li></ol>
+</section>
+<section class="screen" id="e2">
+  <header class="sh">
+    <span class="num">Écran 02</span>
+    <h2>Tableau de bord</h2>
+    <div class="meta"><span><em>Qui</em>Tous les profils</span><span><em>Pour y aller</em>Menu ▸ Tableau de bord. S&#x27;ouvre aussi juste après la connexion.</span></div>
+  </header>
+  <figure class="shot"><img src="images/02-tableau-de-bord.jpg" alt="Écran Tableau de bord annoté" loading="lazy"></figure>
+  <ol class="steps"><li><b>1</b><p>Le menu : clique sur une ligne pour changer de page. Il change selon ton rôle.</p></li><li><b>2</b><p>Tape le nom d&#x27;une IMF, d&#x27;un dirigeant ou d&#x27;une commune pour la trouver.</p></li><li><b>3</b><p>Exporte les chiffres affichés.</p></li><li><b>4</b><p>Nouvelle IMF <span class="go">→</span> ouvre le formulaire de création.</p></li><li><b>5</b><p>Tes notifications : imports terminés, mandats qui expirent.</p></li><li><b>6</b><p>Les 4 chiffres clés du secteur.</p></li><li><b>7</b><p>Ouvrir la carte macro <span class="go">→</span> page Carte macro.</p></li><li><b>8</b><p>Voir tous les mandats <span class="go">→</span> page Dirigeants et mandats.</p></li><li><b>9</b><p>Journal d&#x27;audit complet <span class="go">→</span> historique de toutes les actions.</p></li><li><b>10</b><p>Ton nom et ton rôle.</p></li></ol>
+</section>
+<section class="screen" id="e3">
+  <header class="sh">
+    <span class="num">Écran 03</span>
+    <h2>Carte macro</h2>
+    <div class="meta"><span><em>Qui</em>Tous les profils</span><span><em>Pour y aller</em>Menu ▸ Carte macro, ou « Ouvrir la carte macro » sur le Tableau de bord.</span></div>
+  </header>
+  <figure class="shot"><img src="images/03-carte-macro.jpg" alt="Écran Carte macro annoté" loading="lazy"></figure>
+  <ol class="steps"><li><b>1</b><p>Choisis le niveau : Régions, Départements ou Communes.</p></li><li><b>2</b><p>Exporte les chiffres de la carte.</p></li><li><b>3</b><p>Choisis ce que la couleur montre : points de service, IMF, membres ou encours.</p></li><li><b>4</b><p>Clique sur une région <span class="go">→</span> sa fiche s&#x27;affiche à droite.</p></li><li><b>5</b><p>La fiche de la région sélectionnée.</p></li><li><b>6</b><p>Voir les points <span class="go">→</span> Carte micro, filtrée sur cette région.</p></li><li><b>7</b><p>Liste des IMF <span class="go">→</span> institutions de cette région.</p></li><li><b>8</b><p>Clique une ligne du classement : même effet qu&#x27;un clic sur la carte.</p></li></ol>
+</section>
+<section class="screen" id="e4">
+  <header class="sh">
+    <span class="num">Écran 04</span>
+    <h2>Carte micro</h2>
+    <div class="meta"><span><em>Qui</em>Tous les profils</span><span><em>Pour y aller</em>Menu ▸ Carte micro, ou « Voir les points » sur la Carte macro.</span></div>
+  </header>
+  <figure class="shot"><img src="images/04-carte-micro.jpg" alt="Écran Carte micro annoté" loading="lazy"></figure>
+  <ol class="steps"><li><b>1</b><p>Filtre par institution, région, type, statut ou bailleur. La carte se met à jour.</p></li><li><b>2</b><p>Clique sur un point <span class="go">→</span> sa fiche s&#x27;ouvre.</p></li><li><b>3</b><p>La fiche du point : département, commune, date d&#x27;ouverture, contacts.</p></li><li><b>4</b><p>Ouvrir la fiche IMF <span class="go">→</span> fiche complète de l&#x27;institution.</p></li><li><b>5</b><p>Itinéraire jusqu&#x27;à ce point.</p></li><li><b>6</b><p>Efface tous les filtres.</p></li><li><b>7</b><p>Zoom avant et arrière (ou molette de la souris).</p></li><li><b>8</b><p>La légende : la couleur indique le type de point, le rond vide un point fermé.</p></li></ol>
+</section>
+<section class="screen" id="e5">
+  <header class="sh">
+    <span class="num">Écran 05</span>
+    <h2>Espace consultation</h2>
+    <div class="meta"><span><em>Qui</em>Consultant</span><span><em>Pour y aller</em>Menu ▸ Espace consultation.</span></div>
+  </header>
+  <figure class="shot"><img src="images/06-espace-consultation.jpg" alt="Écran Espace consultation annoté" loading="lazy"></figure>
+  <ol class="steps"><li><b>1</b><p>Cherche une IMF par nom, sigle ou région.</p></li><li><b>2</b><p>Filtre par type d&#x27;IMF.</p></li><li><b>3</b><p>Clique sur une IMF <span class="go">→</span> sa fiche s&#x27;affiche à droite.</p></li><li><b>4</b><p>Les onglets de la fiche : aperçu, points de service, dirigeants, bailleurs.</p></li><li><b>5</b><p>Télécharge la fiche de l&#x27;IMF en PDF.</p></li><li><b>6</b><p>Le consultant lit seulement : il ne peut rien modifier.</p></li></ol>
+</section>
+<section class="screen" id="e6">
+  <header class="sh">
+    <span class="num">Écran 06</span>
+    <h2>Espace supervision</h2>
+    <div class="meta"><span><em>Qui</em>Superviseur et Administrateur</span><span><em>Pour y aller</em>Menu ▸ Espace supervision. Le chiffre à côté indique les alertes à traiter.</span></div>
+  </header>
+  <figure class="shot"><img src="images/05-espace-supervision.jpg" alt="Écran Espace supervision annoté" loading="lazy"></figure>
+  <ol class="steps"><li><b>1</b><p>Les 4 alertes du jour. Clique le lien en bas de chaque carte pour les traiter.</p></li><li><b>2</b><p>Préparer une mission de contrôle.</p></li><li><b>3</b><p>Télécharge la fiche mission en PDF.</p></li><li><b>4</b><p>Les régions les moins couvertes. Clique une région pour la voir sur la carte.</p></li><li><b>5</b><p>Missions à venir, en cours ou terminées.</p></li><li><b>6</b><p>Valide ou rejette chaque modification envoyée par les équipes.</p></li><li><b>7</b><p>Ce qu&#x27;il reste à compléter dans les référentiels.</p></li></ol>
+</section>
+<section class="screen" id="e7">
+  <header class="sh">
+    <span class="num">Écran 07</span>
+    <h2>Institutions (IMF)</h2>
+    <div class="meta"><span><em>Qui</em>Superviseur et Administrateur</span><span><em>Pour y aller</em>Menu ▸ Institutions (IMF).</span></div>
+  </header>
+  <figure class="shot"><img src="images/07-institutions.jpg" alt="Écran Institutions (IMF) annoté" loading="lazy"></figure>
+  <ol class="steps"><li><b>1</b><p>Filtre par statut : toutes, agréées, en cours, radiées.</p></li><li><b>2</b><p>Cherche une IMF par nom, sigle ou adresse.</p></li><li><b>3</b><p>Filtre par type d&#x27;IMF.</p></li><li><b>4</b><p>Œil : voir la fiche. Crayon : modifier. Boîte : archiver.</p></li><li><b>5</b><p>Nouvelle IMF <span class="go">→</span> formulaire « Nouvelle institution ».</p></li><li><b>6</b><p>Importer <span class="go">→</span> page Import et export. Exporter CSV <span class="go">→</span> télécharge la liste.</p></li><li><b>7</b><p>Coche plusieurs IMF pour agir sur toutes en même temps.</p></li><li><b>8</b><p>Passe aux pages suivantes.</p></li></ol>
+</section>
+<section class="screen" id="e8">
+  <header class="sh">
+    <span class="num">Écran 08</span>
+    <h2>Créer ou modifier une IMF</h2>
+    <div class="meta"><span><em>Qui</em>Superviseur et Administrateur</span><span><em>Pour y aller</em>Bouton « Nouvelle IMF », ou crayon sur une ligne de la liste des institutions.</span></div>
+  </header>
+  <figure class="shot"><img src="images/08-formulaire-imf.jpg" alt="Écran Créer ou modifier une IMF annoté" loading="lazy"></figure>
+  <ol class="steps"><li><b>1</b><p>Le sommaire : une coche verte indique une partie remplie. Clique pour y aller.</p></li><li><b>2</b><p>Saisis le nom officiel et le sigle. L&#x27;astérisque * signale un champ obligatoire.</p></li><li><b>3</b><p>Choisis le type d&#x27;IMF.</p></li><li><b>4</b><p>Choisis le statut réglementaire.</p></li><li><b>5</b><p>Saisis l&#x27;adresse et les coordonnées GPS. La région est trouvée automatiquement.</p></li><li><b>6</b><p>Ou clique ici pour utiliser ta position actuelle.</p></li><li><b>7</b><p>Un champ incorrect devient rouge avec la raison. Corrige-le avant d&#x27;enregistrer.</p></li><li><b>8</b><p>Coche les bailleurs de l&#x27;IMF (facultatif).</p></li><li><b>9</b><p>Enregistre, puis ouvre directement le formulaire « Nouveau point de service ».</p></li><li><b>10</b><p>Enregistre l&#x27;IMF <span class="go">→</span> retour à la liste des institutions.</p></li><li><b>11</b><p>La part de la fiche déjà remplie.</p></li></ol>
+</section>
+<section class="screen" id="e9">
+  <header class="sh">
+    <span class="num">Écran 09</span>
+    <h2>Ajouter un point de service</h2>
+    <div class="meta"><span><em>Qui</em>Superviseur et Administrateur</span><span><em>Pour y aller</em>Menu ▸ Points de service, puis bouton « Nouveau point ». Le formulaire s&#x27;ouvre à droite.</span></div>
+  </header>
+  <figure class="shot"><img src="images/09-points-de-service.jpg" alt="Écran Ajouter un point de service annoté" loading="lazy"></figure>
+  <ol class="steps"><li><b>1</b><p>Choisis l&#x27;IMF à laquelle appartient le point.</p></li><li><b>2</b><p>Donne un nom au point.</p></li><li><b>3</b><p>Choisis le type : siège, agence, guichet ou bureau.</p></li><li><b>4</b><p>Statut du point : ouvert, suspendu ou fermé.</p></li><li><b>5</b><p>Statut réglementaire du point.</p></li><li><b>6</b><p>Saisis la latitude et la longitude.</p></li><li><b>7</b><p>Région, département et commune se remplissent seuls. Tu peux les corriger.</p></li><li><b>8</b><p>Enregistre le point <span class="go">→</span> il apparaît sur la Carte micro.</p></li><li><b>9</b><p>Ferme le panneau sans enregistrer.</p></li></ol>
+</section>
+<section class="screen" id="e10">
+  <header class="sh">
+    <span class="num">Écran 10</span>
+    <h2>Enregistrer un dirigeant et son mandat</h2>
+    <div class="meta"><span><em>Qui</em>Superviseur et Administrateur</span><span><em>Pour y aller</em>Menu ▸ Dirigeants &amp; mandats, puis bouton « Nouveau mandat » en haut à droite.</span></div>
+  </header>
+  <figure class="shot"><img src="images/10-dirigeants.jpg" alt="Écran Enregistrer un dirigeant et son mandat annoté" loading="lazy"></figure>
+  <ol class="steps"><li><b>1</b><p>Deux étapes : d&#x27;abord le dirigeant, ensuite son mandat.</p></li><li><b>2</b><p>Choisis une personne déjà enregistrée, ou crée une nouvelle personne.</p></li><li><b>3</b><p>Saisis le prénom et le nom (obligatoires).</p></li><li><b>4</b><p>Ajoute le téléphone et l&#x27;email.</p></li><li><b>5</b><p>Continuer <span class="go">→</span> étape 2 : fonction (PCA, DG…), dates du mandat et justificatif.</p></li><li><b>6</b><p>Annule sans rien enregistrer.</p></li></ol>
+</section>
+<section class="screen" id="e11">
+  <header class="sh">
+    <span class="num">Écran 11</span>
+    <h2>Importer et exporter</h2>
+    <div class="meta"><span><em>Qui</em>Superviseur et Administrateur</span><span><em>Pour y aller</em>Menu ▸ Import / Export, ou bouton « Importer » sur la liste des institutions.</span></div>
+  </header>
+  <figure class="shot"><img src="images/11-import-export.jpg" alt="Écran Importer et exporter annoté" loading="lazy"></figure>
+  <ol class="steps"><li><b>1</b><p>Choisis Importer ou Exporter.</p></li><li><b>2</b><p>Les 3 étapes : choisir le type et déposer le fichier (CSV ou Excel), traitement, rapport.</p></li><li><b>3</b><p>Le bilan : taux de succès, lignes lues, importées et en erreur.</p></li><li><b>4</b><p>Chaque erreur indique la ligne, la colonne, la valeur et le problème. Corrige ton fichier.</p></li><li><b>5</b><p>Télécharge la liste des erreurs en CSV.</p></li><li><b>6</b><p>Nouvel import <span class="go">→</span> recommence avec le fichier corrigé.</p></li><li><b>7</b><p>Historique des imports : terminé, échec ou en attente.</p></li></ol>
+</section>
+</main>
+<footer><div class="wrap"><span>Carto IMF · DRS-SFD</span><span>Manuel d'utilisation · 13 novembre 2026 · images de la maquette, données fictives</span></div></footer>
+
+</body>
+</html>
