@@ -235,3 +235,4 @@ select.di-input{cursor:pointer;padding-right:10px}
 /* Champs du tiroir : fi-input porte le style commun, ps-input ajuste la hauteur (46 px) comme la maquette. */
 .fi-input.ps-input { height: 46px; font-size: 14px; }
 @media (max-width: 560px) { .ps-grille2, .ps-grille3 { grid-template-columns: 1fr !important; } }
+@media (max-width: 560px) { .ps-plein { grid-column: auto !important; } }

@@ -150,3 +150,68 @@ export function Drawer({ surTitre, titre, onClose, children, pied }: { surTitre:
 
 export const btnSecondaire: CSSProperties = { height: 48, padding: "0 18px", borderRadius: 14, border: "1px solid #ECE5D5", background: "#FFFFFF", font: "inherit", fontSize: 14, fontWeight: 700, color: "#0B1424", cursor: "pointer" };
 export const btnPrimaire: CSSProperties = { height: 48, padding: "0 22px", borderRadius: 14, border: "none", background: "#C9A44C", font: "inherit", fontSize: 14, fontWeight: 800, color: "#0B1424", cursor: "pointer", boxShadow: "0 10px 24px rgba(201,164,76,.35)" };
+
+/** Fenêtre modale (écran 10) : voile flouté, carte centrée de 680 px, pied d'actions. */
+export function Modal({ titre, sousTitre, onClose, children, pied, entete }: { titre: string; sousTitre: string; onClose: () => void; children: ReactNode; pied: ReactNode; entete?: ReactNode }) {
+  return (
+    <>
+      <div className="di-fade" onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(11,20,36,.42)", backdropFilter: "blur(3px)", zIndex: 40 }} />
+      <div style={{ position: "fixed", inset: 0, zIndex: 41, display: "flex", alignItems: "center", justifyContent: "center", padding: 24, boxSizing: "border-box", pointerEvents: "none" }}>
+        <div className="di-modal" role="dialog" aria-modal="true" aria-labelledby="modal-titre" style={{ pointerEvents: "auto", width: 680, maxWidth: "100%", maxHeight: "100%", overflow: "auto", borderRadius: 26, background: "#FFFFFF", boxShadow: "0 40px 90px rgba(11,20,36,.35)" }}>
+          <div style={{ padding: "22px 26px 18px 26px", display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start" }}>
+            <div><h2 id="modal-titre" style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: "-0.02em" }}>{titre}</h2><p style={{ margin: "4px 0 0 0", fontSize: 13, color: "#6B7280" }}>{sousTitre}</p></div>
+            <button type="button" aria-label="Fermer" onClick={onClose} style={{ width: 40, height: 40, flex: "none", borderRadius: 12, border: "1px solid #ECE5D5", background: "#FFFFFF", color: "#0B1424", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg></button>
+          </div>
+          {entete}
+          {children}
+          <div style={{ padding: "16px 26px", borderTop: "1px solid #F1ECE0", display: "flex", justifyContent: "space-between", gap: 10, background: "#FDFBF6", borderRadius: "0 0 26px 26px" }}>{pied}</div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+/** Étapes numérotées avec barres de progression (écrans 10 et 11). */
+export function Etapes({ etapes, courante }: { etapes: string[]; courante: number }) {
+  return (
+    <ol style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", gap: 10 }}>
+      {etapes.map((l, i) => {
+        const n = i + 1, done = courante > n, cur = courante === n;
+        return (
+          <li key={l} style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8, minWidth: 0 }} aria-current={cur ? "step" : undefined}>
+            <div style={{ height: 4, borderRadius: 99, background: done || cur ? "#C9A44C" : "#ECE5D5" }} />
+            <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 700, color: cur || done ? "#0B1424" : "#9AA3B2" }}>
+              <span style={{ width: 22, height: 22, flex: "none", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, ...(done ? { background: "#15803D", color: "#FFFFFF" } : cur ? { background: "#0B1424", color: "#F3D98C" } : { background: "#F1ECE0", color: "#6B7280" }) }}>{done ? "✓" : n}</span>{l}
+            </div>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+const tailleFichier = (o: number) => (o >= 1048576 ? `${(o / 1048576).toFixed(1).replace(".", ",")} Mo` : `${Math.max(1, Math.round(o / 1024))} Ko`);
+const COULEUR_EXT: Record<string, string> = { PDF: "#B91C1C", XLSX: "#15803D", CSV: "#1F4E79", JPG: "#8A6A1F", JPEG: "#8A6A1F", PNG: "#8A6A1F" };
+
+/** Zone de dépôt de fichier (glisser-déposer ou parcourir) + fichier sélectionné. */
+export function FileDrop({ id, accept, titre, formats, fichier, onFichier, detail }: { id: string; accept: string; titre: string; formats: string; fichier: File | null; onFichier: (f: File | null) => void; detail?: string }) {
+  const ext = fichier?.name.split(".").pop()?.toUpperCase() ?? "";
+  return (
+    <>
+      <label className="di-drop" htmlFor={id} onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); onFichier(e.dataTransfer.files[0] ?? null); }}
+        style={{ position: "relative", display: "flex", alignItems: "center", gap: 14, padding: 18, borderRadius: 16, border: "1.5px dashed #D3C9B2", background: "#FDFBF6", cursor: "pointer", transition: "border-color .15s ease, background .15s ease" }}>
+        <span style={{ width: 44, height: 44, flex: "none", borderRadius: 14, background: "#0B1424", color: "#F3D98C", display: "flex", alignItems: "center", justifyContent: "center" }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5M4 21h16" /></svg></span>
+        <span style={{ flex: 1 }}><b style={{ display: "block", fontSize: 14 }}>{titre}</b><span style={{ fontSize: 12, color: "#6B7280" }}>{formats} · ou <span style={{ color: "#8A6A1F", fontWeight: 700 }}>parcourir vos fichiers</span></span></span>
+        <input id={id} type="file" accept={accept} onChange={(e) => onFichier(e.target.files?.[0] ?? null)} style={{ position: "absolute", width: 1, height: 1, opacity: 0 }} />
+      </label>
+      {fichier && (
+        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 12, border: "1px solid #ECE5D5" }}>
+          <span style={{ fontSize: 11, fontWeight: 800, color: "#FFFFFF", background: COULEUR_EXT[ext] ?? "#4A5568", padding: "4px 6px", borderRadius: 6 }}>{ext}</span>
+          <span style={{ flex: 1, minWidth: 0, fontSize: 13, fontWeight: 600, overflowWrap: "anywhere" }}>{fichier.name} <span style={{ color: "#6B7280", fontWeight: 500 }}>· {tailleFichier(fichier.size)}{detail ? ` · ${detail}` : ""}</span></span>
+          <span style={{ fontSize: 12, fontWeight: 800, color: "#15803D" }}>✓ Prêt</span>
+          <button type="button" aria-label="Retirer le fichier" onClick={() => onFichier(null)} style={{ border: "none", background: "transparent", cursor: "pointer", color: "#6B7280", fontSize: 16 }}>×</button>
+        </div>
+      )}
+    </>
+  );
+}

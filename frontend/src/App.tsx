@@ -9,6 +9,7 @@ import { Audit } from "./pages/Audit";
 import { CarteMacro } from "./pages/CarteMacro";
 import { CarteMicro } from "./pages/CarteMicro";
 import { Connexion } from "./pages/Connexion";
+import { Dirigeants } from "./pages/Dirigeants";
 import { FormulaireIMF } from "./pages/FormulaireIMF";
 import { Institutions } from "./pages/Institutions";
 import { PointsService } from "./pages/PointsService";
@@ -51,7 +52,7 @@ export function App() {
           <Route path="/imf/nouveau" element={<Protege roles={GESTION}><FormulaireIMF /></Protege>} />
           <Route path="/imf/:id/modifier" element={<Protege roles={GESTION}><FormulaireIMF /></Protege>} />
           <Route path="/points-service" element={<Protege roles={GESTION}><PointsService /></Protege>} />
-          <Route path="/dirigeants" element={<Protege roles={GESTION}><AVenir active="dirigeants" /></Protege>} />
+          <Route path="/dirigeants" element={<Protege roles={GESTION}><Dirigeants /></Protege>} />
           <Route path="/donnees" element={<Protege roles={GESTION}><AVenir active="import" /></Protege>} />
           <Route path="/audit" element={<Protege roles={["ADMIN"]}><AppLayout active="audit"><main style={{ flex: "999 1 640px", minWidth: 0, padding: "28px 32px 48px 32px", boxSizing: "border-box" }}><Audit /></main></AppLayout></Protege>} />
           <Route path="*" element={<Navigate to="/" replace />} />
