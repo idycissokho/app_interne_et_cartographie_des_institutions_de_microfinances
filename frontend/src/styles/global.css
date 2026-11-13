@@ -236,3 +236,10 @@ select.di-input{cursor:pointer;padding-right:10px}
 .fi-input.ps-input { height: 46px; font-size: 14px; }
 @media (max-width: 560px) { .ps-grille2, .ps-grille3 { grid-template-columns: 1fr !important; } }
 @media (max-width: 560px) { .ps-plein { grid-column: auto !important; } }
+@media (max-width: 760px) {
+  .fi-sommaire a { white-space: nowrap; }
+  .fi-barre > span { display: none; }
+  .fi-barre > div { width: 100%; }
+  .fi-barre > div > * { flex: 1 1 auto; justify-content: center; height: 42px !important; padding: 0 12px !important; font-size: 13px !important; }
+}
+@media (max-width: 600px) { .fi-grille-id > * { grid-column: auto !important; } }

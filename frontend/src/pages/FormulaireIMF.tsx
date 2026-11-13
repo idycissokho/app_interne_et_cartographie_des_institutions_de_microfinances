@@ -113,7 +113,7 @@ export function FormulaireIMF() {
           <form onSubmit={(e) => { e.preventDefault(); enregistrer(false); }} style={{ flex: "999 1 560px", minWidth: 0, display: "flex", flexDirection: "column", gap: 18 }}>
             <section id="identite" className="fi-up d1" style={{ ...carte, gap: 20 }}>
               <EnteteSection n={1} titre="Identité" sousTitre="Comment l'institution est désignée officiellement." />
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(240px, 100%), 1fr))", gap: 16 }}>
+              <div className="fi-grille-id" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(240px, 100%), 1fr))", gap: 16 }}>
                 <TextField id="fi-nom" label="Dénomination sociale" requis value={f.nom} onChange={upd("nom")} placeholder="Ex. Mutuelle d'épargne et de crédit de …" style={{ gridColumn: "span 2" }}
                   erreur={err.nom ? "La dénomination sociale est obligatoire." : erreursApi.nom} />
                 <TextField id="fi-sigle" label="Sigle" value={f.sigle} onChange={upd("sigle")} placeholder="Ex. MEC-XX" maxLength={50} aide="50 caractères maximum. Affiché sur la carte et dans les listes." erreur={erreursApi.sigle} />
