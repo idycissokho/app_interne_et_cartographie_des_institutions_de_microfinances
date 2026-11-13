@@ -6,6 +6,7 @@ import { AuthProvider, useAuth } from "./auth/AuthContext";
 import { AppLayout } from "./components/layout/AppLayout";
 import type { CleMenu } from "./components/layout/Sidebar";
 import { Audit } from "./pages/Audit";
+import { CarteMacro } from "./pages/CarteMacro";
 import { Connexion } from "./pages/Connexion";
 import { TableauDeBord } from "./pages/TableauDeBord";
 
@@ -36,7 +37,7 @@ export function App() {
         <Routes>
           <Route path="/connexion" element={<Connexion />} />
           <Route path="/" element={<Protege><TableauDeBord /></Protege>} />
-          <Route path="/carte/macro" element={<Protege><AVenir active="macro" /></Protege>} />
+          <Route path="/carte/macro" element={<Protege><CarteMacro /></Protege>} />
           <Route path="/carte/micro" element={<Protege><AVenir active="micro" /></Protege>} />
           <Route path="/supervision" element={<Protege roles={GESTION}><AVenir active="supervision" /></Protege>} />
           <Route path="/consultation" element={<Protege><AVenir active="consultation" /></Protege>} />

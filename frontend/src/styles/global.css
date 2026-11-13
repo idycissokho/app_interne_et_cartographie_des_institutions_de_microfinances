@@ -217,3 +217,4 @@ select.di-input{cursor:pointer;padding-right:10px}
   .app-main { padding: 20px 16px 32px 16px !important; }
   .tb-carte { height: 240px !important; }
 }
+@media (max-width: 760px) { .cm-carte { height: 300px !important; } }
