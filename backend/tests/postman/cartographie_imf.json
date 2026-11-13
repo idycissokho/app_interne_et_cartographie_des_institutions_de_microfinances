@@ -4,14 +4,54 @@
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "base_url", "value": "http://localhost:8000" },
-    { "key": "access_token", "value": "" },
-    { "key": "refresh_token", "value": "" },
-    { "key": "imf_id", "value": "" }
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000"
+    },
+    {
+      "key": "access_token",
+      "value": ""
+    },
+    {
+      "key": "refresh_token",
+      "value": ""
+    },
+    {
+      "key": "imf_id",
+      "value": ""
+    },
+    {
+      "key": "ps_id",
+      "value": ""
+    },
+    {
+      "key": "dirigeant_id",
+      "value": ""
+    },
+    {
+      "key": "mandat_id",
+      "value": ""
+    },
+    {
+      "key": "zone_id",
+      "value": ""
+    },
+    {
+      "key": "import_id",
+      "value": ""
+    },
+    {
+      "key": "audit_id",
+      "value": ""
+    },
+    {
+      "key": "bailleur_id",
+      "value": ""
+    }
   ],
   "item": [
     {
-      "name": "Auth",
+      "name": "🔐 Auth",
       "item": [
         {
           "name": "Login",
@@ -29,7 +69,12 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": "{{base_url}}/api/v1/auth/login/",
             "body": {
               "mode": "raw",
@@ -45,14 +90,20 @@
               "script": {
                 "exec": [
                   "const res = pm.response.json();",
-                  "pm.collectionVariables.set('access_token', res.access);"
+                  "pm.collectionVariables.set('access_token', res.access);",
+                  "if (res.refresh) pm.collectionVariables.set('refresh_token', res.refresh);"
                 ]
               }
             }
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": "{{base_url}}/api/v1/auth/token/refresh/",
             "body": {
               "mode": "raw",
@@ -61,40 +112,91 @@
           }
         },
         {
-          "name": "Logout",
+          "name": "Profil (GET)",
           "request": {
-            "method": "POST",
+            "method": "GET",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
-            "url": "{{base_url}}/api/v1/auth/logout/",
+            "url": "{{base_url}}/api/v1/auth/profil/"
+          }
+        },
+        {
+          "name": "Profil (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/auth/profil/",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"refresh\": \"{{refresh_token}}\"\n}"
+              "raw": "{\n  \"nom\": \"Diallo\",\n  \"prenom\": \"Amadou\"\n}"
             }
           }
         }
       ]
     },
     {
-      "name": "IMF",
+      "name": "🏦 IMF",
       "item": [
         {
           "name": "Lister les IMF",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
             "url": {
               "raw": "{{base_url}}/api/v1/imf/",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "imf", ""],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "imf",
+                ""
+              ],
               "query": [
-                { "key": "search", "value": "CMS", "disabled": true },
-                { "key": "type_imf", "value": "MUTUELLE", "disabled": true },
-                { "key": "statut_reglementaire", "value": "AGREE", "disabled": true },
-                { "key": "ordering", "value": "nom", "disabled": true },
-                { "key": "page", "value": "1", "disabled": true }
+                {
+                  "key": "search",
+                  "value": "CMS",
+                  "disabled": true
+                },
+                {
+                  "key": "type_imf",
+                  "value": "MUTUELLE",
+                  "disabled": true
+                },
+                {
+                  "key": "statut_reglementaire",
+                  "value": "AGREE",
+                  "disabled": true
+                },
+                {
+                  "key": "ordering",
+                  "value": "nom",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": true
+                }
               ]
             }
           }
@@ -115,8 +217,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "url": "{{base_url}}/api/v1/imf/",
             "body": {
@@ -129,7 +237,12 @@
           "name": "Détail d'une IMF",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
             "url": "{{base_url}}/api/v1/imf/{{imf_id}}/"
           }
         },
@@ -138,13 +251,19 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "url": "{{base_url}}/api/v1/imf/{{imf_id}}/",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"telephone\": \"+221 33 889 11 11\",\n  \"site_web\": \"https://www.cms.sn\"\n}"
+              "raw": "{\n  \"telephone\": \"+221 33 889 11 11\"\n}"
             }
           }
         },
@@ -153,8 +272,14 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "url": "{{base_url}}/api/v1/imf/{{imf_id}}/",
             "body": {
@@ -164,40 +289,1061 @@
           }
         },
         {
-          "name": "Supprimer une IMF (soft delete)",
+          "name": "Créer un bailleur",
           "request": {
-            "method": "DELETE",
-            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
-            "url": "{{base_url}}/api/v1/imf/{{imf_id}}/"
-          }
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/imf/bailleurs/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "imf",
+                "bailleurs",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"FONGIP {{$timestamp}}\",\n  \"sigle\": \"FONGIP\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) pm.collectionVariables.set('bailleur_id', res.id);"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "Filtrer par type COOPERATIVE",
+          "name": "Lister les bailleurs",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/api/v1/imf/?type_imf=COOPERATIVE",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "imf", ""],
-              "query": [{ "key": "type_imf", "value": "COOPERATIVE" }]
+              "raw": "{{base_url}}/api/v1/imf/bailleurs/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "imf",
+                "bailleurs",
+                ""
+              ]
             }
           }
         },
         {
-          "name": "Recherche par nom/sigle",
+          "name": "Associer un bailleur à l'IMF",
           "request": {
-            "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/api/v1/imf/?search=CMS",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "imf", ""],
-              "query": [{ "key": "search", "value": "CMS" }]
+              "raw": "{{base_url}}/api/v1/imf/{{imf_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "imf",
+                "{{imf_id}}",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bailleurs\": [\n    \"{{bailleur_id}}\"\n  ]\n}"
             }
           }
         }
       ]
+    },
+    {
+      "name": "📍 Points de Service",
+      "item": [
+        {
+          "name": "Lister les points de service",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/points-service/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "points-service",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "imf",
+                  "value": "{{imf_id}}",
+                  "disabled": true
+                },
+                {
+                  "key": "type_point",
+                  "value": "AGENCE",
+                  "disabled": true
+                },
+                {
+                  "key": "statut_point",
+                  "value": "OUVERT",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "Dakar",
+                  "disabled": true
+                },
+                {
+                  "key": "ordering",
+                  "value": "nom",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Créer un point de service",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) pm.collectionVariables.set('ps_id', res.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/points-service/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"imf\": \"{{imf_id}}\",\n  \"nom\": \"Agence Plateau\",\n  \"type_point\": \"AGENCE\",\n  \"statut_point\": \"OUVERT\",\n  \"statut_reglementaire\": \"AGREE\",\n  \"adresse\": \"12 Rue Carnot, Plateau, Dakar\",\n  \"telephone\": \"+221 33 821 00 00\",\n  \"email\": \"plateau@cms.sn\",\n  \"localisation\": {\n    \"type\": \"Point\",\n    \"coordinates\": [-17.4441, 14.6928]\n  },\n  \"encours\": 150000000.00\n}"
+            }
+          }
+        },
+        {
+          "name": "Détail d'un point de service",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/points-service/{{ps_id}}/"
+          }
+        },
+        {
+          "name": "Modifier un point de service (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/points-service/{{ps_id}}/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"statut_point\": \"FERME\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Export GeoJSON",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/points-service/geojson/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "points-service",
+                "geojson",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "type_point",
+                  "value": "AGENCE",
+                  "disabled": true
+                },
+                {
+                  "key": "imf",
+                  "value": "{{imf_id}}",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "👤 Dirigeants",
+      "item": [
+        {
+          "name": "Lister les dirigeants",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/dirigeants/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "dirigeants",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "Diallo",
+                  "disabled": true
+                },
+                {
+                  "key": "ordering",
+                  "value": "nom",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Créer un dirigeant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) pm.collectionVariables.set('dirigeant_id', res.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/dirigeants/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Diallo\",\n  \"prenom\": \"Mamadou\",\n  \"telephone\": \"+221 77 123 45 67\",\n  \"email_professionnel\": \"m.diallo@cms.sn\",\n  \"email_secondaire\": \"\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Détail d'un dirigeant",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/dirigeants/{{dirigeant_id}}/"
+          }
+        },
+        {
+          "name": "Modifier un dirigeant (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/dirigeants/{{dirigeant_id}}/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"telephone\": \"+221 77 999 88 77\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Lister les mandats d'un dirigeant",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/dirigeants/{{dirigeant_id}}/mandats/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "dirigeants",
+                "{{dirigeant_id}}",
+                "mandats",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "imf",
+                  "value": "{{imf_id}}",
+                  "disabled": true
+                },
+                {
+                  "key": "fonction_mandat",
+                  "value": "DG",
+                  "disabled": true
+                },
+                {
+                  "key": "statut_mandat",
+                  "value": "EN_FONCTION",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Créer un mandat",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) pm.collectionVariables.set('mandat_id', res.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/dirigeants/{{dirigeant_id}}/mandats/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"imf\": \"{{imf_id}}\",\n  \"fonction_mandat\": \"DG\",\n  \"date_debut\": \"2024-01-01\",\n  \"date_fin\": null,\n  \"statut_mandat\": \"EN_FONCTION\",\n  \"documents_justificatifs\": \"\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Détail d'un mandat",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/dirigeants/{{dirigeant_id}}/mandats/{{mandat_id}}/"
+          }
+        },
+        {
+          "name": "Modifier un mandat (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/dirigeants/{{dirigeant_id}}/mandats/{{mandat_id}}/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"statut_mandat\": \"SUSPENDU\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Dirigeants de la fiche IMF (filtre DG)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/imf/{{imf_id}}/mandats/?fonction_mandat=DG",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "imf",
+                "{{imf_id}}",
+                "mandats",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "fonction_mandat",
+                  "value": "DG"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🗺️ Cartographie",
+      "item": [
+        {
+          "name": "Lister les zones géographiques",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/cartographie/zones/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cartographie",
+                "zones",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "type_zone",
+                  "value": "REGION",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "Dakar",
+                  "disabled": true
+                },
+                {
+                  "key": "ordering",
+                  "value": "nom",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Créer une zone géographique",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) pm.collectionVariables.set('zone_id', res.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/cartographie/zones/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"DK-{{$timestamp}}\",\n  \"nom\": \"Dakar\",\n  \"type_zone\": \"REGION\",\n  \"geometrie\": null\n}"
+            }
+          }
+        },
+        {
+          "name": "Détail d'une zone",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/cartographie/zones/{{zone_id}}/"
+          }
+        },
+        {
+          "name": "Modifier une zone (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/cartographie/zones/{{zone_id}}/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Région de Dakar\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Export GeoJSON zones",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/cartographie/zones/geojson/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cartographie",
+                "zones",
+                "geojson",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "type_zone",
+                  "value": "REGION",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Agrégats carte macro (régions)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/cartographie/zones/agregats/?type_zone=REGION",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cartographie",
+                "zones",
+                "agregats",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "type_zone",
+                  "value": "REGION"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📥 Importation",
+      "item": [
+        {
+          "name": "Lister les imports",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/importation/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "importation",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "type_import",
+                  "value": "IMF",
+                  "disabled": true
+                },
+                {
+                  "key": "statut",
+                  "value": "TERMINE",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Uploader un fichier CSV",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) pm.collectionVariables.set('import_id', res.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/importation/",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "type_import",
+                  "value": "IMF",
+                  "type": "text"
+                },
+                {
+                  "key": "fichier",
+                  "type": "file",
+                  "src": "imf_exemple.csv"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Détail d'un import",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/importation/{{import_id}}/"
+          }
+        },
+        {
+          "name": "Télécharger le modèle CSV (IMF)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/importation/modeles/IMF/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "importation",
+                "modeles",
+                "IMF",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Exporter les points de service (CSV)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/importation/export/POINTS_SERVICE/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "importation",
+                "export",
+                "POINTS_SERVICE",
+                ""
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📋 Audit",
+      "item": [
+        {
+          "name": "Lister le journal d'audit",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/audit/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "audit",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "LOGIN",
+                  "disabled": true
+                },
+                {
+                  "key": "role",
+                  "value": "ADMIN",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "admin@drs-sfd.sn",
+                  "disabled": true
+                },
+                {
+                  "key": "ordering",
+                  "value": "-date_action",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.results && res.results.length) pm.collectionVariables.set('audit_id', res.results[0].id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Détail d'une entrée audit",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/audit/{{audit_id}}/"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🧹 Nettoyage & fin de session",
+      "item": [
+        {
+          "name": "Supprimer un mandat (soft delete)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/dirigeants/{{dirigeant_id}}/mandats/{{mandat_id}}/"
+          }
+        },
+        {
+          "name": "Supprimer un dirigeant (soft delete)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/dirigeants/{{dirigeant_id}}/"
+          }
+        },
+        {
+          "name": "Supprimer un point de service (soft delete)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/points-service/{{ps_id}}/"
+          }
+        },
+        {
+          "name": "Supprimer une IMF (soft delete)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/imf/{{imf_id}}/"
+          }
+        },
+        {
+          "name": "Supprimer une zone (soft delete)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/cartographie/zones/{{zone_id}}/"
+          }
+        },
+        {
+          "name": "Changer mot de passe",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/auth/change-password/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ancien_mot_de_passe\": \"AdminPass123!\",\n  \"nouveau_mot_de_passe\": \"NouveauPass456!\",\n  \"confirmation\": \"NouveauPass456!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Rétablir le mot de passe initial",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/auth/change-password/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ancien_mot_de_passe\": \"NouveauPass456!\",\n  \"nouveau_mot_de_passe\": \"AdminPass123!\",\n  \"confirmation\": \"AdminPass123!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/auth/logout/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh\": \"{{refresh_token}}\"\n}"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.test(`${pm.info.requestName} — statut HTTP sans erreur`, function () {",
+          "    pm.expect(pm.response.code, pm.response.text()).to.be.below(400);",
+          "});"
+        ]
+      }
     }
   ]
 }
