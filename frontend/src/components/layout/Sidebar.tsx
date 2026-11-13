@@ -72,7 +72,7 @@ export function Sidebar({ active, role, nomComplet, onDeconnexion }: Props) {
   const initials = role === "consultant" ? "CO" : role === "admin" ? "AD" : "SU";
 
   return (
-    <nav aria-label="Navigation principale" style={{ width: "100%", height: "100%", minHeight: 900, boxSizing: "border-box", background: "#0B1424", color: "#DCE2EC", padding: "24px 16px", display: "flex", flexDirection: "column", gap: 4, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+    <nav className="app-nav" aria-label="Navigation principale" style={{ width: "100%", height: "100%", minHeight: 900, boxSizing: "border-box", background: "#0B1424", color: "#DCE2EC", padding: "24px 16px", display: "flex", flexDirection: "column", gap: 4, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "4px 10px 22px 10px" }}>
         <div style={{ width: 38, height: 38, borderRadius: 11, background: "linear-gradient(135deg, #E9D49A, #C9A44C)", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0B1424" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z" /><circle cx="12" cy="9.5" r="2.5" /></svg>

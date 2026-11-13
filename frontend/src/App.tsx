@@ -7,6 +7,7 @@ import { AppLayout } from "./components/layout/AppLayout";
 import type { CleMenu } from "./components/layout/Sidebar";
 import { Audit } from "./pages/Audit";
 import { Connexion } from "./pages/Connexion";
+import { TableauDeBord } from "./pages/TableauDeBord";
 
 /** Connexion requise, et éventuellement un ensemble de rôles autorisés. */
 function Protege({ children, roles }: { children: ReactNode; roles?: Role[] }) {
@@ -34,7 +35,7 @@ export function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/connexion" element={<Connexion />} />
-          <Route path="/" element={<Protege><AVenir active="dashboard" /></Protege>} />
+          <Route path="/" element={<Protege><TableauDeBord /></Protege>} />
           <Route path="/carte/macro" element={<Protege><AVenir active="macro" /></Protege>} />
           <Route path="/carte/micro" element={<Protege><AVenir active="micro" /></Protege>} />
           <Route path="/supervision" element={<Protege roles={GESTION}><AVenir active="supervision" /></Protege>} />

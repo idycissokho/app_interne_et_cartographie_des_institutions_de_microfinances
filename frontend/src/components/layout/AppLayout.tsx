@@ -15,7 +15,7 @@ export function AppLayout({ active, minHeight = 1000, children, style }: { activ
   const role = ROLE_MAQUETTE[utilisateur?.role ?? "CONSULTANT"];
   return (
     <div style={{ minHeight, display: "flex", flexWrap: "wrap", background: "#FAF7F0", color: "#0B1424", ...style }}>
-      <div style={{ flex: "1 1 248px", maxWidth: 272, background: "#0B1424", display: "flex" }}>
+      <div className="app-sidebar" style={{ flex: "1 1 248px", maxWidth: 272, background: "#0B1424", display: "flex" }}>
         <Sidebar active={active} role={role} nomComplet={utilisateur?.nom_complet ?? ""} onDeconnexion={deconnecter} />
       </div>
       {children}

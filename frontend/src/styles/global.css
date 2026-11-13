@@ -206,3 +206,14 @@ select.di-input{cursor:pointer;padding-right:10px}
   .ci-carte-fond { position: relative !important; inset: auto !important; }
   .ci-kpi { position: relative !important; right: auto !important; top: auto !important; width: 100% !important; animation: none; }
 }
+
+/* ---------- Écran 02 : la carte « Présence territoriale » occupe toute la ligne quand la grille passe sur une colonne ---------- */
+@media (max-width: 760px) { .tb-presence { grid-column: auto !important; } }
+
+/* ---------- Layout commun : petits écrans (sans effet au-delà de 760 px) ---------- */
+@media (max-width: 760px) {
+  .app-sidebar { max-width: none !important; flex-basis: 100% !important; }
+  .app-nav { min-height: 0 !important; }
+  .app-main { padding: 20px 16px 32px 16px !important; }
+  .tb-carte { height: 240px !important; }
+}
