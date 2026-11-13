@@ -17,7 +17,8 @@
   --danger: #B91C1C;
 }
 
-body { margin: 0; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; background: #FAF7F0; }
+:root { color-scheme: light dark; }
+body { color-scheme: light; margin: 0; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; background: #FAF7F0; }
 a { color: #8A6A1F; }
 a:hover { color: #6E5416; }
 *:focus-visible { outline: 2px solid #C9A44C; outline-offset: 2px; }
@@ -198,13 +199,18 @@ select.di-input{cursor:pointer;padding-right:10px}
   .cs-region { opacity: 1 !important; }
 }
 
-/* ---------- Écran 01 : agencement petits écrans (sans effet au-delà de 640 px) ---------- */
+/* ---------- Écran 01 : sans défilement à partir de 1060 × 560 px (les deux colonnes côte à côte) ; en dessous, la page défile ---------- */
+@media (max-width: 1059px), (max-height: 559px) {
+  .ci-page { height: auto !important; min-height: 100dvh; overflow: visible !important; }
+  .ci-hero, .ci-panneau { height: auto !important; }
+  .ci-carte { flex: none !important; height: 360px; }
+}
 @media (max-width: 640px) {
   .ci-hero { padding: 32px 24px !important; }
   .ci-titre { font-size: 40px !important; overflow-wrap: anywhere; }
-  .ci-carte { min-height: 0 !important; display: flex; flex-direction: column; gap: 16px; }
-  .ci-carte-fond { position: relative !important; inset: auto !important; }
-  .ci-kpi { position: relative !important; right: auto !important; top: auto !important; width: 100% !important; animation: none; }
+  .ci-carte { height: auto; flex-direction: column; align-items: stretch !important; }
+  .ci-carte-fond { height: 230px !important; flex: none !important; }
+  .ci-kpi { width: 100% !important; animation: none; }
 }
 
 /* ---------- Écran 02 : la carte « Présence territoriale » occupe toute la ligne quand la grille passe sur une colonne ---------- */
