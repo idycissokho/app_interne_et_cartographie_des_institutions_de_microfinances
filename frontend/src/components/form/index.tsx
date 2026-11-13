@@ -130,3 +130,23 @@ export function EnteteSection({ n, titre, sousTitre, extra }: { n: number; titre
 }
 
 export const EMAIL_OK = (v: string) => v === "" || /^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(v);
+
+/** Tiroir latéral (écran 09) : voile + panneau de 560 px à droite, pied d'actions. */
+export function Drawer({ surTitre, titre, onClose, children, pied }: { surTitre: string; titre: string; onClose: () => void; children: ReactNode; pied: ReactNode }) {
+  return (
+    <>
+      <div className="ps-fade" onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(11,20,36,.38)", backdropFilter: "blur(2px)", zIndex: 40 }} />
+      <aside className="ps-drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-titre" style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: 560, maxWidth: "100%", zIndex: 41, background: "#FFFFFF", boxShadow: "-30px 0 60px rgba(11,20,36,.22)", display: "flex", flexDirection: "column" }}>
+        <div style={{ padding: "22px 26px", borderBottom: "1px solid #F1ECE0", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+          <div><span style={{ fontSize: 12, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "#8A6A1F" }}>{surTitre}</span><h2 id="drawer-titre" style={{ margin: "4px 0 0 0", fontSize: 24, fontWeight: 800, letterSpacing: "-0.02em" }}>{titre}</h2></div>
+          <button type="button" aria-label="Fermer" onClick={onClose} style={{ width: 40, height: 40, flex: "none", borderRadius: 12, border: "1px solid #ECE5D5", background: "#FFFFFF", color: "#0B1424", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg></button>
+        </div>
+        {children}
+        <div style={{ padding: "16px 26px", borderTop: "1px solid #F1ECE0", display: "flex", justifyContent: "flex-end", gap: 10, background: "#FDFBF6", flexWrap: "wrap" }}>{pied}</div>
+      </aside>
+    </>
+  );
+}
+
+export const btnSecondaire: CSSProperties = { height: 48, padding: "0 18px", borderRadius: 14, border: "1px solid #ECE5D5", background: "#FFFFFF", font: "inherit", fontSize: 14, fontWeight: 700, color: "#0B1424", cursor: "pointer" };
+export const btnPrimaire: CSSProperties = { height: 48, padding: "0 22px", borderRadius: 14, border: "none", background: "#C9A44C", font: "inherit", fontSize: 14, fontWeight: 800, color: "#0B1424", cursor: "pointer", boxShadow: "0 10px 24px rgba(201,164,76,.35)" };

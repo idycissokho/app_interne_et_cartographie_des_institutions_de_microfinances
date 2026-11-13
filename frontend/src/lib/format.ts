@@ -34,3 +34,13 @@ export const CODE_FONCTION: Record<string, string> = {
   RESPONSABLE_CONFORMITE: "RCI", AUDITEUR_INTERNE: "AI", DAF: "DAF",
   RESPONSABLE_SI: "RSI", RESPONSABLE_OPERATIONS: "ROP",
 };
+
+/** Montant court (FCFA) comme dans la maquette : « 2,4 Mds », « 840 M », « 12 480 ». */
+export function montantCourt(v: string | number | null | undefined) {
+  if (v === null || v === undefined || v === "") return "—";
+  const n = Number(v);
+  if (!n) return "—";
+  if (n >= 1e9) { const x = (n / 1e9).toFixed(1).replace(".", ",").replace(",0", ""); return `${x} ${n >= 2e9 ? "Mds" : "Md"}`; }
+  if (n >= 1e6) return `${Math.round(n / 1e6)} M`;
+  return nombre(n);
+}

@@ -232,3 +232,6 @@ select.di-input{cursor:pointer;padding-right:10px}
   .fi-barre { margin: 6px -16px 0 -16px !important; padding: 14px 16px !important; }
   .fi-sommaire { position: static !important; max-width: none !important; flex-direction: row !important; overflow-x: auto; }
 }
+/* Champs du tiroir : fi-input porte le style commun, ps-input ajuste la hauteur (46 px) comme la maquette. */
+.fi-input.ps-input { height: 46px; font-size: 14px; }
+@media (max-width: 560px) { .ps-grille2, .ps-grille3 { grid-template-columns: 1fr !important; } }

@@ -11,6 +11,7 @@ import { CarteMicro } from "./pages/CarteMicro";
 import { Connexion } from "./pages/Connexion";
 import { FormulaireIMF } from "./pages/FormulaireIMF";
 import { Institutions } from "./pages/Institutions";
+import { PointsService } from "./pages/PointsService";
 import { Consultation } from "./pages/Consultation";
 import { Supervision } from "./pages/Supervision";
 import { TableauDeBord } from "./pages/TableauDeBord";
@@ -49,7 +50,7 @@ export function App() {
           <Route path="/imf" element={<Protege roles={GESTION}><Institutions /></Protege>} />
           <Route path="/imf/nouveau" element={<Protege roles={GESTION}><FormulaireIMF /></Protege>} />
           <Route path="/imf/:id/modifier" element={<Protege roles={GESTION}><FormulaireIMF /></Protege>} />
-          <Route path="/points-service" element={<Protege roles={GESTION}><AVenir active="points" /></Protege>} />
+          <Route path="/points-service" element={<Protege roles={GESTION}><PointsService /></Protege>} />
           <Route path="/dirigeants" element={<Protege roles={GESTION}><AVenir active="dirigeants" /></Protege>} />
           <Route path="/donnees" element={<Protege roles={GESTION}><AVenir active="import" /></Protege>} />
           <Route path="/audit" element={<Protege roles={["ADMIN"]}><AppLayout active="audit"><main style={{ flex: "999 1 640px", minWidth: 0, padding: "28px 32px 48px 32px", boxSizing: "border-box" }}><Audit /></main></AppLayout></Protege>} />
