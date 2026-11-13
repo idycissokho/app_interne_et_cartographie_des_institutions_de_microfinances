@@ -14,13 +14,12 @@ from django.http import Http404, StreamingHttpResponse
 from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, generics, status
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.audit.mixins import AuditMixin
 from apps.audit.models import JournalAudit
-from apps.authentication.permissions import IsSuperviseurOrAdmin
+from apps.authentication.permissions import IsAdmin
 
 from .models import ImportationFichier
 from .serializers import ImportationFichierSerializer
@@ -28,18 +27,18 @@ from .services import COLONNES, lignes_export, traiter_importation
 
 
 class ImportationListCreateView(AuditMixin, generics.ListCreateAPIView):
-    """GET  /api/v1/importation/  — Liste des imports (ADMIN : tous, SUPERVISEUR : les siens).
+    """GET  /api/v1/importation/  — Liste des imports (ADMIN uniquement : cas « Import / Export Excel »).
     POST /api/v1/importation/  — Upload d'un fichier CSV/Excel, traité immédiatement.
     """
 
     serializer_class = ImportationFichierSerializer
-    permission_classes = [IsSuperviseurOrAdmin]
+    permission_classes = [IsAdmin]
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ["type_import", "statut"]
     ordering_fields = ["date_creation"]
 
     def get_queryset(self):
-        """Filtre les imports selon le rôle : ADMIN voit tout, SUPERVISEUR voit les siens."""
+        """ADMIN voit tous les imports (filtre conservé par défense en profondeur)."""
         user = self.request.user
         qs = ImportationFichier.objects.select_related("utilisateur")
         return qs if user.is_admin else qs.filter(utilisateur=user)
@@ -67,7 +66,7 @@ class ImportationDetailView(generics.RetrieveAPIView):
     """GET /api/v1/importation/<uuid>/  — Détail et rapport d'un import."""
 
     serializer_class = ImportationFichierSerializer
-    permission_classes = [IsSuperviseurOrAdmin]
+    permission_classes = [IsAdmin]
 
     def get_queryset(self):
         user = self.request.user
@@ -102,9 +101,9 @@ def _reponse_csv(nom_fichier: str, lignes):
 
 
 class ModeleImportView(APIView):
-    """GET /api/v1/importation/modeles/<type>/ — Canevas CSV vide à remplir."""
+    """GET /api/v1/importation/modeles/<type>/ — Canevas CSV vide à remplir (ADMIN)."""
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdmin]
 
     def get(self, request, type_import):
         type_import = _type_ou_404(type_import)
@@ -112,9 +111,9 @@ class ModeleImportView(APIView):
 
 
 class ExportView(APIView):
-    """GET /api/v1/importation/export/<type>/ — Export CSV (SUPERVISEUR/ADMIN, journalisé)."""
+    """GET /api/v1/importation/export/<type>/ — Export CSV (ADMIN, journalisé)."""
 
-    permission_classes = [IsSuperviseurOrAdmin]
+    permission_classes = [IsAdmin]
 
     def get(self, request, type_import):
         type_import = _type_ou_404(type_import)

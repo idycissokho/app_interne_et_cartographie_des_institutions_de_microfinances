@@ -50,9 +50,11 @@ export function Sidebar({ active, role, nomComplet, onDeconnexion }: Props) {
       title: "Pilotage",
       items: [
         mk("dashboard", "Tableau de bord", "/"),
-        role === "consultant"
-          ? mk("consultation", "Espace consultation", "/consultation")
-          : mk("supervision", "Espace supervision", "/supervision", BADGE_SUPERVISION),
+        ...(role === "consultant"
+          ? [mk("consultation", "Espace consultation", "/consultation")]
+          : [mk("supervision", "Espace supervision", "/supervision", BADGE_SUPERVISION)]),
+        // L'administrateur peut tout ce que peuvent les autres rôles, consultation comprise.
+        ...(role === "admin" ? [mk("consultation", "Espace consultation", "/consultation")] : []),
         mk("micro", "Carte micro", "/carte/micro"),
         mk("macro", "Carte macro", "/carte/macro"),
       ],
@@ -66,7 +68,8 @@ export function Sidebar({ active, role, nomComplet, onDeconnexion }: Props) {
       ],
     },
   ];
-  if (role !== "consultant") {
+  // Import / Export Excel et journal d'audit : ADMIN uniquement (diagramme de cas d'utilisation).
+  if (role === "admin") {
     groups.push({ title: "Données", items: [mk("import", "Import / Export", "/donnees"), mk("audit", "Journal d'audit", "/audit")] });
   }
   const initials = role === "consultant" ? "CO" : role === "admin" ? "AD" : "SU";

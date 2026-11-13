@@ -12,7 +12,7 @@ from rest_framework import filters, generics
 from rest_framework.permissions import IsAuthenticated
 
 from apps.audit.mixins import AuditMixin
-from apps.imf.views import LectureAuthentifieeEcritureSuperviseurMixin
+from apps.imf.views import DroitsCasUtilisationMixin
 
 from .filters import PointServiceFilter
 from .models import PointService
@@ -26,7 +26,7 @@ RELATIONS = ("imf", "region", "departement", "commune")
 
 
 class PointServiceListCreateView(
-    AuditMixin, LectureAuthentifieeEcritureSuperviseurMixin, generics.ListCreateAPIView
+    AuditMixin, DroitsCasUtilisationMixin, generics.ListCreateAPIView
 ):
     queryset = PointService.objects.filter(is_active=True).select_related(*RELATIONS)
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -39,7 +39,7 @@ class PointServiceListCreateView(
 
 
 class PointServiceDetailView(
-    AuditMixin, LectureAuthentifieeEcritureSuperviseurMixin, generics.RetrieveUpdateDestroyAPIView
+    AuditMixin, DroitsCasUtilisationMixin, generics.RetrieveUpdateDestroyAPIView
 ):
     queryset = PointService.objects.filter(is_active=True).select_related(*RELATIONS)
     serializer_class = PointServiceDetailSerializer

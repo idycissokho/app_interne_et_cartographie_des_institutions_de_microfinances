@@ -12,18 +12,17 @@ from django.db.models import Count, OuterRef, Prefetch, Q, Subquery
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, generics
-from rest_framework.permissions import IsAuthenticated
 
 from apps.audit.mixins import AuditMixin
-from apps.authentication.permissions import IsSuperviseurOrAdmin
+from apps.imf.views import DroitsCasUtilisationMixin
 
 from .models import Dirigeant, Mandat
 from .serializers import DirigeantDetailSerializer, DirigeantListSerializer, MandatSerializer
 
 
-class DirigeantListCreateView(AuditMixin, generics.ListCreateAPIView):
+class DirigeantListCreateView(AuditMixin, DroitsCasUtilisationMixin, generics.ListCreateAPIView):
     """GET  /api/v1/dirigeants/  — Liste des dirigeants actifs.
-    POST /api/v1/dirigeants/  — Création (SUPERVISEUR/ADMIN requis).
+    POST /api/v1/dirigeants/  — Création (ADMIN requis).
     """
 
     queryset = Dirigeant.objects.filter(is_active=True).annotate(
@@ -42,13 +41,8 @@ class DirigeantListCreateView(AuditMixin, generics.ListCreateAPIView):
         """Détaillé pour la création, allégé pour la liste."""
         return DirigeantDetailSerializer if self.request.method == "POST" else DirigeantListSerializer
 
-    def get_permissions(self):
-        if self.request.method == "POST":
-            return [IsSuperviseurOrAdmin()]
-        return [IsAuthenticated()]
 
-
-class DirigeantDetailView(AuditMixin, generics.RetrieveUpdateDestroyAPIView):
+class DirigeantDetailView(AuditMixin, DroitsCasUtilisationMixin, generics.RetrieveUpdateDestroyAPIView):
     """GET/PUT/PATCH/DELETE /api/v1/dirigeants/<uuid>/"""
 
     queryset = Dirigeant.objects.filter(is_active=True).prefetch_related(
@@ -58,20 +52,15 @@ class DirigeantDetailView(AuditMixin, generics.RetrieveUpdateDestroyAPIView):
     # OBJ-09 : traçabilité des consultations des fiches dirigeants
     audit_consultation = True
 
-    def get_permissions(self):
-        if self.request.method in ("PUT", "PATCH", "DELETE"):
-            return [IsSuperviseurOrAdmin()]
-        return [IsAuthenticated()]
-
     def perform_destroy(self, instance):
         """Soft delete."""
         instance.is_active = False
         instance.save(update_fields=["is_active"])
 
 
-class MandatListCreateView(AuditMixin, generics.ListCreateAPIView):
+class MandatListCreateView(AuditMixin, DroitsCasUtilisationMixin, generics.ListCreateAPIView):
     """GET  /api/v1/dirigeants/<uuid>/mandats/  — Mandats actifs d'un dirigeant.
-    POST /api/v1/dirigeants/<uuid>/mandats/  — Création (SUPERVISEUR/ADMIN requis).
+    POST /api/v1/dirigeants/<uuid>/mandats/  — Création (ADMIN requis).
     """
 
     serializer_class = MandatSerializer
@@ -85,18 +74,13 @@ class MandatListCreateView(AuditMixin, generics.ListCreateAPIView):
             dirigeant_id=self.kwargs["dirigeant_pk"], is_active=True
         ).select_related("imf", "dirigeant")
 
-    def get_permissions(self):
-        if self.request.method == "POST":
-            return [IsSuperviseurOrAdmin()]
-        return [IsAuthenticated()]
-
     def perform_create(self, serializer):
         """Rattache automatiquement le mandat au dirigeant (actif) de l'URL."""
         dirigeant = get_object_or_404(Dirigeant, pk=self.kwargs["dirigeant_pk"], is_active=True)
         serializer.save(dirigeant=dirigeant)
 
 
-class MandatDetailView(AuditMixin, generics.RetrieveUpdateDestroyAPIView):
+class MandatDetailView(AuditMixin, DroitsCasUtilisationMixin, generics.RetrieveUpdateDestroyAPIView):
     """GET/PUT/PATCH/DELETE /api/v1/dirigeants/<uuid>/mandats/<uuid>/"""
 
     serializer_class = MandatSerializer
@@ -106,11 +90,6 @@ class MandatDetailView(AuditMixin, generics.RetrieveUpdateDestroyAPIView):
         return Mandat.objects.filter(
             dirigeant_id=self.kwargs["dirigeant_pk"], is_active=True
         ).select_related("imf", "dirigeant")
-
-    def get_permissions(self):
-        if self.request.method in ("PUT", "PATCH", "DELETE"):
-            return [IsSuperviseurOrAdmin()]
-        return [IsAuthenticated()]
 
     def perform_destroy(self, instance):
         """Soft delete."""

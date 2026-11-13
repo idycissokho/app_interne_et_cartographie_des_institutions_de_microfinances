@@ -22,8 +22,8 @@ def dirigeant():
     return Dirigeant.objects.create(nom="Ndiaye", prenom="Moussa")
 
 
-def test_date_fin_avant_date_debut_refusee(client_superviseur, imf, dirigeant):
-    resp = client_superviseur.post(
+def test_date_fin_avant_date_debut_refusee(client_admin, imf, dirigeant):
+    resp = client_admin.post(
         f"/api/v1/dirigeants/{dirigeant.pk}/mandats/",
         {"imf": str(imf.pk), "fonction_mandat": "DG", "date_debut": "2025-01-01", "date_fin": "2024-01-01"},
         format="json",
@@ -32,8 +32,8 @@ def test_date_fin_avant_date_debut_refusee(client_superviseur, imf, dirigeant):
     assert "date_fin" in resp.data
 
 
-def test_nouvelle_fonction_acceptee(client_superviseur, imf, dirigeant):
-    resp = client_superviseur.post(
+def test_nouvelle_fonction_acceptee(client_admin, imf, dirigeant):
+    resp = client_admin.post(
         f"/api/v1/dirigeants/{dirigeant.pk}/mandats/",
         {"imf": str(imf.pk), "fonction_mandat": "PRESIDENT_CONSEIL_SURVEILLANCE", "date_debut": "2025-01-01"},
         format="json",
@@ -42,8 +42,8 @@ def test_nouvelle_fonction_acceptee(client_superviseur, imf, dirigeant):
     assert resp.data["dirigeant"] == dirigeant.pk
 
 
-def test_mandat_pour_dirigeant_inexistant_404(client_superviseur, imf):
-    resp = client_superviseur.post(
+def test_mandat_pour_dirigeant_inexistant_404(client_admin, imf):
+    resp = client_admin.post(
         "/api/v1/dirigeants/00000000-0000-0000-0000-000000000000/mandats/",
         {"imf": str(imf.pk), "fonction_mandat": "DG", "date_debut": "2025-01-01"},
         format="json",

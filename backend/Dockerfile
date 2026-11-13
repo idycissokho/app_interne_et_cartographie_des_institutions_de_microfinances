@@ -27,7 +27,7 @@ COPY requirements/ /app/requirements/
 # Si tu as un fichier requirements.txt unique, adapte cette ligne
 RUN pip install --upgrade pip
 # Installation des dépendances (ajuste le chemin selon ton fichier exact)
-RUN pip install -r requirements/development.txt || pip install -r requirements/base.txt || pip install -r requirements.txt
+RUN pip install -r requirements/base.txt || pip install -r requirements.txt
 
 # Copie du reste du code du projet
 COPY . /app/

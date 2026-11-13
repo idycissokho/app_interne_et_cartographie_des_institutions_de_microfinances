@@ -25,7 +25,9 @@ function Protege({ children, roles }: { children: ReactNode; roles?: Role[] }) {
   return <>{children}</>;
 }
 
+// Droits du diagramme de cas d'utilisation (DIAGRAMME DE CAS UTILISATION.drawio).
 const GESTION: Role[] = ["ADMIN", "SUPERVISEUR"];
+const ADMIN: Role[] = ["ADMIN"];
 
 
 export function App() {
@@ -40,12 +42,12 @@ export function App() {
           <Route path="/supervision" element={<Protege roles={GESTION}><Supervision /></Protege>} />
           <Route path="/consultation" element={<Protege><Consultation /></Protege>} />
           <Route path="/imf" element={<Protege roles={GESTION}><Institutions /></Protege>} />
-          <Route path="/imf/nouveau" element={<Protege roles={GESTION}><FormulaireIMF /></Protege>} />
+          <Route path="/imf/nouveau" element={<Protege roles={ADMIN}><FormulaireIMF /></Protege>} />
           <Route path="/imf/:id/modifier" element={<Protege roles={GESTION}><FormulaireIMF /></Protege>} />
-          <Route path="/points-service" element={<Protege roles={GESTION}><PointsService /></Protege>} />
-          <Route path="/dirigeants" element={<Protege roles={GESTION}><Dirigeants /></Protege>} />
-          <Route path="/donnees" element={<Protege roles={GESTION}><Donnees /></Protege>} />
-          <Route path="/audit" element={<Protege roles={["ADMIN"]}><Audit /></Protege>} />
+          <Route path="/points-service" element={<Protege><PointsService /></Protege>} />
+          <Route path="/dirigeants" element={<Protege><Dirigeants /></Protege>} />
+          <Route path="/donnees" element={<Protege roles={ADMIN}><Donnees /></Protege>} />
+          <Route path="/audit" element={<Protege roles={ADMIN}><Audit /></Protege>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

@@ -28,7 +28,7 @@ const kp = { borderRadius: 18, padding: "16px 18px" } as const;
 const tuile: CSSProperties = { padding: 14, borderRadius: 16, background: "rgba(255,255,255,.06)" };
 
 export function CarteMacro() {
-  const { utilisateur } = useAuth();
+  const { utilisateur, estAdmin } = useAuth();
   const [sel, setSel] = useState("Dakar");
   const [ind, setInd] = useState<Indicateur>("pts");
   const [mode, setMode] = useState<"regions" | "choro">("regions");
@@ -75,7 +75,7 @@ export function CarteMacro() {
                 <button key={l} type="button" aria-pressed={l === level} onClick={() => setLevel(l)} style={{ ...seg, ...(l === level ? { background: "#0B1424", color: "#F3D98C" } : { background: "transparent", color: "#4A5568" }) }}>{l}</button>
               ))}
             </div>
-            <button type="button" onClick={exporter} style={{ height: 46, padding: "0 18px", borderRadius: 14, border: "none", background: "#0B1424", color: "#F3D98C", font: "inherit", fontSize: 14, fontWeight: 700, display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 21h16" /></svg>Exporter</button>
+            {estAdmin && <button type="button" onClick={exporter} style={{ height: 46, padding: "0 18px", borderRadius: 14, border: "none", background: "#0B1424", color: "#F3D98C", font: "inherit", fontSize: 14, fontWeight: 700, display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 21h16" /></svg>Exporter</button>}
           </div>
         </header>
 

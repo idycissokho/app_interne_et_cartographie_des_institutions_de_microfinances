@@ -6,6 +6,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 import { api, qs, telecharger } from "../api/client";
 import type { Page } from "../api/types";
+import { useAuth } from "../auth/AuthContext";
 import { AppLayout } from "../components/layout/AppLayout";
 import { telechargerCsv } from "../lib/csv";
 import { SB, STATUT_IMF_LONG, TYPE_IMF_LONG, initiales, regionAffichee, tonIMF } from "../lib/metier";
@@ -27,6 +28,8 @@ const td: CSSProperties = { padding: "14px 8px" };
 
 export function Institutions() {
   const naviguer = useNavigate();
+  // Diagramme de cas d'utilisation : créer / désactiver / importer / exporter = ADMIN.
+  const { estAdmin } = useAuth();
   const [params] = useSearchParams();
   const [tab, setTab] = useState(params.get("statut") ?? "");
   const [type, setType] = useState("");
@@ -83,9 +86,9 @@ export function Institutions() {
             <p style={{ margin: 0, fontSize: 14, color: "#4A5568" }}>Le référentiel réglementaire des IMF : identité, statut, siège et bailleurs.</p>
           </div>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <Link to="/donnees" style={{ height: 46, padding: "0 16px", borderRadius: 14, border: "1px solid #ECE5D5", background: "#FFFFFF", fontSize: 14, fontWeight: 700, color: "#0B1424", display: "flex", alignItems: "center", gap: 8, textDecoration: "none", boxSizing: "border-box" }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5M4 21h16" /></svg>Importer</Link>
-            <button type="button" onClick={() => telecharger("/importation/export/IMF/", "export_imf.csv")} style={{ height: 46, padding: "0 16px", borderRadius: 14, border: "1px solid #ECE5D5", background: "#FFFFFF", font: "inherit", fontSize: 14, fontWeight: 700, color: "#0B1424", display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 21h16" /></svg>Exporter CSV</button>
-            <Link to="/imf/nouveau" style={{ height: 46, padding: "0 18px", borderRadius: 14, background: "#C9A44C", fontSize: 14, fontWeight: 800, color: "#0B1424", display: "flex", alignItems: "center", gap: 8, textDecoration: "none", boxShadow: "0 10px 24px rgba(201,164,76,.35)", boxSizing: "border-box" }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>Nouvelle IMF</Link>
+            {estAdmin && <Link to="/donnees" style={{ height: 46, padding: "0 16px", borderRadius: 14, border: "1px solid #ECE5D5", background: "#FFFFFF", fontSize: 14, fontWeight: 700, color: "#0B1424", display: "flex", alignItems: "center", gap: 8, textDecoration: "none", boxSizing: "border-box" }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5M4 21h16" /></svg>Importer</Link>}
+            {estAdmin && <button type="button" onClick={() => telecharger("/importation/export/IMF/", "export_imf.csv")} style={{ height: 46, padding: "0 16px", borderRadius: 14, border: "1px solid #ECE5D5", background: "#FFFFFF", font: "inherit", fontSize: 14, fontWeight: 700, color: "#0B1424", display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 21h16" /></svg>Exporter CSV</button>}
+            {estAdmin && <Link to="/imf/nouveau" style={{ height: 46, padding: "0 18px", borderRadius: 14, background: "#C9A44C", fontSize: 14, fontWeight: 800, color: "#0B1424", display: "flex", alignItems: "center", gap: 8, textDecoration: "none", boxShadow: "0 10px 24px rgba(201,164,76,.35)", boxSizing: "border-box" }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>Nouvelle IMF</Link>}
           </div>
         </header>
 
@@ -112,7 +115,7 @@ export function Institutions() {
           {choisis.length > 0 && (
             <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 18px", background: "#0B1424", color: "#F4EFE3", fontSize: 13, flexWrap: "wrap" }}>
               <b style={{ color: "#F3D98C" }}>{choisis.length} sélectionnée(s)</b>
-              <button type="button" onClick={exporterSelection} style={barreBtn}>Exporter la sélection</button>
+              {estAdmin && <button type="button" onClick={exporterSelection} style={barreBtn}>Exporter la sélection</button>}
               {!statutLot && <button type="button" onClick={() => setStatutLot(true)} style={barreBtn}>Changer le statut</button>}
               {statutLot && Object.entries(STATUT_IMF_LONG).map(([k, l]) => <button key={k} type="button" onClick={() => changerStatut(k)} style={{ ...barreBtn, borderColor: "rgba(243,217,140,.55)", color: "#F3D98C" }}>{l}</button>)}
               <button type="button" onClick={() => { setSel({}); setStatutLot(false); }} style={{ marginLeft: "auto", height: 32, padding: "0 12px", borderRadius: 9, border: "none", background: "rgba(255,255,255,.08)", color: "#F4EFE3", font: "inherit", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Annuler</button>
@@ -143,7 +146,7 @@ export function Institutions() {
                       <td style={{ padding: "14px 18px", textAlign: "right", whiteSpace: "nowrap" }}>
                         <Link className="in-icon" to={`/consultation?imf=${r.id}`} aria-label="Voir la fiche" title="Voir la fiche"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></svg></Link>
                         <button type="button" className="in-icon" onClick={() => naviguer(`/imf/${r.id}/modifier`)} aria-label="Modifier" title="Modifier"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" /></svg></button>
-                        <button type="button" className="in-icon" onClick={() => archiver(r)} aria-label="Archiver" title="Archiver"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="4" rx="1" /><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8M10 12h4" /></svg></button>
+                        {estAdmin && <button type="button" className="in-icon" onClick={() => archiver(r)} aria-label="Archiver" title="Archiver"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="4" rx="1" /><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8M10 12h4" /></svg></button>}
                       </td>
                     </tr>
                   );

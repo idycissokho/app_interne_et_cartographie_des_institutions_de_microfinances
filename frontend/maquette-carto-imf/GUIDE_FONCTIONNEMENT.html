@@ -1,0 +1,590 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Guide Carto IMF</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Mise en page : bandeau nuit en tête, puis chapitres numérotés sur fond ivoire ; chaque parcours se lit de gauche à droite. */
+:root{
+  --bg:#FAF7F0; --surface:#FFFFFF; --sand:#ECE5D5; --line:#E2DCCD;
+  --fg:#13213A; --muted:#5B6578; --night:#0B1424; --night-2:#13213A;
+  --gold:#C9A44C; --gold-light:#F3D98C; --gold-text:#8A6A1F; --gold-soft:#F7EED3;
+  --ok:#15803D; --warn:#D97706; --bad:#B91C1C;
+  --ok-bg:#E7F4EC; --warn-bg:#FDF1E1; --bad-bg:#FBE9E9;
+  --hero-fg:#F4EFE3;
+  --font:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0B1424; --surface:#13213A; --sand:#1B2B47; --line:#263856;
+  --fg:#EEE8DA; --muted:#A3AEC2; --night:#060C17; --night-2:#0B1424;
+  --gold:#D4B05A; --gold-light:#F3D98C; --gold-text:#E5C672; --gold-soft:#2A2A22;
+  --ok:#4ADE80; --warn:#FBBF24; --bad:#F87171;
+  --ok-bg:#12301F; --warn-bg:#33260F; --bad-bg:#3A1717; --hero-fg:#F4EFE3; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0B1424; --surface:#13213A; --sand:#1B2B47; --line:#263856;
+  --fg:#EEE8DA; --muted:#A3AEC2; --night:#060C17; --night-2:#0B1424;
+  --gold:#D4B05A; --gold-light:#F3D98C; --gold-text:#E5C672; --gold-soft:#2A2A22;
+  --ok:#4ADE80; --warn:#FBBF24; --bad:#F87171;
+  --ok-bg:#12301F; --warn-bg:#33260F; --bad-bg:#3A1717; --hero-fg:#F4EFE3; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:15.5px;line-height:1.6;margin:0}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{text-wrap:balance;line-height:1.2;margin:0}
+p{margin:0}
+a{color:var(--gold-text)}
+:focus-visible{outline:2px solid var(--gold);outline-offset:3px;border-radius:4px}
+
+/* Bandeau */
+.hero{background:var(--night);color:var(--hero-fg);position:relative;overflow:hidden}
+.hero .wrap{padding-block:56px 48px;display:grid;gap:28px}
+.hero::after{content:"";position:absolute;right:-120px;top:-120px;width:420px;height:420px;border-radius:50%;border:1px solid rgba(201,164,76,.25);box-shadow:0 0 0 60px rgba(201,164,76,.05),0 0 0 120px rgba(201,164,76,.035)}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-light)}
+.hero h1{font-size:clamp(30px,4.6vw,50px);font-weight:800;letter-spacing:-.02em;max-width:18ch}
+.hero h1 em{font-style:normal;color:var(--gold)}
+.hero .lead{max-width:64ch;color:#C9D1DE;font-size:17px}
+.hero-meta{display:flex;flex-wrap:wrap;gap:10px;position:relative;z-index:1}
+.chip{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(243,217,140,.35);color:var(--gold-light);border-radius:999px;padding:6px 14px;font-size:13px;font-weight:600}
+.chip i{width:8px;height:8px;border-radius:50%;background:var(--gold);display:inline-block}
+
+/* Sommaire */
+.toc{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;margin-top:4px;position:relative;z-index:1}
+.toc a{display:flex;gap:10px;align-items:baseline;color:#DCE2EC;text-decoration:none;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);font-size:14px;font-weight:600}
+.toc a:hover{background:rgba(201,164,76,.12);border-color:rgba(201,164,76,.4)}
+.toc a span{font-family:var(--mono);font-size:12px;color:var(--gold)}
+
+/* Chapitres */
+section.ch{padding-block:56px 8px}
+.ch-head{display:grid;grid-template-columns:auto 1fr;gap:6px 18px;align-items:baseline;margin-bottom:26px}
+.ch-num{font-family:var(--mono);font-size:13px;color:var(--gold-text);background:var(--gold-soft);border:1px solid var(--line);border-radius:8px;padding:3px 9px;grid-row:span 2;align-self:start;margin-top:4px}
+.ch h2{font-size:clamp(23px,2.6vw,30px);font-weight:800;letter-spacing:-.01em}
+.ch-intro{color:var(--muted);max-width:72ch}
+h3{font-size:17px;font-weight:700;margin:30px 0 12px}
+.note{display:flex;gap:12px;align-items:flex-start;background:var(--gold-soft);border:1px solid var(--line);border-radius:12px;padding:14px 16px;font-size:14.5px;margin-top:18px;max-width:900px}
+.note b{color:var(--gold-text)}
+.note svg{flex:0 0 18px;margin-top:3px;color:var(--gold-text)}
+
+/* Parcours fléché, de gauche à droite */
+.scroll{overflow-x:auto;padding-bottom:10px;-webkit-overflow-scrolling:touch}
+.flow{display:flex;align-items:stretch;min-width:max-content;padding:6px 2px}
+.step{width:196px;flex:0 0 auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 14px 12px;display:flex;flex-direction:column;gap:6px;position:relative}
+.step .k{font-family:var(--mono);font-size:11.5px;color:var(--gold-text);letter-spacing:.04em}
+.step b{font-size:15px;line-height:1.3}
+.step p{font-size:13.5px;color:var(--muted);line-height:1.45}
+.step .where{margin-top:auto;padding-top:6px;font-size:11.5px;font-weight:600;color:var(--muted);border-top:1px dashed var(--line)}
+.step.start{background:var(--night-2);border-color:var(--night-2);color:var(--hero-fg)}
+.step.start p,.step.start .where{color:#B9C3D4;border-color:rgba(255,255,255,.12)}
+.step.start .k{color:var(--gold-light)}
+.step.end{border:1.5px solid var(--gold);box-shadow:0 0 0 4px var(--gold-soft)}
+.arrow{flex:0 0 112px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:6px;padding:0 6px;position:relative}
+.arrow .lbl{font-size:11.5px;font-weight:600;color:var(--gold-text);text-align:center;line-height:1.3;max-width:104px}
+.arrow .shaft{position:relative;width:100%;height:2px;background:var(--gold);border-radius:2px}
+.arrow .shaft::after{content:"";position:absolute;right:-2px;top:-5px;border-left:9px solid var(--gold);border-top:6px solid transparent;border-bottom:6px solid transparent}
+.arrow .shaft i{position:absolute;top:-3px;left:0;width:8px;height:8px;border-radius:50%;background:var(--gold-light);box-shadow:0 0 0 3px rgba(201,164,76,.25);animation:run 2.6s linear infinite}
+.arrow.back .shaft{background:transparent;border-top:2px dashed var(--gold)}
+@keyframes run{from{left:0;opacity:0}12%{opacity:1}88%{opacity:1}to{left:calc(100% - 8px);opacity:0}}
+
+/* Embranchement (connexion → menus) */
+.fork{display:grid;grid-template-columns:200px 120px 1fr;align-items:center;min-width:760px}
+.fork-lines{position:relative;height:100%}
+.fork-lines svg{width:100%;height:100%;display:block}
+.branches{display:grid;gap:12px}
+.branch{display:grid;grid-template-columns:150px 1fr;gap:14px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.branch .who{font-weight:800;font-size:14.5px}
+.branch .who small{display:block;font-family:var(--mono);font-weight:500;font-size:11px;color:var(--muted)}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-size:12.5px;font-weight:600;padding:3px 10px;border-radius:999px;background:var(--sand);color:var(--fg)}
+.tag.gold{background:var(--gold-soft);color:var(--gold-text);border:1px solid var(--gold)}
+
+/* Profils */
+.roles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.role{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.role .badge{align-self:flex-start;font-family:var(--mono);font-size:11px;padding:3px 9px;border-radius:6px;background:var(--night-2);color:var(--gold-light)}
+.role h3{margin:0;font-size:19px}
+.role .mission{color:var(--muted);font-size:14.5px}
+.role ul{margin:4px 0 0;padding:0;list-style:none;display:grid;gap:7px}
+.role li{display:grid;grid-template-columns:16px 1fr;gap:8px;font-size:14px;line-height:1.45}
+.role li::before{content:"";width:7px;height:7px;border-radius:2px;background:var(--gold);margin-top:7px;transform:rotate(45deg)}
+.role.admin{border-color:var(--gold);box-shadow:0 0 0 4px var(--gold-soft)}
+
+/* Tableau des droits */
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:680px;font-size:14px}
+th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:middle}
+thead th{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--sand);font-weight:700}
+tbody tr:last-child td{border-bottom:0}
+td.c,th.c{text-align:center}
+td small{color:var(--muted);display:block;font-size:12px}
+.r{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;padding:3px 10px;border-radius:999px}
+.r.full{background:var(--ok-bg);color:var(--ok)}
+.r.read{background:var(--warn-bg);color:var(--warn)}
+.r.none{color:var(--muted);font-weight:500}
+
+/* Diagramme de séquence */
+.seq{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:10px 6px}
+.seq svg{display:block;min-width:900px;width:100%;height:auto}
+.s-lane{fill:var(--sand)}
+.s-head{fill:var(--night-2)}
+.s-headtxt{fill:var(--gold-light);font:700 13px var(--font)}
+.s-subtxt{fill:#B9C3D4;font:500 10.5px var(--mono)}
+.s-life{stroke:var(--line);stroke-width:2;stroke-dasharray:4 5}
+.s-msg{stroke:var(--gold);stroke-width:2;fill:none}
+.s-ret{stroke:var(--gold);stroke-width:1.6;stroke-dasharray:6 5;fill:none}
+.s-txt{fill:var(--fg);font:600 12.5px var(--font)}
+.s-num{fill:var(--gold-text);font:500 11px var(--mono)}
+.s-dot{fill:var(--gold)}
+.s-head-fill{fill:var(--gold)}
+
+/* États */
+.states{display:grid;gap:14px}
+.state-row{display:grid;grid-template-columns:170px 1fr;gap:16px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.state-row > b{font-size:14.5px}
+.state-row > b small{display:block;font-weight:500;color:var(--muted);font-size:12px}
+.sflow{display:flex;align-items:center;gap:0;min-width:max-content}
+.pill{font-size:13px;font-weight:700;padding:6px 14px;border-radius:999px;border:1.5px solid currentColor;white-space:nowrap}
+.pill.ok{color:var(--ok);background:var(--ok-bg)}
+.pill.warn{color:var(--warn);background:var(--warn-bg)}
+.pill.bad{color:var(--bad);background:var(--bad-bg)}
+.pill.neutral{color:var(--muted);background:var(--sand)}
+.sarrow{display:flex;flex-direction:column;align-items:center;width:130px;gap:3px;padding:0 6px}
+.sarrow span{font-size:11px;font-weight:600;color:var(--gold-text);text-align:center;line-height:1.25}
+.sarrow i{display:block;width:100%;height:2px;background:var(--gold);position:relative}
+.sarrow i::after{content:"";position:absolute;right:-1px;top:-4px;border-left:8px solid var(--gold);border-top:5px solid transparent;border-bottom:5px solid transparent}
+.sarrow.two i::before{content:"";position:absolute;left:-1px;top:-4px;border-right:8px solid var(--gold);border-top:5px solid transparent;border-bottom:5px solid transparent}
+
+/* Modèle de données */
+.model svg{display:block;min-width:860px;width:100%;height:auto}
+.m-box{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+.m-box.key{stroke:var(--gold);stroke-width:2}
+.m-title{fill:var(--fg);font:800 14px var(--font)}
+.m-field{fill:var(--muted);font:500 11.5px var(--mono)}
+.m-link{stroke:var(--gold);stroke-width:2;fill:none}
+.m-card{fill:var(--gold-text);font:700 12px var(--mono)}
+.m-lbl{fill:var(--gold-text);font:600 11.5px var(--font)}
+.m-geo{fill:var(--gold-soft);stroke:var(--gold);stroke-width:1.2;stroke-dasharray:4 4}
+
+/* Bénéfices */
+.gains{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.gain{padding:16px;border-top:3px solid var(--gold);background:var(--surface);border-radius:0 0 12px 12px;border-left:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line);min-width:0}
+.gain b{display:block;font-size:15px;margin-bottom:4px}
+.gain p{font-size:13.5px;color:var(--muted)}
+
+.legend{display:flex;flex-wrap:wrap;gap:16px;font-size:12.5px;color:var(--muted);margin:10px 0 0}
+.legend span{display:inline-flex;align-items:center;gap:8px}
+.legend i{display:inline-block;width:28px;height:0;border-top:2px solid var(--gold)}
+.legend i.d{border-top-style:dashed}
+
+footer{margin-top:64px;border-top:1px solid var(--line)}
+footer .wrap{padding-block:22px 40px;color:var(--muted);font-size:13px;display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between}
+
+@media (max-width:900px){.roles{grid-template-columns:1fr}.gains{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.gains{grid-template-columns:1fr}.state-row{grid-template-columns:1fr}.state-row .scroll{margin:0 -4px}.hero .wrap{padding-block:40px 36px}}
+@media (prefers-reduced-motion:reduce){.arrow .shaft i{animation:none;left:calc(50% - 4px)}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">DRS-SFD · Ministère des Finances et du Budget</div>
+    <h1>Comment fonctionne la <em>cartographie des IMF</em></h1>
+    <p class="lead">Ce guide explique, étape par étape, qui fait quoi sur la plateforme et comment les informations circulent entre les utilisateurs, l'interface, le serveur et la base de données. Chaque parcours se lit de gauche à droite, en suivant les flèches.</p>
+    <div class="hero-meta">
+      <span class="chip"><i></i>3 profils : Administrateur, Superviseur, Consultant</span>
+      <span class="chip"><i></i>11 écrans</span>
+      <span class="chip"><i></i>14 régions cartographiées</span>
+    </div>
+    <nav class="toc" aria-label="Sommaire">
+      <a href="#vue"><span>01</span>Vue d'ensemble</a>
+      <a href="#profils"><span>02</span>Les trois profils</a>
+      <a href="#connexion"><span>03</span>Connexion et menus</a>
+      <a href="#admin"><span>04</span>Parcours Administrateur</a>
+      <a href="#superviseur"><span>05</span>Parcours Superviseur</a>
+      <a href="#consultant"><span>06</span>Parcours Consultant</a>
+      <a href="#import"><span>07</span>Import et export</a>
+      <a href="#coulisses"><span>08</span>Dans les coulisses</a>
+      <a href="#statuts"><span>09</span>Cycle de vie des statuts</a>
+      <a href="#donnees"><span>10</span>Comment les données sont reliées</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- 01 -->
+<section class="ch" id="vue">
+  <div class="ch-head"><span class="ch-num">01</span><h2>Vue d'ensemble</h2>
+  <p class="ch-intro">La plateforme recense les institutions de microfinance (IMF) du Sénégal, leurs points de service et leurs dirigeants, puis les place sur une carte. Toute action d'un utilisateur suit le même chemin.</p></div>
+
+  <div class="scroll"><div class="flow" role="img" aria-label="Utilisateur, puis interface web, puis serveur API, puis base de données, puis résultat affiché">
+    <div class="step start"><span class="k">ACTEUR</span><b>L'utilisateur</b><p>Administrateur, superviseur ou consultant. Il clique, saisit ou dépose un fichier.</p><span class="where">Navigateur web</span></div>
+    <div class="arrow"><span class="lbl">clic, saisie, fichier</span><span class="shaft"><i></i></span></div>
+    <div class="step"><span class="k">INTERFACE</span><b>Application web</b><p>Affiche les écrans, les cartes et les formulaires. Vérifie les champs avant l'envoi.</p><span class="where">React + Leaflet</span></div>
+    <div class="arrow"><span class="lbl">requête sécurisée + jeton</span><span class="shaft"><i></i></span></div>
+    <div class="step"><span class="k">SERVEUR</span><b>API métier</b><p>Contrôle le rôle de l'utilisateur, applique les règles et prépare les données.</p><span class="where">Django REST</span></div>
+    <div class="arrow"><span class="lbl">lecture, écriture, calcul géographique</span><span class="shaft"><i></i></span></div>
+    <div class="step"><span class="k">STOCKAGE</span><b>Base de données</b><p>Conserve IMF, points, mandats et limites des régions, départements et communes.</p><span class="where">PostgreSQL + PostGIS</span></div>
+    <div class="arrow"><span class="lbl">réponse JSON ou GeoJSON</span><span class="shaft"><i></i></span></div>
+    <div class="step end"><span class="k">RÉSULTAT</span><b>Ce que l'on voit</b><p>Carte colorée, fiche d'une IMF, tableau de bord, rapport d'import ou fichier exporté.</p><span class="where">Retour à l'écran</span></div>
+  </div></div>
+
+  <h3>À quoi sert la plateforme</h3>
+  <div class="gains">
+    <div class="gain"><b>Une seule source</b><p>Toutes les IMF, agences et dirigeants au même endroit, au lieu de fichiers dispersés.</p></div>
+    <div class="gain"><b>Voir le territoire</b><p>La carte montre où les services financiers sont présents et où ils manquent.</p></div>
+    <div class="gain"><b>Suivre les dossiers</b><p>Agréments en cours, mandats à renouveler et points suspendus sont signalés.</p></div>
+    <div class="gain"><b>Décider vite</b><p>Les chiffres par région sont prêts pour les rapports et les réunions.</p></div>
+  </div>
+</section>
+
+<!-- 02 -->
+<section class="ch" id="profils">
+  <div class="ch-head"><span class="ch-num">02</span><h2>Les trois profils</h2>
+  <p class="ch-intro">Chaque compte reçoit un seul rôle. Le rôle décide des menus affichés et des actions autorisées. Le serveur vérifie ce rôle à chaque requête, même si quelqu'un tente d'ouvrir une page par son adresse.</p></div>
+
+  <div class="roles">
+    <article class="role admin">
+      <span class="badge">ROLE_ADMIN</span>
+      <h3>Administrateur</h3>
+      <p class="mission">Garant de la plateforme. Il gère les comptes et dispose de tous les droits du superviseur.</p>
+      <ul>
+        <li>Crée les comptes des agents et leur attribue un rôle</li>
+        <li>Désactive un compte quand un agent quitte le service</li>
+        <li>Consulte le journal d'audit : qui a modifié quoi, et quand</li>
+        <li>Peut créer, modifier et importer toutes les données</li>
+      </ul>
+    </article>
+    <article class="role">
+      <span class="badge">ROLE_SUPERVISOR</span>
+      <h3>Superviseur</h3>
+      <p class="mission">Agent de la DRS-SFD qui tient les données à jour et suit les institutions.</p>
+      <ul>
+        <li>Crée et modifie les fiches IMF</li>
+        <li>Ajoute les points de service avec leurs coordonnées GPS</li>
+        <li>Enregistre les dirigeants et leurs mandats</li>
+        <li>Importe des fichiers CSV ou Excel et exporte des listes</li>
+        <li>Traite les alertes de l'espace supervision</li>
+      </ul>
+    </article>
+    <article class="role">
+      <span class="badge">ROLE_CONSULT</span>
+      <h3>Consultant</h3>
+      <p class="mission">Lecteur : décideur, partenaire ou agent d'une autre direction.</p>
+      <ul>
+        <li>Consulte le tableau de bord et les cartes macro et micro</li>
+        <li>Cherche une IMF dans l'annuaire et lit sa fiche</li>
+        <li>Ne peut rien créer, modifier ni supprimer</li>
+        <li>N'a pas accès à l'import, à l'export ni au journal d'audit</li>
+      </ul>
+    </article>
+  </div>
+
+  <h3>Qui a accès à quoi</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Écran</th><th class="c">Administrateur</th><th class="c">Superviseur</th><th class="c">Consultant</th></tr></thead>
+    <tbody>
+      <tr><td>Tableau de bord<small>écran 02</small></td><td class="c"><span class="r full">Complet</span></td><td class="c"><span class="r full">Complet</span></td><td class="c"><span class="r read">Lecture</span></td></tr>
+      <tr><td>Cartes macro et micro<small>écrans 03 et 04</small></td><td class="c"><span class="r full">Complet</span></td><td class="c"><span class="r full">Complet</span></td><td class="c"><span class="r read">Lecture</span></td></tr>
+      <tr><td>Espace supervision<small>écran 05</small></td><td class="c"><span class="r full">Complet</span></td><td class="c"><span class="r full">Complet</span></td><td class="c"><span class="r none">—</span></td></tr>
+      <tr><td>Espace consultation<small>écran 06</small></td><td class="c"><span class="r read">Lecture</span></td><td class="c"><span class="r read">Lecture</span></td><td class="c"><span class="r read">Lecture</span></td></tr>
+      <tr><td>Institutions, fiche IMF<small>écrans 07 et 08</small></td><td class="c"><span class="r full">Complet</span></td><td class="c"><span class="r full">Complet</span></td><td class="c"><span class="r none">—</span></td></tr>
+      <tr><td>Points de service<small>écran 09</small></td><td class="c"><span class="r full">Complet</span></td><td class="c"><span class="r full">Complet</span></td><td class="c"><span class="r none">—</span></td></tr>
+      <tr><td>Dirigeants et mandats<small>écran 10</small></td><td class="c"><span class="r full">Complet</span></td><td class="c"><span class="r full">Complet</span></td><td class="c"><span class="r none">—</span></td></tr>
+      <tr><td>Import et export<small>écran 11</small></td><td class="c"><span class="r full">Complet</span></td><td class="c"><span class="r full">Complet</span></td><td class="c"><span class="r none">—</span></td></tr>
+      <tr><td>Journal d'audit<small>menu Données</small></td><td class="c"><span class="r full">Complet</span></td><td class="c"><span class="r read">Lecture</span></td><td class="c"><span class="r none">—</span></td></tr>
+      <tr><td>Gestion des comptes et des rôles<small>écran à ajouter à la maquette</small></td><td class="c"><span class="r full">Complet</span></td><td class="c"><span class="r none">—</span></td><td class="c"><span class="r none">—</span></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- 03 -->
+<section class="ch" id="connexion">
+  <div class="ch-head"><span class="ch-num">03</span><h2>Connexion et menus</h2>
+  <p class="ch-intro">Tout le monde passe par le même écran de connexion. Une fois connecté, chacun arrive sur le tableau de bord, mais la barre latérale ne montre que les menus de son rôle.</p></div>
+
+  <div class="scroll"><div class="flow">
+    <div class="step start"><span class="k">ÉTAPE 1</span><b>Saisir ses identifiants</b><p>Adresse e-mail et mot de passe.</p><span class="where">Écran 01 · Connexion</span></div>
+    <div class="arrow"><span class="lbl">envoi des identifiants</span><span class="shaft"><i></i></span></div>
+    <div class="step"><span class="k">ÉTAPE 2</span><b>Vérification</b><p>Le serveur contrôle le compte. En cas d'erreur, un message s'affiche sous le champ.</p><span class="where">API · authentification</span></div>
+    <div class="arrow"><span class="lbl">jeton JWT + rôle</span><span class="shaft"><i></i></span></div>
+    <div class="step"><span class="k">ÉTAPE 3</span><b>Session ouverte</b><p>Le jeton accompagne ensuite chaque requête. Il expire au bout d'un temps défini.</p><span class="where">Navigateur</span></div>
+    <div class="arrow"><span class="lbl">menus filtrés par rôle</span><span class="shaft"><i></i></span></div>
+    <div class="step end"><span class="k">ÉTAPE 4</span><b>Tableau de bord</b><p>Chiffres clés et accès rapide aux cartes.</p><span class="where">Écran 02</span></div>
+  </div></div>
+
+  <h3>Ce que chaque rôle voit dans la barre latérale</h3>
+  <div class="scroll"><div class="fork">
+    <div class="step start" style="width:auto"><span class="k">APRÈS CONNEXION</span><b>Le rôle est lu dans le jeton</b><p>L'interface construit le menu en fonction de ce rôle.</p></div>
+    <div class="fork-lines" aria-hidden="true"><svg viewBox="0 0 120 240" preserveAspectRatio="none"><path d="M0 120 C60 120 50 40 116 40" fill="none" stroke="var(--gold)" stroke-width="2"/><path d="M0 120 L116 120" fill="none" stroke="var(--gold)" stroke-width="2"/><path d="M0 120 C60 120 50 200 116 200" fill="none" stroke="var(--gold)" stroke-width="2"/></svg></div>
+    <div class="branches">
+      <div class="branch"><div class="who">Administrateur<small>ROLE_ADMIN</small></div><div class="tags"><span class="tag">Tableau de bord</span><span class="tag">Cartes</span><span class="tag">Supervision</span><span class="tag">Institutions</span><span class="tag">Points de service</span><span class="tag">Dirigeants</span><span class="tag">Import / Export</span><span class="tag gold">Journal d'audit</span><span class="tag gold">Comptes et rôles</span></div></div>
+      <div class="branch"><div class="who">Superviseur<small>ROLE_SUPERVISOR</small></div><div class="tags"><span class="tag">Tableau de bord</span><span class="tag">Cartes</span><span class="tag">Supervision</span><span class="tag">Institutions</span><span class="tag">Points de service</span><span class="tag">Dirigeants</span><span class="tag">Import / Export</span><span class="tag">Journal d'audit</span></div></div>
+      <div class="branch"><div class="who">Consultant<small>ROLE_CONSULT</small></div><div class="tags"><span class="tag">Tableau de bord</span><span class="tag">Cartes</span><span class="tag">Espace consultation</span><span class="tag">Institutions (lecture)</span></div></div>
+    </div>
+  </div></div>
+</section>
+
+<!-- 04 -->
+<section class="ch" id="admin">
+  <div class="ch-head"><span class="ch-num">04</span><h2>Parcours Administrateur</h2>
+  <p class="ch-intro">L'administrateur ouvre l'accès à la plateforme. Sans lui, aucun superviseur ni consultant ne peut se connecter.</p></div>
+
+  <div class="scroll"><div class="flow">
+    <div class="step start"><span class="k">1 · DEMANDE</span><b>Un agent a besoin d'un accès</b><p>Sa direction transmet son nom, son service et le rôle souhaité.</p><span class="where">Hors plateforme</span></div>
+    <div class="arrow"><span class="lbl">création du compte</span><span class="shaft"><i></i></span></div>
+    <div class="step"><span class="k">2 · COMPTE</span><b>Créer le compte</b><p>Nom, e-mail, service. Le compte est actif dès l'enregistrement.</p><span class="where">Comptes et rôles</span></div>
+    <div class="arrow"><span class="lbl">choix du rôle</span><span class="shaft"><i></i></span></div>
+    <div class="step"><span class="k">3 · RÔLE</span><b>Attribuer un rôle</b><p>Superviseur pour la saisie, consultant pour la lecture seule.</p><span class="where">Comptes et rôles</span></div>
+    <div class="arrow"><span class="lbl">l'agent se connecte</span><span class="shaft"><i></i></span></div>
+    <div class="step"><span class="k">4 · SUIVI</span><b>Contrôler l'activité</b><p>Le journal d'audit liste chaque création, modification et import, avec son auteur.</p><span class="where">Journal d'audit</span></div>
+    <div class="arrow"><span class="lbl">départ ou changement de poste</span><span class="shaft"><i></i></span></div>
+    <div class="step end"><span class="k">5 · FIN D'ACCÈS</span><b>Désactiver ou changer le rôle</b><p>Le compte est désactivé, pas supprimé, pour garder l'historique.</p><span class="where">Comptes et rôles</span></div>
+  </div></div>
+  <div class="note"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v5M12 16.5v.5"/></svg><p><b>Écran à ajouter.</b> La maquette n'a pas encore d'écran « Comptes et rôles » ni d'écran « Journal d'audit ». Ils doivent reprendre le style de l'écran 07 : une liste avec filtres, et un tiroir à droite pour créer ou modifier un compte.</p></div>
+</section>
+
+<!-- 05 -->
+<section class="ch" id="superviseur">
+  <div class="ch-head"><span class="ch-num">05</span><h2>Parcours Superviseur</h2>
+  <p class="ch-intro">Le superviseur alimente la plateforme. L'ordre compte : une IMF doit exister avant qu'on lui rattache des points de service ou des dirigeants.</p></div>
+
+  <div class="scroll"><div class="flow">
+    <div class="step start"><span class="k">1 · INSTITUTION</span><b>Créer la fiche IMF</b><p>Dénomination, sigle, type (mutuelle, coopérative, SA), numéro et date d'agrément, statut.</p><span class="where">Écrans 07 et 08</span></div>
+    <div class="arrow"><span class="lbl">l'IMF existe</span><span class="shaft"><i></i></span></div>
+    <div class="step"><span class="k">2 · IMPLANTATION</span><b>Ajouter les points de service</b><p>Siège, agence, guichet ou bureau. On clique sur la carte ou on saisit latitude et longitude.</p><span class="where">Écran 09</span></div>
+    <div class="arrow"><span class="lbl">région, département et commune remplis seuls</span><span class="shaft"><i></i></span></div>
+    <div class="step"><span class="k">3 · GOUVERNANCE</span><b>Enregistrer les dirigeants</b><p>Choisir une personne existante ou la créer, puis définir sa fonction, ses dates et son statut de mandat.</p><span class="where">Écran 10</span></div>
+    <div class="arrow"><span class="lbl">données complètes</span><span class="shaft"><i></i></span></div>
+    <div class="step"><span class="k">4 · CONTRÔLE</span><b>Traiter les alertes</b><p>Agréments en cours, mandats proches de leur fin, points sans coordonnées, imports en échec.</p><span class="where">Écran 05</span></div>
+    <div class="arrow"><span class="lbl">mise à jour immédiate</span><span class="shaft"><i></i></span></div>
+    <div class="step end"><span class="k">5 · RÉSULTAT</span><b>Visible sur les cartes</b><p>Les couleurs des régions et les points de la carte micro reflètent les nouvelles données.</p><span class="where">Écrans 02, 03, 04</span></div>
+  </div></div>
+
+  <h3>Les règles appliquées pendant la saisie</h3>
+  <div class="gains">
+    <div class="gain"><b>Champs obligatoires</b><p>Marqués d'un astérisque. Le bouton Enregistrer reste inactif tant qu'ils sont vides.</p></div>
+    <div class="gain"><b>Coordonnées au Sénégal</b><p>Un point placé hors du territoire est refusé avec un message clair.</p></div>
+    <div class="gain"><b>Pas de doublon</b><p>Une même personne ne peut pas occuper deux fois la même fonction dans une IMF.</p></div>
+    <div class="gain"><b>Trace de chaque action</b><p>Chaque création ou modification est inscrite au journal d'audit.</p></div>
+  </div>
+</section>
+
+<!-- 06 -->
+<section class="ch" id="consultant">
+  <div class="ch-head"><span class="ch-num">06</span><h2>Parcours Consultant</h2>
+  <p class="ch-intro">Le consultant part d'une vue nationale et descend jusqu'à une institution précise. Il lit, il ne modifie rien.</p></div>
+
+  <div class="scroll"><div class="flow">
+    <div class="step start"><span class="k">1 · NATIONAL</span><b>Tableau de bord</b><p>Nombre d'IMF, de points de service et répartition par statut.</p><span class="where">Écran 02</span></div>
+    <div class="arrow"><span class="lbl">ouvrir la carte</span><span class="shaft"><i></i></span></div>
+    <div class="step"><span class="k">2 · RÉGIONS</span><b>Carte macro</b><p>Les 14 régions colorées selon le nombre de points. Survol pour voir les chiffres.</p><span class="where">Écran 03</span></div>
+    <div class="arrow"><span class="lbl">clic sur une région</span><span class="shaft"><i></i></span></div>
+    <div class="step"><span class="k">3 · TERRAIN</span><b>Carte micro</b><p>Chaque point de service à son emplacement, avec filtres par type et par statut.</p><span class="where">Écran 04</span></div>
+    <div class="arrow"><span class="lbl">clic sur un point</span><span class="shaft"><i></i></span></div>
+    <div class="step"><span class="k">4 · DÉTAIL</span><b>Fiche de l'IMF</b><p>Identité, agrément, réseau d'agences et dirigeants en fonction.</p><span class="where">Écran 06</span></div>
+    <div class="arrow back"><span class="lbl">retour à la carte ou nouvelle recherche</span><span class="shaft"></span></div>
+    <div class="step end"><span class="k">AUTRE ENTRÉE</span><b>Annuaire</b><p>Recherche directe par nom, sigle ou région, sans passer par la carte.</p><span class="where">Écran 06</span></div>
+  </div></div>
+  <div class="legend"><span><i></i>action de l'utilisateur</span><span><i class="d"></i>retour possible</span></div>
+</section>
+
+<!-- 07 -->
+<section class="ch" id="import">
+  <div class="ch-head"><span class="ch-num">07</span><h2>Import et export</h2>
+  <p class="ch-intro">L'import sert à charger beaucoup de lignes d'un coup, par exemple la liste des agences d'une IMF. Chaque ligne est contrôlée séparément : une ligne fausse n'empêche pas les autres d'entrer.</p></div>
+
+  <h3>Importer un fichier</h3>
+  <div class="scroll"><div class="flow">
+    <div class="step start"><span class="k">1 · TYPE</span><b>Choisir quoi importer</b><p>Institutions, points de service ou dirigeants. Un modèle de fichier est téléchargeable.</p><span class="where">Écran 11 · Importer</span></div>
+    <div class="arrow"><span class="lbl">dépôt du fichier</span><span class="shaft"><i></i></span></div>
+    <div class="step"><span class="k">2 · FICHIER</span><b>Déposer le CSV ou l'Excel</b><p>Glisser-déposer ou parcourir. Formats acceptés : .csv, .xlsx, .xls.</p><span class="where">Statut : En attente</span></div>
+    <div class="arrow"><span class="lbl">lancement</span><span class="shaft"><i></i></span></div>
+    <div class="step"><span class="k">3 · CONTRÔLE</span><b>Vérification ligne par ligne</b><p>Colonnes présentes, valeurs autorisées, coordonnées valides, IMF existante.</p><span class="where">Statut : En cours</span></div>
+    <div class="arrow"><span class="lbl">bilan</span><span class="shaft"><i></i></span></div>
+    <div class="step"><span class="k">4 · RAPPORT</span><b>Lire le rapport</b><p>Lignes importées, lignes en erreur et taux de succès. Chaque erreur indique sa ligne et sa cause.</p><span class="where">Statut : Terminé ou Échec</span></div>
+    <div class="arrow back"><span class="lbl">corriger les lignes en erreur</span><span class="shaft"></span></div>
+    <div class="step end"><span class="k">5 · REPRISE</span><b>Réimporter les corrections</b><p>Seules les lignes corrigées sont renvoyées. L'historique garde tous les imports.</p><span class="where">Historique des imports</span></div>
+  </div></div>
+
+  <h3>Exporter des données</h3>
+  <div class="scroll"><div class="flow">
+    <div class="step start"><span class="k">1 · DONNÉES</span><b>Choisir le jeu de données</b><p>Institutions, points de service ou dirigeants.</p><span class="where">Écran 11 · Exporter</span></div>
+    <div class="arrow"><span class="lbl">affiner</span><span class="shaft"><i></i></span></div>
+    <div class="step"><span class="k">2 · FILTRES</span><b>Filtrer</b><p>Par région, type d'IMF ou statut. Le nombre de lignes se met à jour.</p><span class="where">Écran 11</span></div>
+    <div class="arrow"><span class="lbl">format</span><span class="shaft"><i></i></span></div>
+    <div class="step"><span class="k">3 · FORMAT</span><b>CSV ou Excel</b><p>Les colonnes suivent celles du modèle d'import.</p><span class="where">Écran 11</span></div>
+    <div class="arrow"><span class="lbl">génération</span><span class="shaft"><i></i></span></div>
+    <div class="step end"><span class="k">4 · FICHIER</span><b>Télécharger</b><p>Le fichier est prêt pour un rapport ou un tableur.</p><span class="where">Poste de l'agent</span></div>
+  </div></div>
+</section>
+
+<!-- 08 -->
+<section class="ch" id="coulisses">
+  <div class="ch-head"><span class="ch-num">08</span><h2>Dans les coulisses : enregistrer un point de service</h2>
+  <p class="ch-intro">Ce schéma montre les échanges entre les quatre acteurs quand un superviseur enregistre une agence. Chaque flèche est un message envoyé de gauche à droite, puis la réponse revient en pointillés.</p></div>
+
+  <div class="seq scroll">
+    <svg viewBox="0 0 1000 560" role="img" aria-label="Diagramme de séquence de l'enregistrement d'un point de service">
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="s-head-fill"/></marker>
+      </defs>
+      <!-- colonnes -->
+      <rect x="20" y="16" width="200" height="52" rx="12" class="s-head"/><text x="120" y="39" text-anchor="middle" class="s-headtxt">Superviseur</text><text x="120" y="56" text-anchor="middle" class="s-subtxt">utilisateur</text>
+      <rect x="280" y="16" width="200" height="52" rx="12" class="s-head"/><text x="380" y="39" text-anchor="middle" class="s-headtxt">Interface web</text><text x="380" y="56" text-anchor="middle" class="s-subtxt">React + Leaflet</text>
+      <rect x="540" y="16" width="200" height="52" rx="12" class="s-head"/><text x="640" y="39" text-anchor="middle" class="s-headtxt">API</text><text x="640" y="56" text-anchor="middle" class="s-subtxt">Django REST</text>
+      <rect x="800" y="16" width="180" height="52" rx="12" class="s-head"/><text x="890" y="39" text-anchor="middle" class="s-headtxt">Base de données</text><text x="890" y="56" text-anchor="middle" class="s-subtxt">PostgreSQL + PostGIS</text>
+      <line x1="120" y1="72" x2="120" y2="545" class="s-life"/>
+      <line x1="380" y1="72" x2="380" y2="545" class="s-life"/>
+      <line x1="640" y1="72" x2="640" y2="545" class="s-life"/>
+      <line x1="890" y1="72" x2="890" y2="545" class="s-life"/>
+
+      <!-- 1 -->
+      <text x="250" y="102" text-anchor="middle" class="s-txt"><tspan class="s-num">1 </tspan>Remplit le formulaire, place le point</text>
+      <line x1="124" y1="112" x2="374" y2="112" class="s-msg" marker-end="url(#ah)"/>
+      <!-- 2 self -->
+      <path d="M384 140 h46 v24 h-44" class="s-msg" marker-end="url(#ah)"/>
+      <text x="440" y="157" class="s-txt"><tspan class="s-num">2 </tspan>Vérifie les champs</text>
+      <!-- 3 -->
+      <text x="510" y="196" text-anchor="middle" class="s-txt"><tspan class="s-num">3 </tspan>Envoie la fiche + jeton</text>
+      <line x1="384" y1="206" x2="634" y2="206" class="s-msg" marker-end="url(#ah)"/>
+      <!-- 4 self -->
+      <path d="M644 230 h46 v24 h-44" class="s-msg" marker-end="url(#ah)"/>
+      <text x="700" y="247" class="s-txt"><tspan class="s-num">4 </tspan>Contrôle le rôle</text>
+      <!-- 5 -->
+      <text x="765" y="288" text-anchor="middle" class="s-txt"><tspan class="s-num">5 </tspan>Quelle commune contient ce point ?</text>
+      <line x1="644" y1="298" x2="884" y2="298" class="s-msg" marker-end="url(#ah)"/>
+      <!-- 6 -->
+      <text x="765" y="330" text-anchor="middle" class="s-txt"><tspan class="s-num">6 </tspan>Commune, département, région</text>
+      <line x1="886" y1="340" x2="646" y2="340" class="s-ret" marker-end="url(#ah)"/>
+      <!-- 7 -->
+      <text x="765" y="378" text-anchor="middle" class="s-txt"><tspan class="s-num">7 </tspan>Enregistre le point</text>
+      <line x1="644" y1="388" x2="884" y2="388" class="s-msg" marker-end="url(#ah)"/>
+      <line x1="886" y1="414" x2="646" y2="414" class="s-ret" marker-end="url(#ah)"/>
+      <text x="765" y="432" text-anchor="middle" class="s-num">enregistré</text>
+      <!-- 8 -->
+      <text x="510" y="460" text-anchor="middle" class="s-txt"><tspan class="s-num">8 </tspan>Confirmation + données</text>
+      <line x1="636" y1="470" x2="386" y2="470" class="s-ret" marker-end="url(#ah)"/>
+      <!-- 9 -->
+      <text x="250" y="506" text-anchor="middle" class="s-txt"><tspan class="s-num">9 </tspan>« Point enregistré », visible sur la carte</text>
+      <line x1="376" y1="516" x2="126" y2="516" class="s-ret" marker-end="url(#ah)"/>
+    </svg>
+  </div>
+  <div class="legend"><span><i></i>demande</span><span><i class="d"></i>réponse</span></div>
+  <div class="note"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v5M12 16.5v.5"/></svg><p><b>Si le rôle ne convient pas</b> à l'étape 4, l'API répond « accès refusé » et rien n'est enregistré. <b>Si le point est hors du Sénégal</b> à l'étape 5, aucune commune n'est trouvée et l'interface affiche une erreur sous les coordonnées.</p></div>
+</section>
+
+<!-- 09 -->
+<section class="ch" id="statuts">
+  <div class="ch-head"><span class="ch-num">09</span><h2>Cycle de vie des statuts</h2>
+  <p class="ch-intro">Les couleurs sont les mêmes partout : vert pour ce qui est actif, orange pour ce qui est en attente, rouge pour ce qui est arrêté.</p></div>
+
+  <div class="states">
+    <div class="state-row"><b>Institution (IMF)<small>statut réglementaire</small></b>
+      <div class="scroll"><div class="sflow">
+        <span class="pill warn">En cours d'agrément</span>
+        <span class="sarrow"><span>agrément accordé</span><i></i></span>
+        <span class="pill ok">Agréée</span>
+        <span class="sarrow"><span>retrait d'agrément</span><i></i></span>
+        <span class="pill bad">Radiée</span>
+      </div></div></div>
+    <div class="state-row"><b>Point de service<small>activité</small></b>
+      <div class="scroll"><div class="sflow">
+        <span class="pill ok">Ouvert</span>
+        <span class="sarrow two"><span>suspension ou reprise</span><i></i></span>
+        <span class="pill warn">Suspendu</span>
+        <span class="sarrow"><span>fermeture définitive</span><i></i></span>
+        <span class="pill bad">Fermé</span>
+      </div></div></div>
+    <div class="state-row"><b>Mandat de dirigeant<small>situation</small></b>
+      <div class="scroll"><div class="sflow">
+        <span class="pill neutral">Intérim</span>
+        <span class="sarrow"><span>nomination confirmée</span><i></i></span>
+        <span class="pill ok">En fonction</span>
+        <span class="sarrow two"><span>suspension ou levée</span><i></i></span>
+        <span class="pill warn">Suspendu</span>
+      </div></div></div>
+    <div class="state-row"><b>Import de fichier<small>traitement</small></b>
+      <div class="scroll"><div class="sflow">
+        <span class="pill neutral">En attente</span>
+        <span class="sarrow"><span>lancement</span><i></i></span>
+        <span class="pill warn">En cours</span>
+        <span class="sarrow"><span>fin du contrôle</span><i></i></span>
+        <span class="pill ok">Terminé</span>
+        <span style="padding:0 10px;color:var(--muted);font-size:13px">ou</span>
+        <span class="pill bad">Échec</span>
+      </div></div></div>
+  </div>
+</section>
+
+<!-- 10 -->
+<section class="ch" id="donnees">
+  <div class="ch-head"><span class="ch-num">10</span><h2>Comment les données sont reliées</h2>
+  <p class="ch-intro">Une IMF possède plusieurs points de service et plusieurs mandats. Un dirigeant peut avoir des mandats dans plusieurs IMF. Chaque point est rattaché automatiquement à son découpage administratif grâce à ses coordonnées.</p></div>
+
+  <div class="model scroll">
+    <svg viewBox="0 0 1000 380" role="img" aria-label="Schéma des relations entre IMF, points de service, mandats, dirigeants et découpage administratif">
+      <defs><marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="s-head-fill"/></marker></defs>
+      <!-- IMF -->
+      <rect x="20" y="130" width="200" height="132" rx="14" class="m-box key"/>
+      <text x="40" y="160" class="m-title">Institution (IMF)</text>
+      <text x="40" y="186" class="m-field">dénomination, sigle</text>
+      <text x="40" y="206" class="m-field">type : MUTUELLE · COOP · SA</text>
+      <text x="40" y="226" class="m-field">n° et date d'agrément</text>
+      <text x="40" y="246" class="m-field">statut réglementaire</text>
+      <!-- Point -->
+      <rect x="390" y="30" width="220" height="132" rx="14" class="m-box"/>
+      <text x="410" y="60" class="m-title">Point de service</text>
+      <text x="410" y="86" class="m-field">type : SIÈGE · AGENCE ·</text>
+      <text x="410" y="104" class="m-field">  GUICHET · BUREAU</text>
+      <text x="410" y="124" class="m-field">latitude, longitude</text>
+      <text x="410" y="144" class="m-field">statut : OUVERT · …</text>
+      <!-- Mandat -->
+      <rect x="390" y="232" width="220" height="118" rx="14" class="m-box"/>
+      <text x="410" y="262" class="m-title">Mandat</text>
+      <text x="410" y="288" class="m-field">fonction : PCA, DG, …</text>
+      <text x="410" y="308" class="m-field">date de début, de fin</text>
+      <text x="410" y="328" class="m-field">statut : EN_FONCTION · …</text>
+      <!-- Dirigeant -->
+      <rect x="780" y="246" width="200" height="90" rx="14" class="m-box"/>
+      <text x="800" y="276" class="m-title">Dirigeant</text>
+      <text x="800" y="302" class="m-field">nom, prénom</text>
+      <text x="800" y="320" class="m-field">contact</text>
+      <!-- Découpage -->
+      <rect x="780" y="20" width="200" height="152" rx="14" class="m-geo"/>
+      <text x="800" y="50" class="m-title">Découpage administratif</text>
+      <text x="800" y="78" class="m-field">Région (14)</text>
+      <text x="812" y="100" class="m-field">└ Département</text>
+      <text x="824" y="122" class="m-field">└ Commune</text>
+      <text x="800" y="152" class="m-field">limites : PostGIS</text>
+
+      <!-- liens -->
+      <path d="M220 175 C300 175 300 96 386 96" class="m-link" marker-end="url(#ah2)"/>
+      <text x="236" y="166" class="m-card">1</text><text x="368" y="88" class="m-card">n</text>
+      <text x="268" y="128" class="m-lbl">possède</text>
+
+      <path d="M220 222 C300 222 300 290 386 290" class="m-link" marker-end="url(#ah2)"/>
+      <text x="236" y="242" class="m-card">1</text><text x="368" y="282" class="m-card">n</text>
+      <text x="268" y="276" class="m-lbl">confie</text>
+
+      <path d="M776 291 L614 291" class="m-link" marker-end="url(#ah2)"/>
+      <text x="760" y="282" class="m-card">1</text><text x="622" y="282" class="m-card">n</text>
+      <text x="660" y="312" class="m-lbl">occupe</text>
+
+      <path d="M614 96 L776 96" class="m-link" marker-end="url(#ah2)" stroke-dasharray="6 5"/>
+      <text x="628" y="86" class="m-lbl">situé dans (calcul GPS)</text>
+    </svg>
+  </div>
+  <div class="legend"><span><i></i>relation enregistrée</span><span><i class="d"></i>rattachement calculé automatiquement</span></div>
+</section>
+
+</main>
+
+<footer><div class="wrap"><span>Carto IMF · Direction de la Réglementation et de la Supervision des SFD</span><span>Guide de fonctionnement · version du 13 novembre 2026</span></div></footer>
+</body>
+</html>

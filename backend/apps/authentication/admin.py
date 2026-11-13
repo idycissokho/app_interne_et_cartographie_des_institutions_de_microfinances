@@ -34,3 +34,6 @@ class UtilisateurAdmin(UserAdmin):
             "fields": ("email", "nom", "prenom", "role", "password1", "password2"),
         }),
     )
+
+    # Nécessaire car notre modèle n'a pas de champ username
+    USERNAME_FIELD = "email"

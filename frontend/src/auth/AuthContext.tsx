@@ -9,7 +9,9 @@ interface ContexteAuth {
   connecter: (email: string, motDePasse: string, resterConnecte?: boolean) => Promise<void>;
   deconnecter: () => Promise<void>;
   /** SUPERVISEUR ou ADMIN : droits d'écriture sur les référentiels. */
-  peutEcrire: boolean;
+  /** Diagramme de cas d'utilisation : modifier IMF / point de service / mandat (SUPERVISEUR, ADMIN). */
+  peutModifier: boolean;
+  /** Créer, désactiver, Import / Export Excel, journal d'audit (ADMIN uniquement). */
   estAdmin: boolean;
 }
 
@@ -63,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       chargement,
       connecter,
       deconnecter,
-      peutEcrire: utilisateur?.role === "ADMIN" || utilisateur?.role === "SUPERVISEUR",
+      peutModifier: utilisateur?.role === "ADMIN" || utilisateur?.role === "SUPERVISEUR",
       estAdmin: utilisateur?.role === "ADMIN",
     }),
     [utilisateur, chargement, connecter, deconnecter],

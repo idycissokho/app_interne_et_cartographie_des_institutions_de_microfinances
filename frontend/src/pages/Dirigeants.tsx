@@ -6,6 +6,7 @@ import { useEffect, useState, type CSSProperties } from "react";
 
 import { api, qs, requete } from "../api/client";
 import type { Page } from "../api/types";
+import { useAuth } from "../auth/AuthContext";
 import { EMAIL_OK, Erreur, Etapes, FileDrop, Label, Modal, Toast, btnPrimaire, btnSecondaire, erreursChamps } from "../components/form";
 import { AppLayout } from "../components/layout/AppLayout";
 import { CODE_FONCTION, nombre } from "../lib/format";
@@ -34,6 +35,8 @@ const champ: CSSProperties = { display: "flex", flexDirection: "column", gap: 8,
 const nomFichier = (url: string) => decodeURIComponent(url.split("/").pop() ?? "Fichier");
 
 export function Dirigeants() {
+  // Diagramme : créer un mandat = ADMIN, modifier un mandat = SUPERVISEUR/ADMIN, consulter = tous.
+  const { estAdmin, peutModifier } = useAuth();
   const [famille, setFamille] = useState("Toutes");
   const [page, setPage] = useState(1);
   const [version, setVersion] = useState(0);
@@ -57,7 +60,7 @@ export function Dirigeants() {
             <h1 style={{ margin: 0, fontSize: 34, fontWeight: 800, letterSpacing: "-0.03em" }}>Dirigeants et mandats</h1>
             <p style={{ margin: 0, fontSize: 14, color: "#4A5568" }}>PCA, DG, gérants, comités. Chaque consultation de fiche est journalisée.</p>
           </div>
-          <button type="button" onClick={() => setModale({})} style={{ height: 46, padding: "0 18px", borderRadius: 14, border: "none", background: "#C9A44C", font: "inherit", fontSize: 14, fontWeight: 800, color: "#0B1424", display: "flex", alignItems: "center", gap: 8, cursor: "pointer", boxShadow: "0 10px 24px rgba(201,164,76,.35)" }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>Nouveau mandat</button>
+          {estAdmin && <button type="button" onClick={() => setModale({})} style={{ height: 46, padding: "0 18px", borderRadius: 14, border: "none", background: "#C9A44C", font: "inherit", fontSize: 14, fontWeight: 800, color: "#0B1424", display: "flex", alignItems: "center", gap: 8, cursor: "pointer", boxShadow: "0 10px 24px rgba(201,164,76,.35)" }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>Nouveau mandat</button>}
         </header>
 
         <div className="di-up d1" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -74,7 +77,7 @@ export function Dirigeants() {
                   const c = SB[r.statut_mandat];
                   const lien = r.fichier_justificatif || r.documents_justificatifs;
                   return (
-                    <tr key={r.id} className="di-row" tabIndex={0} onClick={() => setModale({ mandat: r })} onKeyDown={(e) => e.key === "Enter" && setModale({ mandat: r })} style={{ borderTop: "1px solid #F6F1E4", cursor: "pointer" }}>
+                    <tr key={r.id} className="di-row" tabIndex={peutModifier ? 0 : undefined} onClick={() => peutModifier && setModale({ mandat: r })} onKeyDown={(e) => peutModifier && e.key === "Enter" && setModale({ mandat: r })} style={{ borderTop: "1px solid #F6F1E4", cursor: peutModifier ? "pointer" : "default" }}>
                       <td style={{ padding: "13px 18px" }}><div style={{ display: "flex", alignItems: "center", gap: 12 }}><span style={{ width: 40, height: 40, flex: "none", borderRadius: "50%", background: "#0B1424", color: "#F3D98C", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 800 }}>{initiales(r.dirigeant_nom_complet)}</span><div><div style={{ fontWeight: 800 }}>{r.dirigeant_nom_complet}</div><div style={{ fontSize: 12, color: "#6B7280" }}>{r.dirigeant_email || "—"}</div></div></div></td>
                       <td style={{ padding: "13px 8px" }}><span style={{ fontSize: 12, fontWeight: 800, color: "#6E5416", background: "#F3ECDC", padding: "4px 9px", borderRadius: 8, marginRight: 6 }}>{CODE_FONCTION[r.fonction_mandat]}</span><span style={{ fontSize: 13, color: "#4A5568" }}>{LIBELLE_FONCTION[r.fonction_mandat]}</span></td>
                       <td style={{ padding: "13px 8px", fontWeight: 600 }}>{r.imf_nom}</td>

@@ -7,6 +7,7 @@ import { Link, useSearchParams } from "react-router-dom";
 
 import { api, qs } from "../api/client";
 import type { Page } from "../api/types";
+import { useAuth } from "../auth/AuthContext";
 import { Drawer, EMAIL_OK, Erreur, Label, Toast, btnPrimaire, btnSecondaire, erreursChamps } from "../components/form";
 import { AppLayout } from "../components/layout/AppLayout";
 import { dansLeSenegal } from "../data/projection";
@@ -29,11 +30,13 @@ const champ: CSSProperties = { display: "flex", flexDirection: "column", gap: 8,
 const pageBtn = (on = false): CSSProperties => ({ width: 36, height: 36, borderRadius: 10, font: "inherit", cursor: "pointer", ...(on ? { border: "none", background: "#0B1424", color: "#F3D98C", fontWeight: 800 } : { border: "1px solid #ECE5D5", background: "#FFFFFF", color: "#0B1424", fontWeight: 700 }) });
 
 export function PointsService() {
+  // Diagramme : ajouter = ADMIN, modifier = SUPERVISEUR/ADMIN, consulter = tous les rôles.
+  const { estAdmin, peutModifier } = useAuth();
   const [params, setParams] = useSearchParams();
   const sansGps = params.get("sans_gps") === "true";
   const [page, setPage] = useState(1);
   const [version, setVersion] = useState(0);
-  const [tiroir, setTiroir] = useState<null | { id?: string }>(params.get("nouveau") ? {} : null);
+  const [tiroir, setTiroir] = useState<null | { id?: string }>(params.get("nouveau") && estAdmin ? {} : null);
   const [toast, setToast] = useState<string | null>(null);
 
   const { donnees: d } = useDonnees<{ rows: Page<Ligne>; k0: Compte; k1: Compte; k2: Compte; k3: Compte }>({
@@ -61,7 +64,7 @@ export function PointsService() {
           </div>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <Link to="/carte/micro" style={{ height: 46, padding: "0 16px", borderRadius: 14, border: "1px solid #ECE5D5", background: "#FFFFFF", fontSize: 14, fontWeight: 700, color: "#0B1424", display: "flex", alignItems: "center", gap: 8, textDecoration: "none", boxSizing: "border-box" }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14" /></svg>Voir sur la carte</Link>
-            <button type="button" onClick={() => setTiroir({})} style={{ height: 46, padding: "0 18px", borderRadius: 14, border: "none", background: "#C9A44C", font: "inherit", fontSize: 14, fontWeight: 800, color: "#0B1424", display: "flex", alignItems: "center", gap: 8, cursor: "pointer", boxShadow: "0 10px 24px rgba(201,164,76,.35)" }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>Nouveau point</button>
+            {estAdmin && <button type="button" onClick={() => setTiroir({})} style={{ height: 46, padding: "0 18px", borderRadius: 14, border: "none", background: "#C9A44C", font: "inherit", fontSize: 14, fontWeight: 800, color: "#0B1424", display: "flex", alignItems: "center", gap: 8, cursor: "pointer", boxShadow: "0 10px 24px rgba(201,164,76,.35)" }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>Nouveau point</button>}
           </div>
         </header>
 
@@ -90,7 +93,7 @@ export function PointsService() {
                   const c = SB[r.statut_point === "SUSPENDU" ? "SUSPENDU_POINT" : r.statut_point];
                   const col = COULEUR_TYPE_POINT[r.type_point];
                   return (
-                    <tr key={r.id} className="ps-row" onClick={() => setTiroir({ id: r.id })} style={{ borderTop: "1px solid #F6F1E4", cursor: "pointer" }} tabIndex={0} onKeyDown={(e) => e.key === "Enter" && setTiroir({ id: r.id })}>
+                    <tr key={r.id} className="ps-row" onClick={() => peutModifier && setTiroir({ id: r.id })} style={{ borderTop: "1px solid #F6F1E4", cursor: peutModifier ? "pointer" : "default" }} tabIndex={peutModifier ? 0 : undefined} onKeyDown={(e) => peutModifier && e.key === "Enter" && setTiroir({ id: r.id })}>
                       <td style={{ padding: "13px 18px" }}><div style={{ display: "flex", alignItems: "center", gap: 10 }}><span style={{ width: 10, height: 10, flex: "none", borderRadius: "50%", background: col, boxShadow: `0 0 0 4px ${col}22` }} /><b>{r.nom}</b></div></td>
                       <td style={{ padding: "13px 8px", color: "#4A5568", fontWeight: 600 }}>{r.imf_nom}</td>
                       <td style={{ padding: "13px 8px" }}>{TYPE_POINT[r.type_point]}</td>

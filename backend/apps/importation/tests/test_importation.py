@@ -34,13 +34,13 @@ def _importer(client, type_import, fichier):
     return client.post(URL, {"type_import": type_import, "fichier": fichier}, format="multipart")
 
 
-def test_import_imf_csv_puis_mise_a_jour_sans_doublon(client_superviseur):
+def test_import_imf_csv_puis_mise_a_jour_sans_doublon(client_admin):
     contenu = (
         "nom;sigle;type_imf;adresse_siege;latitude;longitude\n"
         "Crédit Mutuel du Sénégal;CMS;MUTUELLE;Dakar;14,69;-17,44\n"
         "Mauvaise IMF;MAU;BANQUE;Thiès;;\n"
     )
-    resp = _importer(client_superviseur, "IMF", _csv(contenu))
+    resp = _importer(client_admin, "IMF", _csv(contenu))
     assert resp.status_code == 201, resp.data
     assert resp.data["statut"] == "TERMINE"
     assert resp.data["nb_lignes_importees"] == 1
@@ -52,7 +52,7 @@ def test_import_imf_csv_puis_mise_a_jour_sans_doublon(client_superviseur):
     assert round(cms.localisation_siege.y, 2) == 14.69
 
     # Réimport : mise à jour de l'existant, cellule vide = valeur conservée
-    _importer(client_superviseur, "IMF", _csv("sigle;nom;type_imf;adresse_siege;telephone\nCMS;Crédit Mutuel du Sénégal;MUTUELLE;Dakar Plateau;\n"))
+    _importer(client_admin, "IMF", _csv("sigle;nom;type_imf;adresse_siege;telephone\nCMS;Crédit Mutuel du Sénégal;MUTUELLE;Dakar Plateau;\n"))
     assert IMF.objects.count() == 1
     cms.refresh_from_db()
     assert cms.adresse_siege == "Dakar Plateau"
@@ -62,7 +62,7 @@ def test_import_imf_csv_puis_mise_a_jour_sans_doublon(client_superviseur):
     assert entree.details["lignes_creees"] == 0 and entree.details["lignes_mises_a_jour"] == 1
 
 
-def test_import_points_service_excel_resout_imf_et_zones(client_superviseur):
+def test_import_points_service_excel_resout_imf_et_zones(client_admin):
     imf = IMF.objects.create(nom="IMF A", sigle="IMFA", type_imf="SA", adresse_siege="Dakar")
     region = ZoneGeographique.objects.create(
         code="DK", nom="Dakar", type_zone="REGION",
@@ -77,7 +77,7 @@ def test_import_points_service_excel_resout_imf_et_zones(client_superviseur):
     wb.save(buffer)
     fichier = SimpleUploadedFile("points.xlsx", buffer.getvalue())
 
-    resp = _importer(client_superviseur, "POINTS_SERVICE", fichier)
+    resp = _importer(client_admin, "POINTS_SERVICE", fichier)
     assert resp.data["nb_lignes_importees"] == 1, resp.data["rapport_erreurs"]
     assert "imf" in resp.data["rapport_erreurs"][0]["erreurs"]
     ps = PointService.objects.get()
@@ -85,7 +85,7 @@ def test_import_points_service_excel_resout_imf_et_zones(client_superviseur):
     assert str(ps.encours) == "1500000.50"
 
 
-def test_import_dirigeants_avec_mandat(client_superviseur):
+def test_import_dirigeants_avec_mandat(client_admin):
     IMF.objects.create(nom="IMF A", sigle="IMFA", type_imf="SA", adresse_siege="Dakar")
     contenu = (
         "nom,prenom,email_professionnel,imf,fonction_mandat,date_debut,date_fin\n"
@@ -93,7 +93,7 @@ def test_import_dirigeants_avec_mandat(client_superviseur):
         "Diop,Awa,awa@imfa.sn,IMFA,DG,2024-01-01,\n"
         "Sow,Ali,,IMFA,PCA,2024-01-01,2023-01-01\n"
     )
-    resp = _importer(client_superviseur, "DIRIGEANTS", _csv(contenu))
+    resp = _importer(client_admin, "DIRIGEANTS", _csv(contenu))
     assert resp.data["nb_lignes_importees"] == 2
     assert resp.data["rapport_erreurs"][0]["ligne"] == 4
     assert Dirigeant.objects.filter(nom="Diop").count() == 1
@@ -108,14 +108,14 @@ def test_import_dirigeants_avec_mandat(client_superviseur):
         (SimpleUploadedFile("x.txt", b"abc"), "Format"),
     ],
 )
-def test_fichier_refuse(client_superviseur, fichier, message):
-    resp = _importer(client_superviseur, "IMF", fichier)
+def test_fichier_refuse(client_admin, fichier, message):
+    resp = _importer(client_admin, "IMF", fichier)
     assert resp.status_code == 400
     assert message in str(resp.data["fichier"])
 
 
-def test_colonnes_obligatoires_absentes_echec(client_superviseur):
-    resp = _importer(client_superviseur, "IMF", _csv("nom;sigle\nA;B\n"))
+def test_colonnes_obligatoires_absentes_echec(client_admin):
+    resp = _importer(client_admin, "IMF", _csv("nom;sigle\nA;B\n"))
     assert resp.data["statut"] == "ECHEC"
     assert "adresse_siege" in resp.data["rapport_erreurs"][0]["erreurs"]["fichier"]
 
@@ -125,19 +125,19 @@ def test_consultant_ne_peut_pas_importer(client_consultant):
     assert resp.status_code == 403
 
 
-def test_export_reimportable(client_superviseur):
+def test_export_reimportable(client_admin):
     IMF.objects.create(nom="IMF A", sigle="IMFA", type_imf="SA", adresse_siege="Dakar")
-    resp = client_superviseur.get("/api/v1/importation/export/imf/")
+    resp = client_admin.get("/api/v1/importation/export/imf/")
     assert resp.status_code == 200
     contenu = b"".join(resp.streaming_content).decode("utf-8-sig")
     assert contenu.splitlines()[0].startswith("nom;sigle;type_imf")
     assert JournalAudit.objects.filter(action="EXPORTATION").exists()
 
-    retour = _importer(client_superviseur, "IMF", _csv(contenu))
+    retour = _importer(client_admin, "IMF", _csv(contenu))
     assert retour.data["nb_lignes_erreur"] == 0, retour.data["rapport_erreurs"]
     assert IMF.objects.count() == 1
 
 
-def test_modele_et_type_inconnu(client_consultant):
-    assert client_consultant.get("/api/v1/importation/modeles/dirigeants/").status_code == 200
-    assert client_consultant.get("/api/v1/importation/modeles/inconnu/").status_code == 404
+def test_modele_et_type_inconnu(client_admin):
+    assert client_admin.get("/api/v1/importation/modeles/dirigeants/").status_code == 200
+    assert client_admin.get("/api/v1/importation/modeles/inconnu/").status_code == 404

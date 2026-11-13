@@ -2,7 +2,7 @@
 imf/views.py
 ============
 Vues DRF du module IMF :
-- IMFListCreateView     : liste paginée + filtres + création (SUPERVISEUR/ADMIN)
+- IMFListCreateView     : liste paginée + filtres + création (ADMIN)
 - IMFDetailView         : détail, modification et suppression logique (soft delete)
 - BailleurListCreateView / BailleurDetailView : référentiel des bailleurs
 """
@@ -13,19 +13,27 @@ from rest_framework import filters, generics
 from rest_framework.permissions import IsAuthenticated
 
 from apps.audit.mixins import AuditMixin
-from apps.authentication.permissions import IsSuperviseurOrAdmin
+from apps.authentication.permissions import IsAdmin, IsSuperviseurOrAdmin
 
 from .models import IMF, Bailleur
 from .serializers import BailleurSerializer, IMFDetailSerializer, IMFListSerializer
 
-ECRITURE = ("POST", "PUT", "PATCH", "DELETE")
+CREATION_SUPPRESSION = ("POST", "DELETE")
+MODIFICATION = ("PUT", "PATCH")
 
 
-class LectureAuthentifieeEcritureSuperviseurMixin:
-    """Lecture : tout utilisateur authentifié. Écriture : SUPERVISEUR ou ADMIN."""
+class DroitsCasUtilisationMixin:
+    """Droits du diagramme de cas d'utilisation (DIAGRAMME DE CAS UTILISATION.drawio).
+
+    - Consulter (GET)               : tout utilisateur authentifié (CONSULTANT et au-dessus).
+    - Modifier (PUT/PATCH)          : SUPERVISEUR ou ADMIN.
+    - Créer / désactiver (POST/DEL) : ADMIN uniquement.
+    """
 
     def get_permissions(self):
-        if self.request.method in ECRITURE:
+        if self.request.method in CREATION_SUPPRESSION:
+            return [IsAdmin()]
+        if self.request.method in MODIFICATION:
             return [IsSuperviseurOrAdmin()]
         return [IsAuthenticated()]
 
@@ -55,10 +63,10 @@ def _imf_queryset():
 
 
 class IMFListCreateView(
-    AuditMixin, LectureAuthentifieeEcritureSuperviseurMixin, generics.ListCreateAPIView
+    AuditMixin, DroitsCasUtilisationMixin, generics.ListCreateAPIView
 ):
     """GET  /api/v1/imf/  — Liste des IMF actives avec filtres, recherche et pagination.
-    POST /api/v1/imf/  — Création d'une nouvelle IMF (SUPERVISEUR ou ADMIN requis).
+    POST /api/v1/imf/  — Création d'une nouvelle IMF (ADMIN requis).
     """
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -80,11 +88,11 @@ class IMFListCreateView(
 
 
 class IMFDetailView(
-    AuditMixin, LectureAuthentifieeEcritureSuperviseurMixin, generics.RetrieveUpdateDestroyAPIView
+    AuditMixin, DroitsCasUtilisationMixin, generics.RetrieveUpdateDestroyAPIView
 ):
     """GET    /api/v1/imf/<uuid>/  — Détail d'une IMF.
     PUT/PATCH /api/v1/imf/<uuid>/  — Modification (SUPERVISEUR ou ADMIN requis).
-    DELETE    /api/v1/imf/<uuid>/  — Suppression logique : is_active=False.
+    DELETE    /api/v1/imf/<uuid>/  — Suppression logique : is_active=False (ADMIN requis).
     """
 
     serializer_class = IMFDetailSerializer
@@ -99,7 +107,7 @@ class IMFDetailView(
 
 
 class BailleurListCreateView(
-    AuditMixin, LectureAuthentifieeEcritureSuperviseurMixin, generics.ListCreateAPIView
+    AuditMixin, DroitsCasUtilisationMixin, generics.ListCreateAPIView
 ):
     """GET/POST /api/v1/imf/bailleurs/"""
 
@@ -111,7 +119,7 @@ class BailleurListCreateView(
 
 
 class BailleurDetailView(
-    AuditMixin, LectureAuthentifieeEcritureSuperviseurMixin, generics.RetrieveUpdateDestroyAPIView
+    AuditMixin, DroitsCasUtilisationMixin, generics.RetrieveUpdateDestroyAPIView
 ):
     """GET/PUT/PATCH/DELETE /api/v1/imf/bailleurs/<uuid>/"""
 

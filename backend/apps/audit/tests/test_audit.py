@@ -23,18 +23,18 @@ def _actions():
     return list(JournalAudit.objects.values_list("action", flat=True))
 
 
-def test_creation_modification_suppression_imf_journalisees(client_superviseur):
-    resp = client_superviseur.post("/api/v1/imf/", IMF_PAYLOAD, format="json")
+def test_creation_modification_suppression_imf_journalisees(client_admin):
+    resp = client_admin.post("/api/v1/imf/", IMF_PAYLOAD, format="json")
     assert resp.status_code == 201
     imf_id = resp.data["id"]
 
-    client_superviseur.patch(f"/api/v1/imf/{imf_id}/", {"sigle": "CMT2"}, format="json")
-    client_superviseur.delete(f"/api/v1/imf/{imf_id}/")
+    client_admin.patch(f"/api/v1/imf/{imf_id}/", {"sigle": "CMT2"}, format="json")
+    client_admin.delete(f"/api/v1/imf/{imf_id}/")
 
     entrees = JournalAudit.objects.order_by("date_action")
     assert [e.action for e in entrees] == ["CREATION", "MODIFICATION", "SUPPRESSION"]
     assert all(e.objet_concerne == f"imf.IMF:{imf_id}" for e in entrees)
-    assert all(e.utilisateur == client_superviseur.user for e in entrees)
+    assert all(e.utilisateur == client_admin.user for e in entrees)
     assert entrees[1].details["champs_modifies"] == ["sigle"]
 
 

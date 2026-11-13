@@ -8,6 +8,7 @@ import { api } from "../api/client";
 import type { Page } from "../api/types";
 import { SenegalMap } from "../components/carto/SenegalMap";
 import { ChoiceCards, EMAIL_OK, EnteteSection, Erreur, Segmented, TextField, Toast, ToggleChips, erreursChamps } from "../components/form";
+import { useAuth } from "../auth/AuthContext";
 import { AppLayout } from "../components/layout/AppLayout";
 import { dansLeSenegal, projeter } from "../data/projection";
 import { nombreFr, regionProche } from "../lib/region";
@@ -25,6 +26,8 @@ const carte: CSSProperties = { borderRadius: 22, background: "#FFFFFF", border: 
 interface ImfApi { nom: string; sigle: string; type_imf: string; statut_reglementaire: string; adresse_siege: string; localisation_siege: { coordinates: [number, number] } | null; telephone: string; email: string; site_web: string; bailleurs: string[] }
 
 export function FormulaireIMF() {
+  // Diagramme : « ajouter un point de service » est réservé à l'ADMIN.
+  const { estAdmin } = useAuth();
   const { id } = useParams();
   const naviguer = useNavigate();
   const [f, setF] = useState(VIDE);
@@ -172,7 +175,7 @@ export function FormulaireIMF() {
               <span style={{ fontSize: 13, color: "#6B7280" }}><span className="fi-req">*</span> Champs obligatoires</span>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                 <Link className="fi-ghost" to="/imf" style={{ height: 48, padding: "0 18px", borderRadius: 14, fontSize: 14, fontWeight: 700, color: "#0B1424", display: "flex", alignItems: "center", textDecoration: "none" }}>Annuler</Link>
-                <button type="button" disabled={envoi} onClick={() => enregistrer(true)} style={{ height: 48, padding: "0 18px", borderRadius: 14, border: "1.5px solid #0B1424", background: "#FFFFFF", font: "inherit", fontSize: 14, fontWeight: 800, color: "#0B1424", cursor: "pointer" }}>Enregistrer et ajouter un point</button>
+                {estAdmin && <button type="button" disabled={envoi} onClick={() => enregistrer(true)} style={{ height: 48, padding: "0 18px", borderRadius: 14, border: "1.5px solid #0B1424", background: "#FFFFFF", font: "inherit", fontSize: 14, fontWeight: 800, color: "#0B1424", cursor: "pointer" }}>Enregistrer et ajouter un point</button>}
                 <button type="submit" className="fi-primary" disabled={envoi} style={{ height: 48, padding: "0 22px", borderRadius: 14, border: "none", background: "#C9A44C", font: "inherit", fontSize: 14, fontWeight: 800, color: "#0B1424", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, boxShadow: "0 10px 24px rgba(201,164,76,.35)" }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7" /></svg>Enregistrer l'institution</button>
               </div>
             </div>

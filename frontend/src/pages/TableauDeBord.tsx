@@ -14,7 +14,6 @@ import { useDonnees, type Compte } from "../lib/useDonnees";
 
 interface MandatEcheance { id: string; fonction_mandat: string; dirigeant_nom_complet: string; imf_sigle: string; imf_nom: string; imf_region: string | null; date_fin: string }
 interface EntreeAudit { id: string; action: string; role: string; date_action: string; utilisateur_email: string | null; details: { libelle?: string } }
-interface Import { id: string; type_import: string; statut: string; nb_lignes_importees: number; utilisateur_email: string; date_creation: string }
 
 const carte: CSSProperties = { background: "#FFFFFF", border: "1px solid #ECE5D5", borderRadius: 20, padding: 20, display: "flex", flexDirection: "column", gap: 14 };
 const icone: CSSProperties = { width: 38, height: 38, borderRadius: 12, background: "#F3ECDC", color: "#8A6A1F", display: "flex", alignItems: "center", justifyContent: "center" };
@@ -31,10 +30,9 @@ const LIBELLE_ACTION: Record<string, string> = {
   IMPORTATION: "Import", EXPORTATION: "Export",
 };
 const PASTILLE_ACTION: Record<string, string> = { IMPORTATION: "#C9A44C", CONSULTATION: "#0B1424", MODIFICATION: "#15803D", CREATION: "#15803D", SUPPRESSION: "#B91C1C" };
-const LIBELLE_IMPORT: Record<string, string> = { IMF: "institutions", POINTS_SERVICE: "points de service", DIRIGEANTS: "dirigeants" };
 
 export function TableauDeBord() {
-  const { utilisateur, estAdmin, peutEcrire } = useAuth();
+  const { utilisateur, estAdmin } = useAuth();
   const naviguer = useNavigate();
   const recherche = useRef<HTMLInputElement>(null);
   const auj = new Date();
@@ -45,7 +43,7 @@ export function TableauDeBord() {
     agreees: Compte; agreeesAn: Compte; imfTotal: Compte; enCours: Compte; radiees: Compte;
     mutuelles: Compte; coops: Compte; sa: Compte;
     points: Compte; sansGps: Compte; dirigeants: Compte; echeances: Page<MandatEcheance>;
-    regions: AgregatZone[]; communes: AgregatZone[]; audit: Page<EntreeAudit>; imports: Page<Import>;
+    regions: AgregatZone[]; communes: AgregatZone[]; audit: Page<EntreeAudit>;
   }>({
     agreees: "/imf/?statut_reglementaire=AGREE&page_size=1",
     agreeesAn: `/imf/?statut_reglementaire=AGREE&date_creation__gte=${janvier}&page_size=1`,
@@ -62,7 +60,6 @@ export function TableauDeBord() {
     regions: "/cartographie/zones/agregats/?type_zone=REGION",
     communes: "/cartographie/zones/agregats/?type_zone=COMMUNE",
     audit: estAdmin ? "/audit/?page_size=3" : null,
-    imports: !estAdmin && peutEcrire ? "/importation/?page_size=3" : null,
   });
 
   useEffect(() => {
@@ -96,15 +93,10 @@ export function TableauDeBord() {
   const echeances = d.echeances?.results ?? [];
   const urgent = echeances.some((m) => joursAvant(m.date_fin) <= 30);
 
-  const activite = estAdmin
-    ? (d.audit?.results ?? []).map((e) => ({
-        id: e.id, dot: PASTILLE_ACTION[e.action] ?? "#C9A44C", titre: LIBELLE_ACTION[e.action] ?? e.action,
-        detail: e.details.libelle || "", meta: `${e.utilisateur_email ?? "Système"} · ${ilYa(e.date_action)}`,
-      }))
-    : (d.imports?.results ?? []).map((i) => ({
-        id: i.id, dot: i.statut === "ECHEC" ? "#B91C1C" : "#C9A44C", titre: "Import " + (i.type_import === "IMF" ? "IMF" : "CSV"),
-        detail: `${nombre(i.nb_lignes_importees)} ${LIBELLE_IMPORT[i.type_import]} importés`, meta: `${i.utilisateur_email} · ${ilYa(i.date_creation)}`,
-      }));
+  const activite = (d.audit?.results ?? []).map((e) => ({
+    id: e.id, dot: PASTILLE_ACTION[e.action] ?? "#C9A44C", titre: LIBELLE_ACTION[e.action] ?? e.action,
+    detail: e.details.libelle || "", meta: `${e.utilisateur_email ?? "Système"} · ${ilYa(e.date_action)}`,
+  }));
 
   return (
     <AppLayout active="dashboard" minHeight={1240}>
@@ -116,12 +108,12 @@ export function TableauDeBord() {
             <input ref={recherche} type="search" aria-label="Recherche globale" placeholder="Rechercher une IMF, un dirigeant, une commune…" style={{ border: "none", outline: "none", background: "transparent", font: "inherit", fontSize: 14, flex: 1, minWidth: 0, color: "#0B1424" }} />
             <span style={{ fontSize: 12, fontWeight: 700, color: "#8A6A1F", background: "#F3ECDC", padding: "4px 8px", borderRadius: 8 }}>⌘ K</span>
           </form>
-          {peutEcrire && (
+          {estAdmin && (
             <button type="button" onClick={() => naviguer("/donnees?onglet=export")} style={{ height: 48, padding: "0 18px", borderRadius: 14, border: "1px solid #ECE5D5", background: "#FFFFFF", font: "inherit", fontSize: 14, fontWeight: 700, color: "#0B1424", display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 21h16" /></svg>Exporter
             </button>
           )}
-          {peutEcrire && (
+          {estAdmin && (
             <button type="button" onClick={() => naviguer("/imf/nouveau")} style={{ height: 48, padding: "0 18px", borderRadius: 14, border: "none", background: "#0B1424", font: "inherit", fontSize: 14, fontWeight: 700, color: "#F3D98C", display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>Nouvelle IMF
             </button>
@@ -224,7 +216,7 @@ export function TableauDeBord() {
               ))}
               {activite.length === 0 && <div style={{ color: "#6B7280" }}>Aucune activité récente.</div>}
             </div>
-            <Link to={estAdmin ? "/audit" : "/donnees"} style={{ marginTop: "auto", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>{estAdmin ? "Journal d'audit complet →" : "Historique des imports →"}</Link>
+            {estAdmin && <Link to="/audit" style={{ marginTop: "auto", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>Journal d'audit complet →</Link>}
           </article>
         </section>
       </main>
