@@ -89,7 +89,7 @@ export function CarteMacro() {
         </section>
 
         <div style={{ display: "flex", flexWrap: "wrap", gap: 20, alignItems: "flex-start" }}>
-          <section className="cm-in d2" style={{ flex: "999 1 560px", minWidth: 0, position: "relative", borderRadius: 28, background: "#FFFFFF", border: "1px solid #ECE5D5", boxShadow: "0 30px 60px -30px rgba(11,20,36,.25)", padding: 20, boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 10, overflow: "hidden" }}>
+          <section className="cm-in d2 cm-cadre" style={{ flex: "999 1 560px", minWidth: 0, position: "relative", borderRadius: 28, background: "#FFFFFF", border: "1px solid #ECE5D5", boxShadow: "0 30px 60px -30px rgba(11,20,36,.25)", padding: 20, boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 10, overflow: "hidden" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", position: "relative", zIndex: 2 }}>
               <div role="group" aria-label="Mode de coloration" style={{ display: "flex", padding: 4, borderRadius: 12, background: "#F6F1E4" }}>
                 {([{ k: "regions", label: "Par région" }, { k: "choro", label: "Par indicateur" }] as const).map((m) => (
@@ -104,7 +104,7 @@ export function CarteMacro() {
             </div>
 
             <div className="cm-carte" style={{ height: 600, position: "relative", borderRadius: 20 }}>
-              <SenegalMap theme="light" fillMode={mode} indicator={ind} stats={stats} selected={sel} flow showLabels={false} onPick={setSel} rayon={20} />
+              <SenegalMap theme="light" fillMode={mode} indicator={ind} stats={stats} selected={sel} flow showLabels={false} onPick={setSel} rayon={20} agrandir=".cm-cadre" />
             </div>
 
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>

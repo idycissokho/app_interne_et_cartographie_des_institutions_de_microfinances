@@ -118,7 +118,7 @@ export function CarteMicro() {
 
           <div className="mi-zone" style={{ flex: "999 1 480px", minWidth: 0, position: "relative", overflow: "hidden" }}>
             <div className="mi-carte-pos" style={{ position: "absolute", inset: 0 }}>
-              <SenegalMap theme="light" fillMode="muted" flow showPoints showLabels={false} zoomSelection molette rayon={0} selected={f.region} points={points} pointFilter={flt} selectedPoint={pt}
+              <SenegalMap theme="light" fillMode="muted" flow showPoints showLabels={false} zoomSelection molette rayon={0} agrandir=".mi-cadre" selected={f.region} points={points} pointFilter={flt} selectedPoint={pt}
                 onPickPoint={(p) => setPt(p as PointMicro)} onPick={(id) => { setF({ ...f, region: id }); setPt(null); }} />
             </div>
 

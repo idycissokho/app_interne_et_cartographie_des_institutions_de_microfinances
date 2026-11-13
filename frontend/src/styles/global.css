@@ -221,6 +221,29 @@ select.di-input{cursor:pointer;padding-right:10px}
 .cs-carte .maplibregl-cooperative-gesture-screen{font-family:inherit;font-size:15px;font-weight:700;padding:16px;text-align:center;background:rgba(11,20,36,.55)}
 .cs-hors-ligne{position:absolute;left:10px;top:10px;z-index:2;font-size:11px;font-weight:700;padding:5px 9px;border-radius:8px;background:rgba(255,255,255,.9);color:#92400E}
 
+/* Bouton « Agrandir » et mode plein écran (carte seule, ou cadre parent avec ses filtres) */
+.cs-carte .cs-agrandir{display:flex;align-items:center;justify-content:center;color:#0B1424;cursor:pointer}
+.cs-nuit .cs-agrandir{color:#F3D98C}
+.cs-carte .maplibregl-ctrl-bottom-right .maplibregl-ctrl{margin:0 12px 8px 0}
+.cs-carte .maplibregl-ctrl-bottom-right .maplibregl-ctrl:first-child{margin-bottom:12px}
+html.cs-fige{overflow:hidden}
+.cs-plein{position:fixed !important;inset:0 !important;z-index:1000;width:100vw !important;height:100dvh !important;max-width:none !important;min-height:0 !important;margin:0 !important;border-radius:0 !important;border:none !important;box-sizing:border-box;animation:cs-plein .35s cubic-bezier(.2,.7,.2,1)}
+.cs-plein:fullscreen{width:100% !important;height:100% !important}
+.cs-plein .cs-carte,.cs-carte.cs-plein{border-radius:0 !important}
+@keyframes cs-plein{from{opacity:.4;transform:scale(.985)}to{opacity:1;transform:none}}
+/* Carte micro : filtres à gauche, carte sur tout le reste */
+.mi-cadre.cs-plein{flex-wrap:nowrap !important;background:#FFFFFF}
+.mi-cadre.cs-plein .mi-filtres{flex:none !important;width:290px;overflow-y:auto}
+/* Carte macro : modes et indicateurs en haut, carte sur tout le reste */
+.cm-cadre.cs-plein{padding:16px !important;background:#FFFFFF;overflow:hidden}
+.cm-cadre.cs-plein .cm-carte{height:auto !important;flex:1 1 auto;min-height:0}
+@media (max-width: 760px) {
+  .mi-cadre.cs-plein{flex-direction:column;overflow-y:auto}
+  .mi-cadre.cs-plein .mi-filtres{width:auto;overflow:visible}
+  .mi-cadre.cs-plein .mi-carte-pos{height:70dvh !important}
+}
+@media (prefers-reduced-motion: reduce) { .cs-plein{animation:none} }
+
 /* Fiche affichée au survol d'une région */
 @keyframes cs-fiche{from{opacity:0;transform:translateY(8px) scale(.96)}to{opacity:1;transform:none}}
 .cs-fiche{position:absolute;left:0;top:0;z-index:4;pointer-events:none;opacity:0;transition:opacity .16s ease,transform .09s ease-out;will-change:transform}

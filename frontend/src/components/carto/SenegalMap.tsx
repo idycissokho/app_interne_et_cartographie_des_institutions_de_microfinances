@@ -82,6 +82,12 @@ interface Props {
   molette?: boolean;
   /** Rayon des coins du cadre, en px. */
   rayon?: number;
+  /**
+   * Bouton « Agrandir » : la carte occupe tout l'écran (plus de menu ni d'en-tête).
+   * Sélecteur CSS d'un parent à agrandir avec elle (ex. le cadre qui contient les filtres) ;
+   * chaîne vide : la carte seule ; false : pas de bouton.
+   */
+  agrandir?: string | false;
 }
 
 /* ---------- Géométrie (chargée une fois pour toutes les cartes) ---------- */
@@ -191,6 +197,9 @@ const FR = {
   "CooperativeGesturesHandler.MobileHelpText": "Utilisez deux doigts pour déplacer la carte",
 };
 
+const ICONE_AGRANDIR = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>';
+const ICONE_REDUIRE = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>';
+
 const mouvementReduit = () => typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /* ---------- Calques posés sur le fond de carte ---------- */
@@ -262,7 +271,7 @@ function installer(carte: Carte, style: StyleSpecification, geo: { regions: Coll
 export function SenegalMap({
   theme = "light", fillMode = "regions", indicator = "pts", stats = {}, selected = "",
   flow = true, showPoints = false, showLabels = true, points = [], pointFilter = {},
-  selectedPoint = null, onPick, onPickPoint, infos, zoomSelection = false, molette = false, rayon = 18,
+  selectedPoint = null, onPick, onPickPoint, infos, zoomSelection = false, molette = false, rayon = 18, agrandir = "",
 }: Props) {
   const dark = theme === "dark";
   const cadre = useRef<HTMLDivElement>(null);
@@ -279,6 +288,9 @@ export function SenegalMap({
   const rappels = useRef({ onPick, onPickPoint });
   rappels.current = { onPick, onPickPoint };
   const parId = useRef(new Map<string, PointCarte>());
+  const recadrer = useRef<(duree: number) => void>(() => {});
+  const avecAgrandir = agrandir !== false;
+  const parentAgrandi = agrandir || "";
 
   const sigStats = JSON.stringify(stats);
   const sigFiltre = JSON.stringify(pointFilter);
@@ -317,6 +329,7 @@ export function SenegalMap({
   useEffect(() => {
     let annule = false;
     let carte: Carte | null = null;
+    let nettoyer = () => {};
     Promise.all([styleCarte(theme), chargerGeometrie()]).then(([fond, geo]) => {
       if (annule || !conteneur.current) return;
       setHorsLigne(fond.horsLigne);
@@ -332,6 +345,53 @@ export function SenegalMap({
       if (!fond.horsLigne) {
         c.addControl(new AttributionControl({ compact: true }), "bottom-right");
       }
+
+      /* Bouton « Agrandir » : plein écran du navigateur, avec repli en superposition fixe s'il est refusé. */
+      let plein = false;
+      let basculer: (etat: boolean) => void = () => {};
+      if (avecAgrandir) {
+        const zone = (parentAgrandi && cadre.current?.closest<HTMLElement>(parentAgrandi)) || cadre.current!;
+        const groupe = document.createElement("div");
+        groupe.className = "maplibregl-ctrl maplibregl-ctrl-group";
+        const bouton = document.createElement("button");
+        bouton.type = "button";
+        bouton.className = "cs-agrandir";
+        groupe.appendChild(bouton);
+        const peindre = () => {
+          const libelle = plein ? "Réduire la carte (Échap)" : "Agrandir la carte";
+          bouton.innerHTML = plein ? ICONE_REDUIRE : ICONE_AGRANDIR;
+          bouton.title = libelle;
+          bouton.setAttribute("aria-label", libelle);
+          bouton.setAttribute("aria-pressed", String(plein));
+        };
+        basculer = (etat) => {
+          if (etat === plein) return;
+          plein = etat;
+          zone.classList.toggle("cs-plein", plein);
+          document.documentElement.classList.toggle("cs-fige", plein);
+          if (plein) {
+            zone.requestFullscreen?.().catch(() => {});
+            c.cooperativeGestures.disable();
+          } else {
+            if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+            if (!molette) c.cooperativeGestures.enable();
+          }
+          peindre();
+          window.setTimeout(() => { if (carteRef.current === c) { c.resize(); recadrer.current(700); } }, 260);
+        };
+        peindre();
+        bouton.addEventListener("click", () => basculer(!plein));
+        c.addControl({ onAdd: () => groupe, onRemove: () => groupe.remove() }, "bottom-right");
+      }
+      const surPleinEcran = () => { if (!document.fullscreenElement) basculer(false); };
+      const surTouche = (e: KeyboardEvent) => { if (e.key === "Escape") basculer(false); };
+      document.addEventListener("fullscreenchange", surPleinEcran);
+      document.addEventListener("keydown", surTouche);
+      nettoyer = () => {
+        document.removeEventListener("fullscreenchange", surPleinEcran);
+        document.removeEventListener("keydown", surTouche);
+        basculer(false);
+      };
 
       const survoler = (cle: string | null, pt?: { x: number; y: number }) => {
         if (pt) curseur.current = pt;
@@ -373,6 +433,7 @@ export function SenegalMap({
     });
     return () => {
       annule = true;
+      nettoyer();
       carteRef.current = null;
       survolCle.current = null;
       setPret(false);
@@ -380,7 +441,7 @@ export function SenegalMap({
       carte?.remove();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [theme, molette]);
+  }, [theme, molette, avecAgrandir, parentAgrandi]);
 
   /* --- Fiche de survol : suit le curseur sans sortir du cadre --- */
   function placerFiche() {
@@ -421,13 +482,16 @@ export function SenegalMap({
 
   /* --- Cadrage : le pays, ou la région sélectionnée (arrivée animée) --- */
   const cible = zoomSelection ? selected : "";
-  useEffect(() => {
+  recadrer.current = (duree) => {
     const c = carteRef.current;
-    if (!pret || !c) return;
+    if (!c) return;
     const [o, s, e, n] = (cible && EMPRISES.get(cleRegion(cible))) || SENEGAL;
     const el = c.getContainer();
     const marge = Math.round(Math.max(14, Math.min(48, Math.min(el.clientWidth, el.clientHeight) * 0.07)));
-    c.fitBounds([[o, s], [e, n]], { padding: marge, duration: mouvementReduit() ? 0 : 1500, essential: true });
+    c.fitBounds([[o, s], [e, n]], { padding: marge, duration: mouvementReduit() ? 0 : duree, essential: true });
+  };
+  useEffect(() => {
+    if (pret) recadrer.current(1500);
   }, [pret, cible]);
 
   /* --- Épingles --- */
