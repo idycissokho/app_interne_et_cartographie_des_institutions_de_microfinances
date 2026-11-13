@@ -17,8 +17,8 @@
   --danger: #B91C1C;
 }
 
-:root { color-scheme: light dark; }
-body { color-scheme: light; margin: 0; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; background: #FAF7F0; }
+:root, body { color-scheme: only light; }
+body { margin: 0; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; background: #FAF7F0; }
 a { color: #8A6A1F; }
 a:hover { color: #6E5416; }
 *:focus-visible { outline: 2px solid #C9A44C; outline-offset: 2px; }

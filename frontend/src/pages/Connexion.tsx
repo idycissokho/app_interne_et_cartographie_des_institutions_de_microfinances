@@ -2,7 +2,7 @@
  * Écran 01 — Connexion (maquette-carto-imf/ecrans/01-connexion.dc.html).
  * - Tient dans la hauteur de la fenêtre, sans défilement (à partir de 1060 × 560 px, colonnes côte à côte) :
  *   tailles et espacements en clamp(…, vh, valeur de la maquette) — identiques à 900 px de haut.
- * - Thème clair (maquette) / sombre, au choix de l'utilisateur, mémorisé.
+ * - Thème clair (maquette, par défaut) / sombre sur demande, choix mémorisé.
  * - Page publique : la carte est un décor de démonstration (aucune donnée réelle sans authentification).
  */
 import { useEffect, useMemo, useState, type CSSProperties, type FormEvent } from "react";
@@ -28,7 +28,8 @@ function themeInitial(): Theme {
     const t = localStorage.getItem(CLE_THEME);
     if (t === "clair" || t === "sombre") return t;
   } catch { /* stockage indisponible */ }
-  return window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "sombre" : "clair";
+  // Par défaut : blanc et or, comme la maquette (le sombre n'est appliqué que sur demande).
+  return "clair";
 }
 
 const tuile: CSSProperties = { flex: "1 1 160px", padding: "clamp(10px, 1.6vh, 14px) 16px", borderRadius: 14, background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.08)" };
@@ -71,7 +72,7 @@ export function Connexion() {
   const libelle: CSSProperties = { fontSize: 13, fontWeight: 700, color: c.label };
 
   return (
-    <div className="ci-page" style={{ height: "100dvh", overflow: "hidden", display: "flex", flexWrap: "wrap", background: "#0B1424", color: "#F4EFE3", colorScheme: theme === "sombre" ? "dark" : "light" }}>
+    <div className="ci-page" style={{ height: "100dvh", overflow: "hidden", display: "flex", flexWrap: "wrap", background: "#0B1424", color: "#F4EFE3", colorScheme: theme === "sombre" ? "dark" : "only light" }}>
       <section className="ci-hero" style={{ flex: "1.25 1 640px", minWidth: 0, height: "100%", position: "relative", overflow: "hidden", padding: "clamp(20px, 4.4vh, 40px) 56px", boxSizing: "border-box", display: "flex", flexDirection: "column", gap: "clamp(12px, 3.1vh, 28px)", background: "radial-gradient(900px 600px at 70% 60%, #15253F 0%, #0B1424 70%)" }}>
         <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap", flex: "none" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
