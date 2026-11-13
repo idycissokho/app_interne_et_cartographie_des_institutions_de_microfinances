@@ -27,13 +27,27 @@ class _NbPointsServiceMixin:
 
 
 class IMFListSerializer(_NbPointsServiceMixin, serializers.ModelSerializer):
-    """Sérialiseur allégé utilisé pour les réponses de liste."""
+    """Sérialiseur allégé utilisé pour les réponses de liste (référentiel, annuaire)."""
 
     nb_points_service = serializers.SerializerMethodField()
+    nb_dirigeants_en_fonction = serializers.IntegerField(read_only=True, default=0)
+    region_siege = serializers.CharField(read_only=True, default=None)
+    a_gps = serializers.SerializerMethodField()
+    bailleurs_noms = serializers.SerializerMethodField()
 
     class Meta:
         model = IMF
-        fields = ["id", "nom", "sigle", "type_imf", "statut_reglementaire", "nb_points_service"]
+        fields = [
+            "id", "nom", "sigle", "type_imf", "statut_reglementaire", "nb_points_service",
+            "email", "telephone", "adresse_siege", "a_gps", "bailleurs_noms",
+            "nb_dirigeants_en_fonction", "region_siege", "date_creation",
+        ]
+
+    def get_a_gps(self, obj):
+        return obj.localisation_siege is not None
+
+    def get_bailleurs_noms(self, obj):
+        return [b.sigle or b.nom for b in obj.bailleurs.all()]
 
 
 class IMFDetailSerializer(_NbPointsServiceMixin, serializers.ModelSerializer):
@@ -53,9 +67,26 @@ class IMFDetailSerializer(_NbPointsServiceMixin, serializers.ModelSerializer):
             "adresse_siege", "localisation_siege", "telephone", "email", "site_web",
             "bailleurs", "bailleurs_detail",
             "is_active", "nb_points_service", "statut_actif",
+            "nb_dirigeants_en_fonction", "region_siege", "nb_regions_couvertes", "nb_membres_total",
             "date_creation", "date_modification",
         ]
         read_only_fields = ["id", "date_creation", "date_modification"]
+
+    nb_dirigeants_en_fonction = serializers.IntegerField(read_only=True, default=0)
+    region_siege = serializers.CharField(read_only=True, default=None)
+    nb_regions_couvertes = serializers.SerializerMethodField()
+    nb_membres_total = serializers.SerializerMethodField()
+
+    def _points_actifs(self, obj):
+        return obj.points_service.filter(is_active=True)
+
+    def get_nb_regions_couvertes(self, obj):
+        return self._points_actifs(obj).exclude(region=None).values("region").distinct().count()
+
+    def get_nb_membres_total(self, obj):
+        from django.db.models import Sum
+
+        return self._points_actifs(obj).aggregate(t=Sum("nombre_membres"))["t"]
 
     def get_statut_actif(self, obj):
         """True si l'IMF est agréée et non désactivée."""

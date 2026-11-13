@@ -7,7 +7,7 @@ Vues DRF du module IMF :
 - BailleurListCreateView / BailleurDetailView : référentiel des bailleurs
 """
 
-from django.db.models import Count, Q
+from django.db.models import Count, OuterRef, Q, Subquery
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, generics
 from rest_framework.permissions import IsAuthenticated
@@ -31,12 +31,23 @@ class LectureAuthentifieeEcritureSuperviseurMixin:
 
 
 def _imf_queryset():
+    from apps.points_service.models import PointService
+
+    region_siege = PointService.objects.filter(
+        imf=OuterRef("pk"), type_point="SIEGE", is_active=True, region__isnull=False
+    ).values("region__nom")[:1]
     return (
         IMF.objects.filter(is_active=True)
         .annotate(
             nb_points_service_actifs=Count(
                 "points_service", filter=Q(points_service__is_active=True), distinct=True
-            )
+            ),
+            nb_dirigeants_en_fonction=Count(
+                "mandats",
+                filter=Q(mandats__is_active=True, mandats__statut_mandat="EN_FONCTION"),
+                distinct=True,
+            ),
+            region_siege=Subquery(region_siege),
         )
         .prefetch_related("bailleurs")
         .order_by("nom")
@@ -51,7 +62,12 @@ class IMFListCreateView(
     """
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ["type_imf", "statut_reglementaire", "bailleurs"]
+    filterset_fields = {
+        "type_imf": ["exact"],
+        "statut_reglementaire": ["exact"],
+        "bailleurs": ["exact"],
+        "date_creation": ["gte", "lte"],
+    }
     search_fields = ["nom", "sigle"]
     ordering_fields = ["nom", "date_creation"]
 

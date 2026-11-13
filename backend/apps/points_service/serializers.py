@@ -28,13 +28,21 @@ class PointServiceListSerializer(serializers.ModelSerializer):
 
     imf_nom = serializers.CharField(source="imf.nom", read_only=True)
     region_nom = serializers.CharField(source="region.nom", read_only=True, default=None)
+    commune_nom = serializers.CharField(source="commune.nom", read_only=True, default=None)
+    imf_sigle = serializers.CharField(source="imf.sigle", read_only=True)
 
     class Meta:
         model = PointService
         fields = [
-            "id", "nom", "imf", "imf_nom", "type_point", "statut_point",
-            "statut_reglementaire", "region", "region_nom", "is_active",
+            "id", "nom", "imf", "imf_nom", "imf_sigle", "type_point", "statut_point",
+            "statut_reglementaire", "region", "region_nom", "commune_nom",
+            "nombre_membres", "encours", "depots", "a_gps", "is_active",
         ]
+
+    a_gps = serializers.SerializerMethodField()
+
+    def get_a_gps(self, obj):
+        return obj.localisation is not None
 
 
 class PointServiceDetailSerializer(serializers.ModelSerializer):

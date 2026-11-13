@@ -8,7 +8,7 @@ Vues DRF des modules Dirigeant et Mandat :
 - MandatDetailView         : détail, modification, soft delete d'un mandat
 """
 
-from django.db.models import Count, Prefetch, Q
+from django.db.models import Count, OuterRef, Prefetch, Q, Subquery
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, generics
@@ -27,10 +27,14 @@ class DirigeantListCreateView(AuditMixin, generics.ListCreateAPIView):
     """
 
     queryset = Dirigeant.objects.filter(is_active=True).annotate(
-        nb_mandats_actifs=Count("mandats", filter=Q(mandats__is_active=True))
-    ).order_by("nom", "prenom")
+        nb_mandats_actifs=Count("mandats", filter=Q(mandats__is_active=True), distinct=True)
+    ).order_by("nom", "prenom").distinct()
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = {"mandats__fonction_mandat": ["exact"], "mandats__imf": ["exact"]}
+    filterset_fields = {
+        "mandats__fonction_mandat": ["exact"],
+        "mandats__imf": ["exact"],
+        "mandats__statut_mandat": ["exact"],
+    }
     search_fields = ["nom", "prenom", "email_professionnel"]
     ordering_fields = ["nom", "prenom"]
 
@@ -129,3 +133,46 @@ class MandatsParIMFView(generics.ListAPIView):
         return Mandat.objects.filter(
             imf_id=self.kwargs["imf_pk"], is_active=True, dirigeant__is_active=True
         ).select_related("imf", "dirigeant")
+
+
+def _region_imf():
+    from apps.points_service.models import PointService
+
+    return Subquery(
+        PointService.objects.filter(
+            imf=OuterRef("imf"), type_point="SIEGE", is_active=True, region__isnull=False
+        ).values("region__nom")[:1]
+    )
+
+
+class MandatListView(generics.ListAPIView):
+    """GET /api/v1/dirigeants/mandats/ — Tous les mandats actifs (liste « Dirigeants et mandats »).
+
+    Lecture seule, non journalisée (aucune fiche dirigeant n'est ouverte).
+    Filtres : fonction_mandat, statut_mandat, imf, dirigeant, date_fin__gte / __lte (échéances),
+    sans_justificatif=true. Recherche : nom, prénom, email du dirigeant, IMF.
+    """
+
+    serializer_class = MandatSerializer
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_class = None
+    filterset_fields = {
+        "fonction_mandat": ["exact", "in"],
+        "statut_mandat": ["exact"],
+        "imf": ["exact"],
+        "dirigeant": ["exact"],
+        "date_fin": ["gte", "lte", "isnull"],
+    }
+    search_fields = ["dirigeant__nom", "dirigeant__prenom", "dirigeant__email_professionnel", "imf__nom", "imf__sigle"]
+    ordering_fields = ["date_fin", "date_debut", "dirigeant__nom"]
+
+    def get_queryset(self):
+        qs = (
+            Mandat.objects.filter(is_active=True, dirigeant__is_active=True, imf__is_active=True)
+            .select_related("imf", "dirigeant")
+            .annotate(imf_region=_region_imf())
+            .order_by("dirigeant__nom", "dirigeant__prenom", "-date_debut")
+        )
+        if self.request.query_params.get("sans_justificatif") in ("true", "1"):
+            qs = qs.filter(fichier_justificatif="", documents_justificatifs="")
+        return qs

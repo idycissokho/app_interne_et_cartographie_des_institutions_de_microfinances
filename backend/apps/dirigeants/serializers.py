@@ -17,12 +17,16 @@ class MandatSerializer(serializers.ModelSerializer):
 
     imf_nom = serializers.CharField(source="imf.nom", read_only=True)
     dirigeant_nom_complet = serializers.CharField(source="dirigeant.get_nom_complet", read_only=True)
+    dirigeant_email = serializers.CharField(source="dirigeant.email_professionnel", read_only=True)
+    imf_sigle = serializers.CharField(source="imf.sigle", read_only=True)
+    imf_region = serializers.CharField(read_only=True, default=None)
     est_en_cours = serializers.SerializerMethodField()
 
     class Meta:
         model = Mandat
         fields = [
-            "id", "dirigeant", "dirigeant_nom_complet", "imf", "imf_nom",
+            "id", "dirigeant", "dirigeant_nom_complet", "dirigeant_email",
+            "imf", "imf_nom", "imf_sigle", "imf_region",
             "fonction_mandat", "date_debut", "date_fin", "statut_mandat",
             "documents_justificatifs", "fichier_justificatif", "est_en_cours",
             "is_active", "date_creation", "date_modification",

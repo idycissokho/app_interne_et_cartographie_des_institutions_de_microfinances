@@ -59,13 +59,32 @@ class ZoneAgregatsSerializer(serializers.ModelSerializer):
     encours_total = serializers.DecimalField(max_digits=18, decimal_places=2, read_only=True)
     depots_total = serializers.DecimalField(max_digits=18, decimal_places=2, read_only=True)
     nb_membres_total = serializers.IntegerField(read_only=True)
+    principaux_bailleurs = serializers.SerializerMethodField()
 
     class Meta:
         model = ZoneGeographique
         fields = [
             "id", "code", "nom", "type_zone", "parent",
             "nb_points_service", "nb_imf", "encours_total", "depots_total", "nb_membres_total",
+            "principaux_bailleurs",
         ]
+
+    def get_principaux_bailleurs(self, obj):
+        """Les 2 bailleurs associés au plus grand nombre d'IMF présentes dans la zone."""
+        from django.db.models import Count, Q
+
+        from apps.cartographie.models import CHAMP_POINT_PAR_TYPE
+        from apps.imf.models import Bailleur
+
+        champ = CHAMP_POINT_PAR_TYPE[obj.type_zone]
+        presence = Q(**{f"imfs__points_service__{champ}": obj, "imfs__points_service__is_active": True})
+        top = (
+            Bailleur.objects.filter(is_active=True)
+            .annotate(n=Count("imfs", filter=presence, distinct=True))
+            .filter(n__gt=0)
+            .order_by("-n", "nom")[:2]
+        )
+        return [b.sigle or b.nom for b in top]
 
 
 class ZoneGeographiqueGeoSerializer(GeoFeatureModelSerializer):

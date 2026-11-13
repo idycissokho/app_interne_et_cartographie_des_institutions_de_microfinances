@@ -15,12 +15,14 @@ from .views import (
     DirigeantListCreateView,
     MandatDetailView,
     MandatListCreateView,
+    MandatListView,
 )
 
 app_name = "dirigeants"
 
 urlpatterns = [
     path("", DirigeantListCreateView.as_view(), name="dirigeant-list"),
+    path("mandats/", MandatListView.as_view(), name="mandat-global-list"),
     path("<uuid:pk>/", DirigeantDetailView.as_view(), name="dirigeant-detail"),
     path("<uuid:dirigeant_pk>/mandats/", MandatListCreateView.as_view(), name="mandat-list"),
     path("<uuid:dirigeant_pk>/mandats/<uuid:pk>/", MandatDetailView.as_view(), name="mandat-detail"),

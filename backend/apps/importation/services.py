@@ -311,7 +311,8 @@ def traiter_importation(importation: ImportationFichier) -> ImportationFichier:
                 else:
                     mises_a_jour += 1
         except ErreurLigne as exc:
-            erreurs.append({"ligne": numero, "erreurs": exc.erreurs})
+            valeurs = {col: ligne.get(col, "") for col in exc.erreurs if col in ligne}
+            erreurs.append({"ligne": numero, "erreurs": exc.erreurs, "valeurs": valeurs})
 
     importation.nb_lignes_total = len(lignes)
     importation.nb_lignes_importees = creees + mises_a_jour
