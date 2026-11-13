@@ -65,3 +65,12 @@ def test_connexion_journalisee(client):
     user = UtilisateurFactory(password="TestPass123!")
     client.post("/api/v1/auth/login/", {"email": user.email, "password": "TestPass123!"})
     assert _actions() == ["CONNEXION"]
+
+
+def test_pagination_ajustable_via_page_size(client_consultant):
+    from apps.imf.models import IMF
+
+    for i in range(25):
+        IMF.objects.create(nom=f"IMF {i:02d}", type_imf="SA", adresse_siege="Dakar")
+    assert len(client_consultant.get("/api/v1/imf/").data["results"]) == 20
+    assert len(client_consultant.get("/api/v1/imf/?page_size=1000").data["results"]) == 25

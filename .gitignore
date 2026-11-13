@@ -63,3 +63,4 @@ logs/
 # --- Fichiers temporaires ---
 *.tmp
 *.bak
+*.tsbuildinfo

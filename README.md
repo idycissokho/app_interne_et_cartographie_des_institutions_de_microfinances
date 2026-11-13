@@ -43,7 +43,17 @@ docker-compose exec backend python manage.py migrate
 
 # Créer l'administrateur
 docker-compose exec backend python manage.py createsuperuser
-L'application sera alors accessible sur http://localhost:8000.
+L'API est accessible sur http://localhost:8000/api/v1/ et l'interface sur **http://localhost:5173**.
+
+5. Frontend hors Docker (optionnel)
+cd frontend
+npm install
+npm run dev        # http://localhost:5173 (relaie /api vers http://localhost:8000)
+npm run build      # vérification TypeScript + build de production
+
+Écrans : carte des points de service (filtres IMF, région, type, statut, bailleur), carte macro par zone,
+fiches IMF (onglets points de service et dirigeants), dirigeants et mandats, import/export CSV-Excel,
+journal d'audit (administrateurs). Les actions d'écriture n'apparaissent que pour SUPERVISEUR et ADMIN.
 
 📂 Organisation du dépôt
 
