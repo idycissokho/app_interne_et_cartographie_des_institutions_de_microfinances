@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Dirigeants et mandats — Carto IMF</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:#FAF7F0}
+a{color:#8A6A1F}a:hover{color:#6E5416}
+@keyframes di-up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes di-modal{from{opacity:0;transform:translateY(16px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes di-fade{from{opacity:0}to{opacity:1}}
+.di-up{animation:di-up .6s cubic-bezier(.2,.7,.2,1) both}
+.di-up.d1{animation-delay:.08s}
+.di-modal{animation:di-modal .4s cubic-bezier(.2,.7,.2,1) both}
+.di-fade{animation:di-fade .3s ease both}
+.di-row:hover{background:#FBF8F1}
+.di-label{font-size:13px;font-weight:700;color:#1A2333;display:flex;gap:4px;align-items:baseline}
+.di-req{color:#B08A1E}
+.di-help{font-size:12px;color:#6B7280;line-height:1.45}
+.di-input{height:46px;box-sizing:border-box;width:100%;border-radius:12px;border:1.5px solid #E2DCCD;background:#FFFFFF;padding:0 14px;font:inherit;font-size:14px;color:#0B1424;transition:border-color .15s ease,box-shadow .15s ease}
+.di-input::placeholder{color:#9AA3B2}
+.di-input:focus{outline:none;border-color:#C9A44C;box-shadow:0 0 0 4px rgba(201,164,76,.18)}
+select.di-input{cursor:pointer;padding-right:10px}
+.di-drop:hover{border-color:#C9A44C;background:#FDF8EA}
+.di-primary:hover{background:#D9B65E}
+@media (prefers-reduced-motion:reduce){.di-up,.di-modal,.di-fade{animation:none}}
+</style>
+</helmet>
+<div style="min-height: 1100px; position: relative; display: flex; flex-wrap: wrap; background: #FAF7F0; color: #0B1424; overflow: hidden">
+  <div style="flex: 1 1 248px; max-width: 272px; background: #0B1424; display: flex">
+    <dc-import name="Sidebar" active="dirigeants" role="superviseur" hint-size="100%,1100px"></dc-import>
+  </div>
+
+  <main style="flex: 999 1 640px; min-width: 0; padding: 28px 32px 40px 32px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px">
+    <header class="di-up" style="display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <span style="font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #8A6A1F">Référentiels · Gouvernance</span>
+        <h1 style="margin: 0; font-size: 34px; font-weight: 800; letter-spacing: -0.03em">Dirigeants et mandats</h1>
+        <p style="margin: 0; font-size: 14px; color: #4A5568">PCA, DG, gérants, comités. Chaque consultation de fiche est journalisée. <span style="font-weight: 700; color: #8A6A1F">Données fictives.</span></p>
+      </div>
+      <button type="button" onClick="{{open}}" style="height: 46px; padding: 0 18px; border-radius: 14px; border: none; background: #C9A44C; font: inherit; font-size: 14px; font-weight: 800; color: #0B1424; display: flex; align-items: center; gap: 8px; cursor: pointer; box-shadow: 0 10px 24px rgba(201,164,76,.35)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Nouveau mandat</button>
+    </header>
+
+    <div class="di-up d1" style="display: flex; gap: 8px; flex-wrap: wrap">
+      <sc-for list="{{chips}}" as="c" hint-placeholder-count="6"><button type="button" onClick="{{c.pick}}" style="{{c.style}}">{{c.label}}</button></sc-for>
+    </div>
+
+    <section class="di-up d1" style="border-radius: 24px; background: #FFFFFF; border: 1px solid #ECE5D5; overflow: hidden">
+      <div style="overflow-x: auto">
+        <table style="width: 100%; min-width: 900px; border-collapse: collapse; font-size: 14px">
+          <thead><tr style="text-align: left; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #6B7280; background: #FDFBF6"><th style="padding: 12px 18px">Dirigeant</th><th style="padding: 12px 8px">Fonction</th><th style="padding: 12px 8px">IMF</th><th style="padding: 12px 8px">Mandat</th><th style="padding: 12px 8px">Statut</th><th style="padding: 12px 18px">Justificatif</th></tr></thead>
+          <tbody>
+            <sc-for list="{{rows}}" as="r" hint-placeholder-count="7">
+              <tr class="di-row" style="border-top: 1px solid #F6F1E4">
+                <td style="padding: 13px 18px"><div style="display: flex; align-items: center; gap: 12px"><span style="width: 40px; height: 40px; flex: none; border-radius: 50%; background: #0B1424; color: #F3D98C; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800">{{r.ini}}</span><div><div style="font-weight: 800">{{r.nom}}</div><div style="font-size: 12px; color: #6B7280">{{r.mail}}</div></div></div></td>
+                <td style="padding: 13px 8px"><span style="font-size: 12px; font-weight: 800; color: #6E5416; background: #F3ECDC; padding: 4px 9px; border-radius: 8px; margin-right: 6px">{{r.code}}</span><span style="font-size: 13px; color: #4A5568">{{r.fonction}}</span></td>
+                <td style="padding: 13px 8px; font-weight: 600">{{r.imf}}</td>
+                <td style="padding: 13px 8px; min-width: 170px"><div style="display: flex; justify-content: space-between; font-size: 12px; color: #6B7280; margin-bottom: 5px"><span>{{r.debut}}</span><span>{{r.fin}}</span></div><div style="height: 6px; border-radius: 99px; background: #F1ECE0; overflow: hidden"><div style="height: 100%; border-radius: 99px; background: {{r.barColor}}; width: {{r.prog}}"></div></div></td>
+                <td style="padding: 13px 8px"><span style="{{r.badge}}">{{r.statut}}</span></td>
+                <td style="padding: 13px 18px"><sc-if value="{{r.hasDoc}}" hint-placeholder-val="{{ true }}"><a href="#" style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; text-decoration: none"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6z"></path><path d="M14 3v6h6"></path></svg>{{r.doc}}</a></sc-if><sc-if value="{{r.noDoc}}" hint-placeholder-val="{{ false }}"><span style="font-size: 12px; font-weight: 700; color: #B45309">Manquant</span></sc-if></td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <sc-if value="{{modal}}" hint-placeholder-val="{{ true }}">
+    <div class="di-fade" onClick="{{close}}" style="position: absolute; inset: 0; background: rgba(11,20,36,.42); backdrop-filter: blur(3px); z-index: 10"></div>
+    <div style="position: absolute; inset: 0; z-index: 11; display: flex; align-items: center; justify-content: center; padding: 24px; box-sizing: border-box; pointer-events: none">
+      <div class="di-modal" role="dialog" aria-modal="true" aria-labelledby="di-title" style="pointer-events: auto; width: 680px; max-width: 100%; max-height: 100%; overflow: auto; border-radius: 26px; background: #FFFFFF; box-shadow: 0 40px 90px rgba(11,20,36,.35)">
+        <div style="padding: 22px 26px 18px 26px; display: flex; justify-content: space-between; gap: 12px; align-items: flex-start">
+          <div><h2 id="di-title" style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.02em">Nouveau mandat</h2><p style="margin: 4px 0 0 0; font-size: 13px; color: #6B7280">Identifiez le dirigeant, puis décrivez sa fonction dans l'IMF.</p></div>
+          <button type="button" aria-label="Fermer" onClick="{{close}}" style="width: 40px; height: 40px; border-radius: 12px; border: 1px solid #ECE5D5; background: #FFFFFF; color: #0B1424; cursor: pointer; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
+        </div>
+        <ol style="list-style: none; margin: 0; padding: 0 26px 18px 26px; display: flex; gap: 10px">
+          <sc-for list="{{steps}}" as="s" hint-placeholder-count="2">
+            <li style="flex: 1; display: flex; flex-direction: column; gap: 8px">
+              <div style="{{s.bar}}"></div>
+              <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: {{s.color}}"><span style="{{s.num}}">{{s.mark}}</span>{{s.label}}</div>
+            </li>
+          </sc-for>
+        </ol>
+
+        <form style="padding: 4px 26px 22px 26px; display: flex; flex-direction: column; gap: 16px">
+          <sc-if value="{{step1}}" hint-placeholder-val="{{ true }}">
+            <div style="display: flex; padding: 4px; border-radius: 12px; background: #F6F1E4; gap: 2px">
+              <sc-for list="{{modes}}" as="m" hint-placeholder-count="2"><button type="button" onClick="{{m.pick}}" style="{{m.style}}">{{m.label}}</button></sc-for>
+            </div>
+            <sc-if value="{{existing}}" hint-placeholder-val="{{ false }}">
+              <div style="display: flex; flex-direction: column; gap: 8px"><label class="di-label" for="di-find">Rechercher un dirigeant</label><input id="di-find" class="di-input" placeholder="Nom, prénom ou email…" value="Ndiaye"></div>
+              <div style="display: flex; flex-direction: column; gap: 8px">
+                <button type="button" style="display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 14px; border: 1.5px solid #C9A44C; background: #FDF8EA; font: inherit; color: #0B1424; cursor: pointer; text-align: left"><span style="width: 38px; height: 38px; border-radius: 50%; background: #0B1424; color: #F3D98C; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800">AN</span><span style="flex: 1"><b style="display: block; font-size: 14px">Aïssatou Ndiaye</b><span style="font-size: 12px; color: #6B7280">2 mandats · DG chez IMF Baobab</span></span><span style="width: 18px; height: 18px; border-radius: 50%; border: 5px solid #C9A44C; box-sizing: border-box"></span></button>
+                <button type="button" style="display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 14px; border: 1.5px solid #E2DCCD; background: #FFFFFF; font: inherit; color: #0B1424; cursor: pointer; text-align: left"><span style="width: 38px; height: 38px; border-radius: 50%; background: #F1ECE0; color: #6E5416; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800">MN</span><span style="flex: 1"><b style="display: block; font-size: 14px">Mamadou Ndiaye</b><span style="font-size: 12px; color: #6B7280">1 mandat · PCA chez IMF Cauris</span></span><span style="width: 18px; height: 18px; border-radius: 50%; border: 2px solid #D3C9B2; box-sizing: border-box"></span></button>
+              </div>
+            </sc-if>
+            <sc-if value="{{creating}}" hint-placeholder-val="{{ true }}">
+              <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px">
+                <div style="display: flex; flex-direction: column; gap: 8px"><label class="di-label" for="di-prenom">Prénom <span class="di-req">*</span></label><input id="di-prenom" class="di-input" value="Aïssatou"></div>
+                <div style="display: flex; flex-direction: column; gap: 8px"><label class="di-label" for="di-nom">Nom <span class="di-req">*</span></label><input id="di-nom" class="di-input" value="Ndiaye"></div>
+                <div style="display: flex; flex-direction: column; gap: 8px"><label class="di-label" for="di-tel">Téléphone</label><input id="di-tel" class="di-input" placeholder="+221 77 000 00 00" inputmode="tel"></div>
+                <div style="display: flex; flex-direction: column; gap: 8px"><label class="di-label" for="di-mail">Email professionnel</label><input id="di-mail" type="email" class="di-input" placeholder="prenom.nom@imf.sn"></div>
+                <div style="display: flex; flex-direction: column; gap: 8px; grid-column: span 2"><label class="di-label" for="di-mail2">Email secondaire <span style="font-weight: 600; color: #6B7280">(optionnel)</span></label><input id="di-mail2" type="email" class="di-input" placeholder="adresse personnelle"></div>
+              </div>
+            </sc-if>
+          </sc-if>
+
+          <sc-if value="{{step2}}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px; background: #0B1424; color: #F4EFE3"><span style="width: 36px; height: 36px; border-radius: 50%; background: #C9A44C; color: #0B1424; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800">AN</span><div style="flex: 1"><b style="font-size: 14px">Aïssatou Ndiaye</b><div style="font-size: 12px; color: #A9B3C4">Nouveau dirigeant</div></div><button type="button" onClick="{{back}}" style="border: none; background: transparent; color: #F3D98C; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer">Modifier</button></div>
+            <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px">
+              <div style="display: flex; flex-direction: column; gap: 8px"><label class="di-label" for="di-imf">Institution <span class="di-req">*</span></label><select id="di-imf" class="di-input"><option>IMF Baobab (IB)</option><option>IMF Alpha (IA)</option></select></div>
+              <div style="display: flex; flex-direction: column; gap: 8px"><label class="di-label" for="di-fct">Fonction <span class="di-req">*</span></label>
+                <select id="di-fct" class="di-input">
+                  <option>Président du Conseil d'Administration</option><option>Président du Conseil</option><option selected>Directeur Général</option><option>Directeur Général Adjoint</option><option>Gérant</option><option>Président de la Commission Crédit</option><option>Président du Conseil de Surveillance</option><option>Responsable Conformité / Contrôle interne</option><option>Auditeur interne</option><option>Directeur Administratif et Financier</option><option>Responsable IT / Systèmes d'Information</option><option>Responsable Opérations / Réseau</option>
+                </select></div>
+              <div style="display: flex; flex-direction: column; gap: 8px"><label class="di-label" for="di-deb">Début du mandat <span class="di-req">*</span></label><input id="di-deb" type="date" class="di-input" value="2025-01-15"></div>
+              <div style="display: flex; flex-direction: column; gap: 8px"><label class="di-label" for="di-fin">Fin du mandat</label><input id="di-fin" type="date" class="di-input" value="2029-01-14"><span class="di-help">Doit être postérieure au début. Laisser vide si indéterminée.</span></div>
+            </div>
+            <fieldset style="border: none; margin: 0; padding: 0">
+              <legend class="di-label" style="margin-bottom: 8px">Statut du mandat</legend>
+              <div style="display: flex; padding: 4px; border-radius: 12px; background: #F6F1E4; gap: 2px">
+                <sc-for list="{{statuts}}" as="s" hint-placeholder-count="3"><button type="button" role="radio" aria-checked="{{s.on}}" onClick="{{s.pick}}" style="{{s.style}}"><span style="width: 8px; height: 8px; border-radius: 50%; background: {{s.color}}"></span>{{s.label}}</button></sc-for>
+              </div>
+            </fieldset>
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <span class="di-label">Document justificatif</span>
+              <label class="di-drop" for="di-file" style="display: flex; align-items: center; gap: 14px; padding: 18px; border-radius: 16px; border: 1.5px dashed #D3C9B2; background: #FDFBF6; cursor: pointer; transition: border-color .15s ease, background .15s ease">
+                <span style="width: 44px; height: 44px; border-radius: 14px; background: #0B1424; color: #F3D98C; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5M4 21h16"></path></svg></span>
+                <span style="flex: 1"><b style="display: block; font-size: 14px">Déposez le PV, la décision, l'arrêté ou la lettre</b><span style="font-size: 12px; color: #6B7280">PDF, JPG ou PNG · ou <span style="color: #8A6A1F; font-weight: 700">parcourir vos fichiers</span></span></span>
+                <input id="di-file" type="file" accept=".pdf,.jpg,.jpeg,.png" style="position: absolute; width: 1px; height: 1px; opacity: 0">
+              </label>
+              <div style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; border: 1px solid #ECE5D5"><span style="font-size: 11px; font-weight: 800; color: #FFFFFF; background: #B91C1C; padding: 4px 6px; border-radius: 6px">PDF</span><span style="flex: 1; font-size: 13px; font-weight: 600">PV_conseil_2025-01.pdf <span style="color: #6B7280; font-weight: 500">· 412 Ko</span></span><span style="font-size: 12px; font-weight: 800; color: #15803D">✓ Prêt</span></div>
+              <span class="di-help">Ou collez un lien vers un document externe : <a href="#">ajouter un lien</a></span>
+            </div>
+          </sc-if>
+        </form>
+
+        <div style="padding: 16px 26px; border-top: 1px solid #F1ECE0; display: flex; justify-content: space-between; gap: 10px; background: #FDFBF6; border-radius: 0 0 26px 26px">
+          <button type="button" onClick="{{backOrClose}}" style="height: 48px; padding: 0 18px; border-radius: 14px; border: 1px solid #ECE5D5; background: #FFFFFF; font: inherit; font-size: 14px; font-weight: 700; color: #0B1424; cursor: pointer">{{backLabel}}</button>
+          <button type="button" class="di-primary" onClick="{{next}}" style="height: 48px; padding: 0 22px; border-radius: 14px; border: none; background: #C9A44C; font: inherit; font-size: 14px; font-weight: 800; color: #0B1424; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 10px 24px rgba(201,164,76,.35)">{{nextLabel}} <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1100}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { modal: true, step: 1, mode: 'new', statut: 'EN_FONCTION', chip: 'Toutes' };
+  }
+  renderVals() {
+    var self = this, st = this.state;
+    var SB = { 'En fonction': ['#DCFCE7', '#166534'], 'Intérim': ['#FEF3C7', '#92400E'], 'Suspendu': ['#FDECEC', '#991B1B'] };
+    var D = [
+      ['AN', 'Aïssatou Ndiaye', 'DG', 'Directeur Général', 'IMF Baobab', '2022', '2026', '92%', 'En fonction', 'Décision', 'Direction'],
+      ['MS', 'Moussa Sarr', 'PCA', "Président du Conseil d'Administration", 'IMF Baobab', '2023', '2027', '62%', 'En fonction', 'PV d’AG', 'Conseils'],
+      ['FD', 'Fatou Diop', 'DGA', 'Directeur Général Adjoint', 'IMF Alpha', '2025', '—', '30%', 'Intérim', '', 'Direction'],
+      ['IB', 'Ibrahima Ba', 'PCC', 'Président de la Commission Crédit', 'IMF Cauris', '2024', '2028', '40%', 'En fonction', 'PV du conseil', 'Comités'],
+      ['KF', 'Khady Fall', 'RCI', 'Responsable Conformité / Contrôle interne', 'IMF Delta', '2021', '2025', '100%', 'En fonction', 'Arrêté', 'Contrôle'],
+      ['OG', 'Ousmane Gueye', 'GÉR', 'Gérant', 'IMF Fleuve', '2020', '2024', '100%', 'Suspendu', '', 'Direction'],
+      ['NS', 'Ndèye Seck', 'DAF', 'Directeur Administratif et Financier', 'IMF Gaïndé', '2023', '2027', '55%', 'En fonction', 'Lettre formelle', 'Direction']
+    ];
+    var chip = function (label, on, fn) {
+      return { label: label, pick: fn, style: 'font: inherit; font-size: 13px; font-weight: 700; padding: 9px 14px; border-radius: 999px; cursor: pointer; ' + (on ? 'background: #0B1424; color: #F3D98C; border: 1px solid #0B1424;' : 'background: #FFFFFF; color: #4A5568; border: 1px solid #ECE5D5;') };
+    };
+    var seg = function (on) { return 'flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; height: 40px; border: none; border-radius: 9px; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; ' + (on ? 'background: #FFFFFF; color: #0B1424; box-shadow: 0 2px 8px rgba(11,20,36,.10);' : 'background: transparent; color: #6B7280;'); };
+    var step = st.step;
+    return {
+      modal: st.modal,
+      open: function () { self.setState({ modal: true, step: 1 }); },
+      close: function () { self.setState({ modal: false }); },
+      chips: ['Toutes', 'Conseils', 'Direction', 'Comités', 'Contrôle'].map(function (c) { return chip(c === 'Toutes' ? 'Toutes les fonctions' : c, c === st.chip, function () { self.setState({ chip: c }); }); }),
+      rows: D.filter(function (d) { return st.chip === 'Toutes' || d[10] === st.chip; }).map(function (d) {
+        var c = SB[d[8]];
+        return { ini: d[0], nom: d[1], mail: d[1].toLowerCase().replace(/[^a-z ]/g, '').replace(' ', '.') + '@imf.sn', code: d[2], fonction: d[3], imf: d[4], debut: d[5], fin: d[6], prog: d[7],
+          barColor: d[7] === '100%' ? '#B91C1C' : (parseInt(d[7], 10) > 85 ? '#D97706' : '#C9A44C'), statut: d[8],
+          badge: 'font-size: 12px; font-weight: 800; padding: 5px 10px; border-radius: 999px; white-space: nowrap; background: ' + c[0] + '; color: ' + c[1] + ';',
+          hasDoc: !!d[9], noDoc: !d[9], doc: d[9] };
+      }),
+      steps: [{ n: 1, label: 'Dirigeant' }, { n: 2, label: 'Mandat et justificatif' }].map(function (s) {
+        var done = step > s.n, cur = step === s.n;
+        return { label: s.label, mark: done ? '✓' : String(s.n), color: cur || done ? '#0B1424' : '#9AA3B2',
+          bar: 'height: 4px; border-radius: 99px; background: ' + (done || cur ? '#C9A44C' : '#ECE5D5') + ';',
+          num: 'width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; ' + (done ? 'background: #15803D; color: #FFFFFF;' : (cur ? 'background: #0B1424; color: #F3D98C;' : 'background: #F1ECE0; color: #6B7280;')) };
+      }),
+      step1: step === 1, step2: step === 2,
+      modes: [['existing', 'Dirigeant existant'], ['new', 'Nouveau dirigeant']].map(function (m) { return { label: m[1], pick: function () { self.setState({ mode: m[0] }); }, style: seg(st.mode === m[0]) }; }),
+      existing: st.mode === 'existing', creating: st.mode === 'new',
+      statuts: [['EN_FONCTION', 'En fonction', '#15803D'], ['INTERIM', 'Intérim', '#D97706'], ['SUSPENDU', 'Suspendu', '#B91C1C']].map(function (s) {
+        return { label: s[1], color: s[2], on: st.statut === s[0] ? 'true' : 'false', pick: function () { self.setState({ statut: s[0] }); }, style: seg(st.statut === s[0]) };
+      }),
+      back: function () { self.setState({ step: 1 }); },
+      backOrClose: function () { if (step === 1) self.setState({ modal: false }); else self.setState({ step: 1 }); },
+      backLabel: step === 1 ? 'Annuler' : 'Retour',
+      next: function () { if (step === 1) self.setState({ step: 2 }); else self.setState({ modal: false, step: 1 }); },
+      nextLabel: step === 1 ? 'Continuer' : 'Enregistrer le mandat'
+    };
+  }
+}
+</script>
+</body>
+</html>

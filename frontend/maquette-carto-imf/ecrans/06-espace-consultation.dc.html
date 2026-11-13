@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Espace consultation — Carto IMF</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:#FAF7F0}
+a{color:#8A6A1F}a:hover{color:#6E5416}
+@keyframes co-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes co-grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.co-in{animation:co-in .7s cubic-bezier(.2,.7,.2,1) both}
+.co-in.d1{animation-delay:.1s}.co-in.d2{animation-delay:.2s}
+.co-bar{transform-origin:left;animation:co-grow 1s cubic-bezier(.2,.7,.2,1) both .2s}
+.co-item{transition:transform .18s ease,box-shadow .18s ease}
+.co-item:hover{transform:translateX(3px)}
+.co-search:focus-within{border-color:#C9A44C;box-shadow:0 0 0 4px rgba(201,164,76,.18)}
+@media (prefers-reduced-motion:reduce){.co-in,.co-bar{animation:none}}
+</style>
+</helmet>
+<div style="min-height: 1300px; display: flex; flex-wrap: wrap; background: #FAF7F0; color: #0B1424">
+  <div style="flex: 1 1 248px; max-width: 272px; background: #0B1424; display: flex">
+    <dc-import name="Sidebar" active="consultation" role="consultant" hint-size="100%,1300px"></dc-import>
+  </div>
+
+  <main style="flex: 999 1 640px; min-width: 0; padding: 28px 32px 48px 32px; box-sizing: border-box; display: flex; flex-direction: column; gap: 22px">
+    <header class="co-in" style="display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <span style="font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #8A6A1F">Consultation · ROLE_CONSULT</span>
+        <h1 style="margin: 0; font-size: 34px; font-weight: 800; letter-spacing: -0.03em">Annuaire des institutions</h1>
+        <p style="margin: 0; font-size: 14px; color: #4A5568">Consultez les fiches IMF, leurs points de service et leurs dirigeants. <span style="font-weight: 700; color: #8A6A1F">Données fictives de démonstration.</span></p>
+      </div>
+      <span style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #1F4E79; background: #E0ECF7; padding: 10px 14px; border-radius: 12px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg>Accès en lecture seule</span>
+    </header>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start">
+      <section class="co-in d1" style="flex: 1 1 320px; max-width: 400px; min-width: 0; display: flex; flex-direction: column; gap: 12px">
+        <label class="co-search" style="display: flex; align-items: center; gap: 10px; height: 50px; padding: 0 16px; border-radius: 16px; background: #FFFFFF; border: 1.5px solid #ECE5D5; color: #6B7280">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+          <input type="search" aria-label="Rechercher une IMF" placeholder="Nom, sigle ou région…" value="{{q}}" onInput="{{search}}" style="border: none; outline: none; background: transparent; font: inherit; font-size: 14px; flex: 1; min-width: 0; color: #0B1424">
+        </label>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap">
+          <sc-for list="{{chips}}" as="c" hint-placeholder-count="4">
+            <button type="button" onClick="{{c.pick}}" style="{{c.style}}">{{c.label}}</button>
+          </sc-for>
+        </div>
+        <div style="font-size: 12px; font-weight: 700; color: #6B7280; padding: 4px 4px 0 4px">{{resultTxt}}</div>
+        <sc-for list="{{list}}" as="m" hint-placeholder-count="6">
+          <button type="button" class="co-item" onClick="{{m.pick}}" style="{{m.style}}">
+            <span style="width: 46px; height: 46px; flex: none; border-radius: 14px; background: {{m.tone}}; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800">{{m.short}}</span>
+            <span style="flex: 1; min-width: 0; text-align: left; display: flex; flex-direction: column; gap: 3px">
+              <span style="font-size: 15px; font-weight: 800">{{m.name}}</span>
+              <span style="font-size: 12px; color: #6B7280">{{m.type}} · {{m.region}}</span>
+            </span>
+            <span style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px">
+              <span style="{{m.badge}}">{{m.statut}}</span>
+              <span style="font-size: 12px; color: #6B7280"><b style="color: #0B1424">{{m.pts}}</b> points</span>
+            </span>
+          </button>
+        </sc-for>
+      </section>
+
+      <section class="co-in d2" style="flex: 999 1 520px; min-width: 0; border-radius: 28px; background: #FFFFFF; border: 1px solid #ECE5D5; box-shadow: 0 30px 60px -30px rgba(11,20,36,.22); overflow: hidden">
+        <div style="position: relative; padding: 26px 26px 0 26px; background: #0B1424; color: #F4EFE3; overflow: hidden">
+          <svg aria-hidden="true" width="100%" height="100%" style="position: absolute; inset: 0; opacity: .5"><defs><pattern id="coDots" width="14" height="14" patternUnits="userSpaceOnUse"><circle cx="7" cy="7" r="1.2" fill="#C9A44C" fill-opacity=".35"></circle></pattern></defs><rect width="100%" height="100%" fill="url(#coDots)"></rect></svg>
+          <div style="position: relative; display: flex; gap: 18px; align-items: center; flex-wrap: wrap">
+            <span style="width: 72px; height: 72px; border-radius: 20px; background: {{cur.tone}}; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800; box-shadow: 0 0 0 4px rgba(243,217,140,.25)">{{cur.short}}</span>
+            <div style="flex: 1; min-width: 200px">
+              <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 6px"><span style="{{cur.badge}}">{{cur.statut}}</span><span style="font-size: 11px; font-weight: 800; color: #0B1424; background: #F3D98C; padding: 4px 10px; border-radius: 999px">{{cur.type}}</span></div>
+              <div style="font-size: 28px; font-weight: 800; letter-spacing: -0.02em">{{cur.name}}</div>
+              <div style="font-size: 13px; color: #A9B3C4">Siège : [adresse du siège], {{cur.region}}</div>
+            </div>
+            <button type="button" style="height: 44px; padding: 0 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.06); font: inherit; font-size: 13px; font-weight: 700; color: #F4EFE3; display: flex; align-items: center; gap: 8px; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"></path></svg>Fiche PDF</button>
+          </div>
+          <div role="tablist" aria-label="Sections de la fiche IMF" style="position: relative; display: flex; gap: 4px; margin-top: 22px; flex-wrap: wrap">
+            <sc-for list="{{tabs}}" as="t" hint-placeholder-count="4">
+              <button type="button" role="tab" aria-selected="{{t.on}}" onClick="{{t.pick}}" style="{{t.style}}">{{t.label}}</button>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="padding: 24px 26px 28px 26px">
+          <sc-if value="{{isApercu}}" hint-placeholder-val="{{ true }}">
+            <div style="display: flex; flex-wrap: wrap; gap: 20px">
+              <div style="flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 14px">
+                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+                  <div style="padding: 16px; border-radius: 16px; background: #FAF7F0"><div style="font-size: 26px; font-weight: 800">{{cur.pts}}</div><div style="font-size: 12px; color: #6B7280; font-weight: 600">Points de service</div></div>
+                  <div style="padding: 16px; border-radius: 16px; background: #FAF7F0"><div style="font-size: 26px; font-weight: 800">{{cur.regions}}</div><div style="font-size: 12px; color: #6B7280; font-weight: 600">Régions couvertes</div></div>
+                  <div style="padding: 16px; border-radius: 16px; background: #FAF7F0"><div style="font-size: 26px; font-weight: 800">{{cur.dir}}</div><div style="font-size: 12px; color: #6B7280; font-weight: 600">Dirigeants en fonction</div></div>
+                  <div style="padding: 16px; border-radius: 16px; background: #FAF7F0"><div style="font-size: 26px; font-weight: 800">[N]</div><div style="font-size: 12px; color: #6B7280; font-weight: 600">Membres</div></div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 10px; font-size: 14px">
+                  <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #F1ECE0"><span style="color: #6B7280">Sigle</span><b>{{cur.short}}</b></div>
+                  <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #F1ECE0"><span style="color: #6B7280">Téléphone</span><b>[+221 XX XXX XX XX]</b></div>
+                  <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #F1ECE0"><span style="color: #6B7280">Email</span><b>[contact@imf.sn]</b></div>
+                  <div style="display: flex; justify-content: space-between; padding: 10px 0"><span style="color: #6B7280">Site web</span><a href="#" style="font-weight: 700">[www.imf.sn]</a></div>
+                </div>
+              </div>
+              <div style="flex: 1 1 280px; min-width: 0; height: 320px; border-radius: 20px; background: #0B1424; padding: 10px; box-sizing: border-box">
+                <dc-import name="CarteSenegal" theme="dark" fill-mode="muted" selected="{{cur.region}}" flow="{{ true }}" show-labels="{{ false }}" hint-size="100%,300px"></dc-import>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{isDir}}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; gap: 14px">
+              <div style="display: flex; gap: 8px; flex-wrap: wrap">
+                <sc-for list="{{dirChips}}" as="c" hint-placeholder-count="4"><button type="button" onClick="{{c.pick}}" style="{{c.style}}">{{c.label}}</button></sc-for>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px">
+                <sc-for list="{{dirs}}" as="d" hint-placeholder-count="4">
+                  <div style="padding: 16px; border-radius: 18px; border: 1px solid #ECE5D5; background: #FDFBF6; display: flex; flex-direction: column; gap: 10px">
+                    <div style="display: flex; align-items: center; gap: 12px">
+                      <span style="width: 44px; height: 44px; border-radius: 14px; background: #0B1424; color: #F3D98C; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800">{{d.code}}</span>
+                      <div style="flex: 1; min-width: 0"><div style="font-size: 14px; font-weight: 800">[Nom Prénom]</div><div style="font-size: 12px; color: #6B7280">{{d.fonction}}</div></div>
+                      <span style="{{d.badge}}">{{d.statut}}</span>
+                    </div>
+                    <div><div style="display: flex; justify-content: space-between; font-size: 11px; color: #6B7280; margin-bottom: 5px"><span>Mandat {{d.debut}}</span><span>{{d.fin}}</span></div><div style="height: 6px; border-radius: 99px; background: #ECE5D5; overflow: hidden"><div class="co-bar" style="height: 100%; border-radius: 99px; background: {{d.color}}; width: {{d.prog}}"></div></div></div>
+                    <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #8A6A1F; font-weight: 700"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6z"></path><path d="M14 3v6h6"></path></svg>{{d.doc}}</div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="display: flex; gap: 10px; align-items: center; padding: 12px 14px; border-radius: 14px; background: #F3ECDC; color: #5B4A1E; font-size: 13px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>Votre consultation de cette fiche est enregistrée dans le journal d'audit.</div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{isPts}}" hint-placeholder-val="{{ false }}">
+            <div style="overflow-x: auto">
+              <div style="min-width: 520px">
+                <div style="display: grid; grid-template-columns: 1.4fr 0.8fr 1fr 0.8fr; gap: 12px; padding: 0 10px 10px 10px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #6B7280; border-bottom: 1px solid #F1ECE0"><span>Point</span><span>Type</span><span>Région</span><span>Statut</span></div>
+                <sc-for list="{{pts}}" as="p" hint-placeholder-count="6">
+                  <div style="display: grid; grid-template-columns: 1.4fr 0.8fr 1fr 0.8fr; gap: 12px; align-items: center; padding: 12px 10px; border-bottom: 1px solid #F6F1E4; font-size: 13px"><b>{{p.nom}}</b><span>{{p.t}}</span><span style="color: #4A5568">{{p.r}}</span><span style="{{p.badge}}">{{p.s}}</span></div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{isBail}}" hint-placeholder-val="{{ false }}">
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px">
+              <div style="padding: 18px; border-radius: 18px; border: 1px solid #ECE5D5"><div style="font-size: 15px; font-weight: 800">[Bailleur A]</div><div style="font-size: 12px; color: #6B7280; margin-top: 4px">Convention de refinancement · [année]</div></div>
+              <div style="padding: 18px; border-radius: 18px; border: 1px solid #ECE5D5"><div style="font-size: 15px; font-weight: 800">[Bailleur B]</div><div style="font-size: 12px; color: #6B7280; margin-top: 4px">Ligne de garantie · [année]</div></div>
+              <div style="padding: 18px; border-radius: 18px; border: 1.5px dashed #E2DCCD; color: #6B7280; font-size: 13px; display: flex; align-items: center">Les bailleurs associés sont optionnels (V1).</div>
+            </div>
+          </sc-if>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1300}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { data: null, sel: 'IMF B', tab: 'apercu', q: '', chip: 'Toutes', dchip: 'Tous' };
+  }
+  componentDidMount() {
+    var self = this;
+    fetch('/_blob/9e3a69493b9e44df6dcf02b06ceb565b').then(function (r) { return r.json(); }).then(function (d) { self.setState({ data: d }); }).catch(function () {});
+  }
+  renderVals() {
+    var self = this, st = this.state;
+    var P = st.data ? st.data.points : [];
+    var IMF = [
+      { name: 'IMF A', short: 'IA', type: 'Mutuelle', statut: 'Agréée', region: 'Dakar', tone: '#1F4E79', dir: 9 },
+      { name: 'IMF B', short: 'IB', type: 'Mutuelle', statut: 'Agréée', region: 'Thiès', tone: '#2E7D6B', dir: 8 },
+      { name: 'IMF C', short: 'IC', type: 'Coopérative', statut: 'En cours', region: 'Kaolack', tone: '#8C5A3C', dir: 6 },
+      { name: 'IMF D', short: 'ID', type: 'SA', statut: 'Agréée', region: 'Saint-Louis', tone: '#C9A44C', dir: 11 },
+      { name: 'IMF E', short: 'IE', type: 'Coopérative', statut: 'Agréée', region: 'Ziguinchor', tone: '#5E7FA8', dir: 7 },
+      { name: 'IMF F', short: 'IF', type: 'Mutuelle', statut: 'Radiée', region: 'Kolda', tone: '#7A4E2D', dir: 4 }
+    ];
+    var SB = { 'Agréée': ['#DCFCE7', '#166534'], 'En cours': ['#FEF3C7', '#92400E'], 'Radiée': ['#FDECEC', '#991B1B'],
+      'Ouvert': ['#DCFCE7', '#166534'], 'En pause': ['#FEF3C7', '#92400E'], 'Fermé': ['#E5E7EB', '#374151'],
+      'En fonction': ['#DCFCE7', '#166534'], 'Intérim': ['#FEF3C7', '#92400E'], 'Suspendu': ['#FDECEC', '#991B1B'] };
+    var badge = function (s) { var c = SB[s] || SB['Ouvert']; return 'font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 999px; white-space: nowrap; background: ' + c[0] + '; color: ' + c[1] + ';'; };
+    var ptsOf = function (n) { return P.filter(function (p) { return p.i === n; }); };
+    var q = st.q.toLowerCase();
+    var list = IMF.filter(function (m) {
+      var okC = st.chip === 'Toutes' || m.type === st.chip;
+      var okQ = !q || (m.name + ' ' + m.region + ' ' + m.type).toLowerCase().indexOf(q) >= 0;
+      return okC && okQ;
+    });
+    var cur = IMF.filter(function (m) { return m.name === st.sel; })[0];
+    var cp = ptsOf(cur.name);
+    var regs = {}; cp.forEach(function (p) { regs[p.r] = 1; });
+    var chip = function (label, on, fn) {
+      return { label: label, pick: fn, style: 'font: inherit; font-size: 13px; font-weight: 700; padding: 8px 14px; border-radius: 999px; cursor: pointer; ' +
+        (on ? 'background: #0B1424; color: #F3D98C; border: 1px solid #0B1424;' : 'background: #FFFFFF; color: #4A5568; border: 1px solid #ECE5D5;') };
+    };
+    var DIR = [
+      { code: 'PCA', fonction: 'Président du Conseil d’administration', statut: 'En fonction', debut: '2023', fin: '2027', prog: '62%', kind: 'Gouvernance', doc: 'PV d’AG · 2023' },
+      { code: 'DG', fonction: 'Directeur Général', statut: 'En fonction', debut: '2022', fin: '2026', prog: '92%', kind: 'Direction', doc: 'Décision de nomination' },
+      { code: 'DGA', fonction: 'Directeur Général Adjoint', statut: 'Intérim', debut: '2025', fin: '[à définir]', prog: '30%', kind: 'Direction', doc: 'Lettre formelle' },
+      { code: 'PCC', fonction: 'Président Commission Crédit', statut: 'En fonction', debut: '2024', fin: '2028', prog: '40%', kind: 'Comités', doc: 'PV du conseil' },
+      { code: 'RCI', fonction: 'Responsable Conformité / Contrôle interne', statut: 'En fonction', debut: '2021', fin: '2025', prog: '100%', kind: 'Contrôle', doc: 'Arrêté' },
+      { code: 'DAF', fonction: 'Directeur Administratif et Financier', statut: 'Suspendu', debut: '2020', fin: '2024', prog: '100%', kind: 'Direction', doc: 'Décision' }
+    ];
+    var TABS = [{ k: 'apercu', label: 'Aperçu' }, { k: 'pts', label: 'Points de service' }, { k: 'dir', label: 'Dirigeants' }, { k: 'bail', label: 'Bailleurs' }];
+    return {
+      q: st.q, search: function (e) { self.setState({ q: e.target.value }); },
+      chips: ['Toutes', 'Mutuelle', 'Coopérative', 'SA'].map(function (c) { return chip(c, c === st.chip, function () { self.setState({ chip: c }); }); }),
+      resultTxt: list.length + ' institution' + (list.length > 1 ? 's' : ''),
+      list: list.map(function (m) {
+        var on = m.name === st.sel;
+        return { name: m.name, short: m.short, type: m.type, region: m.region, tone: m.tone, statut: m.statut, badge: badge(m.statut), pts: ptsOf(m.name).length,
+          pick: function () { self.setState({ sel: m.name }); },
+          style: 'display: flex; align-items: center; gap: 14px; width: 100%; font: inherit; color: #0B1424; padding: 14px; border-radius: 18px; cursor: pointer; ' +
+            (on ? 'background: #FFFFFF; border: 1.5px solid #C9A44C; box-shadow: 0 14px 30px -14px rgba(201,164,76,.6);' : 'background: #FFFFFF; border: 1px solid #ECE5D5;') };
+      }),
+      cur: { name: cur.name, short: cur.short, type: cur.type, statut: cur.statut, badge: badge(cur.statut), region: cur.region, tone: cur.tone, pts: cp.length, regions: Object.keys(regs).length, dir: cur.dir },
+      tabs: TABS.map(function (t) {
+        var on = t.k === st.tab;
+        return { label: t.label, on: on ? 'true' : 'false', pick: function () { self.setState({ tab: t.k }); },
+          style: 'border: none; font: inherit; font-size: 14px; font-weight: 700; padding: 12px 18px; border-radius: 14px 14px 0 0; cursor: pointer; ' + (on ? 'background: #FFFFFF; color: #0B1424;' : 'background: transparent; color: #A9B3C4;') };
+      }),
+      isApercu: st.tab === 'apercu', isDir: st.tab === 'dir', isPts: st.tab === 'pts', isBail: st.tab === 'bail',
+      dirChips: ['Tous', 'Gouvernance', 'Direction', 'Comités', 'Contrôle'].map(function (c) { return chip(c, c === st.dchip, function () { self.setState({ dchip: c }); }); }),
+      dirs: DIR.filter(function (d) { return st.dchip === 'Tous' || d.kind === st.dchip; }).map(function (d) {
+        return Object.assign({}, d, { badge: badge(d.statut), color: d.prog === '100%' ? '#B91C1C' : (parseInt(d.prog, 10) > 85 ? '#D97706' : '#C9A44C') });
+      }),
+      pts: cp.slice(0, 8).map(function (p, i) { return { nom: p.t + ' ' + p.r + ' ' + (i + 1), t: p.t, r: p.r, s: p.s, badge: badge(p.s) + ' justify-self: start;' }; })
+    };
+  }
+}
+</script>
+</body>
+</html>

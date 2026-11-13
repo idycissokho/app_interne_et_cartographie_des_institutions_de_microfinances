@@ -1,0 +1,208 @@
+/*
+ * Styles globaux « Or & Nuit ».
+ * Les blocs « Écran NN » sont extraits tels quels des <helmet> de maquette-carto-imf/ecrans/
+ * (seules les règles body/a, communes, sont factorisées en tête).
+ */
+
+:root {
+  --nuit-900: #0B1424;
+  --nuit-800: #13213A;
+  --or-500: #C9A44C;
+  --or-300: #F3D98C;
+  --or-700: #8A6A1F;
+  --ivoire: #FAF7F0;
+  --sable: #ECE5D5;
+  --succes: #15803D;
+  --alerte: #D97706;
+  --danger: #B91C1C;
+}
+
+body { margin: 0; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; background: #FAF7F0; }
+a { color: #8A6A1F; }
+a:hover { color: #6E5416; }
+*:focus-visible { outline: 2px solid #C9A44C; outline-offset: 2px; }
+
+
+/* ---------- Écran 01-connexion.dc.html ---------- */
+@keyframes ci-pulse{0%{transform:scale(1);opacity:.75}100%{transform:scale(4.2);opacity:0}}
+@keyframes ci-up{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes ci-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes ci-draw{from{stroke-dashoffset:2400}to{stroke-dashoffset:0}}
+.ci-ring{transform-box:fill-box;transform-origin:center;animation:ci-pulse 2.6s ease-out infinite}
+.ci-ring.d2{animation-delay:.6s}.ci-ring.d3{animation-delay:1.2s}.ci-ring.d4{animation-delay:1.8s}
+.ci-up{animation:ci-up .9s cubic-bezier(.2,.7,.2,1) both}
+.ci-up.d1{animation-delay:.12s}.ci-up.d2{animation-delay:.24s}.ci-up.d3{animation-delay:.36s}
+.ci-float{animation:ci-float 6s ease-in-out infinite}
+.ci-outline{stroke-dasharray:2400;animation:ci-draw 3.2s ease-out both}
+.ci-input:focus{outline:none;border-color:#C9A44C;box-shadow:0 0 0 4px rgba(201,164,76,.18)}
+.ci-btn:hover{background:#D9B65E}
+@media (prefers-reduced-motion:reduce){.ci-ring,.ci-up,.ci-float,.ci-outline{animation:none}}
+
+
+/* ---------- Écran 02-tableau-de-bord.dc.html ---------- */
+@keyframes tb-up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes tb-grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes tb-pulse{0%{transform:scale(1);opacity:.6}100%{transform:scale(2.4);opacity:0}}
+.tb-up{animation:tb-up .7s cubic-bezier(.2,.7,.2,1) both}
+.tb-up.d1{animation-delay:.08s}.tb-up.d2{animation-delay:.16s}.tb-up.d3{animation-delay:.24s}.tb-up.d4{animation-delay:.32s}
+.tb-bar{transform-origin:left;animation:tb-grow 1.1s cubic-bezier(.2,.7,.2,1) both .3s}
+.tb-ring{transform-box:fill-box;transform-origin:center;animation:tb-pulse 2.8s ease-out infinite}
+.tb-nav:hover{background:rgba(255,255,255,.06)}
+.tb-card{transition:transform .2s ease,box-shadow .2s ease}
+.tb-card:hover{transform:translateY(-3px);box-shadow:0 18px 40px rgba(11,20,36,.10)}
+@media (prefers-reduced-motion:reduce){.tb-up,.tb-bar,.tb-ring{animation:none}}
+
+
+/* ---------- Écran 03-carte-macro.dc.html ---------- */
+@keyframes cm-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.cm-in{animation:cm-in .7s cubic-bezier(.2,.7,.2,1) both}
+.cm-in.d1{animation-delay:.08s}.cm-in.d2{animation-delay:.16s}.cm-in.d3{animation-delay:.24s}
+.cm-row:hover{background:#F6F1E4}
+@media (prefers-reduced-motion:reduce){.cm-in{animation:none}}
+
+
+/* ---------- Écran 04-carte-micro.dc.html ---------- */
+@keyframes mi-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes mi-sheet{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+.mi-in{animation:mi-in .7s cubic-bezier(.2,.7,.2,1) both}
+.mi-in.d1{animation-delay:.1s}.mi-in.d2{animation-delay:.2s}
+.mi-sheet{animation:mi-sheet .45s cubic-bezier(.2,.7,.2,1) both}
+.mi-sel{appearance:none;-webkit-appearance:none}
+.mi-sel:focus{outline:none;border-color:#C9A44C;box-shadow:0 0 0 4px rgba(201,164,76,.18)}
+@media (prefers-reduced-motion:reduce){.mi-in,.mi-sheet{animation:none}}
+
+
+/* ---------- Écran 05-espace-supervision.dc.html ---------- */
+@keyframes su-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes su-grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.su-in{animation:su-in .7s cubic-bezier(.2,.7,.2,1) both}
+.su-in.d1{animation-delay:.08s}.su-in.d2{animation-delay:.16s}.su-in.d3{animation-delay:.24s}.su-in.d4{animation-delay:.32s}
+.su-bar{transform-origin:left;animation:su-grow 1.1s cubic-bezier(.2,.7,.2,1) both .3s}
+.su-card{transition:transform .2s ease,box-shadow .2s ease}
+.su-card:hover{transform:translateY(-3px);box-shadow:0 18px 40px rgba(11,20,36,.10)}
+@media (prefers-reduced-motion:reduce){.su-in,.su-bar{animation:none}}
+
+
+/* ---------- Écran 06-espace-consultation.dc.html ---------- */
+@keyframes co-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes co-grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.co-in{animation:co-in .7s cubic-bezier(.2,.7,.2,1) both}
+.co-in.d1{animation-delay:.1s}.co-in.d2{animation-delay:.2s}
+.co-bar{transform-origin:left;animation:co-grow 1s cubic-bezier(.2,.7,.2,1) both .2s}
+.co-item{transition:transform .18s ease,box-shadow .18s ease}
+.co-item:hover{transform:translateX(3px)}
+.co-search:focus-within{border-color:#C9A44C;box-shadow:0 0 0 4px rgba(201,164,76,.18)}
+@media (prefers-reduced-motion:reduce){.co-in,.co-bar{animation:none}}
+
+
+/* ---------- Écran 07-institutions.dc.html ---------- */
+@keyframes in-up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.in-up{animation:in-up .6s cubic-bezier(.2,.7,.2,1) both}
+.in-up.d1{animation-delay:.08s}.in-up.d2{animation-delay:.16s}
+.in-row{transition:background .15s ease}
+.in-row:hover{background:#FBF8F1}
+.in-icon{width:34px;height:34px;border-radius:10px;border:1px solid transparent;background:transparent;color:#4A5568;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.in-icon:hover{background:#F3ECDC;color:#6E5416;border-color:#ECE5D5}
+.in-search:focus-within{border-color:#C9A44C;box-shadow:0 0 0 4px rgba(201,164,76,.18)}
+.in-check{width:18px;height:18px;accent-color:#C9A44C;cursor:pointer}
+@media (prefers-reduced-motion:reduce){.in-up{animation:none}}
+
+
+/* ---------- Écran 08-formulaire-imf.dc.html ---------- */
+@keyframes fi-up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes fi-toast{from{opacity:0;transform:translateY(16px) scale(.98)}to{opacity:1;transform:none}}
+.fi-up{animation:fi-up .6s cubic-bezier(.2,.7,.2,1) both}
+.fi-up.d1{animation-delay:.06s}.fi-up.d2{animation-delay:.12s}.fi-up.d3{animation-delay:.18s}.fi-up.d4{animation-delay:.24s}.fi-up.d5{animation-delay:.3s}
+.fi-toast{animation:fi-toast .4s cubic-bezier(.2,.7,.2,1) both}
+.fi-label{font-size:13px;font-weight:700;color:#1A2333;display:flex;gap:4px;align-items:baseline}
+.fi-req{color:#B08A1E}
+.fi-help{font-size:12px;color:#6B7280;line-height:1.45}
+.fi-err{font-size:12px;color:#B91C1C;font-weight:600;display:flex;gap:6px;align-items:center}
+.fi-input{height:48px;box-sizing:border-box;width:100%;border-radius:12px;border:1.5px solid #E2DCCD;background:#FFFFFF;padding:0 14px;font:inherit;font-size:15px;color:#0B1424;transition:border-color .15s ease,box-shadow .15s ease}
+.fi-input::placeholder{color:#9AA3B2}
+.fi-input:hover{border-color:#D3C9B2}
+.fi-input:focus{outline:none;border-color:#C9A44C;box-shadow:0 0 0 4px rgba(201,164,76,.18)}
+.fi-input.bad{border-color:#DC2626;box-shadow:0 0 0 4px rgba(220,38,38,.10)}
+textarea.fi-input{height:auto;min-height:88px;padding:12px 14px;resize:vertical;line-height:1.5}
+.fi-addon{display:flex;align-items:stretch}
+.fi-addon>span{display:flex;align-items:center;padding:0 12px;border:1.5px solid #E2DCCD;border-right:none;border-radius:12px 0 0 12px;background:#FAF7F0;color:#4A5568;font-size:14px;font-weight:700}
+.fi-addon>.fi-input{border-radius:0 12px 12px 0}
+.fi-choice{transition:border-color .15s ease,box-shadow .15s ease,background .15s ease}
+.fi-choice:hover{border-color:#D9B65E}
+.fi-nav:hover{background:#F6F1E4}
+.fi-ghost:hover{background:#F6F1E4}
+.fi-primary:hover{background:#D9B65E}
+@media (prefers-reduced-motion:reduce){.fi-up,.fi-toast{animation:none}}
+
+
+/* ---------- Écran 09-points-de-service.dc.html ---------- */
+@keyframes ps-up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes ps-drawer{from{transform:translateX(40px);opacity:0}to{transform:none;opacity:1}}
+@keyframes ps-fade{from{opacity:0}to{opacity:1}}
+.ps-up{animation:ps-up .6s cubic-bezier(.2,.7,.2,1) both}
+.ps-up.d1{animation-delay:.08s}.ps-up.d2{animation-delay:.16s}
+.ps-drawer{animation:ps-drawer .45s cubic-bezier(.2,.7,.2,1) both}
+.ps-fade{animation:ps-fade .3s ease both}
+.ps-row:hover{background:#FBF8F1}
+.ps-label{font-size:13px;font-weight:700;color:#1A2333;display:flex;gap:4px;align-items:baseline}
+.ps-req{color:#B08A1E}
+.ps-help{font-size:12px;color:#6B7280;line-height:1.45}
+.ps-input{height:46px;box-sizing:border-box;width:100%;border-radius:12px;border:1.5px solid #E2DCCD;background:#FFFFFF;padding:0 14px;font:inherit;font-size:14px;color:#0B1424;transition:border-color .15s ease,box-shadow .15s ease}
+.ps-input::placeholder{color:#9AA3B2}
+.ps-input:focus{outline:none;border-color:#C9A44C;box-shadow:0 0 0 4px rgba(201,164,76,.18)}
+.ps-input.auto{background:#FDFBF6;border-style:dashed}
+select.ps-input{cursor:pointer;padding-right:10px;accent-color:#C9A44C}
+.ps-unit{position:relative}
+.ps-unit>span{position:absolute;right:14px;top:14px;font-size:12px;font-weight:800;color:#8A6A1F}
+.ps-unit>.ps-input{padding-right:64px}
+.ps-primary:hover{background:#D9B65E}
+@media (prefers-reduced-motion:reduce){.ps-up,.ps-drawer,.ps-fade{animation:none}}
+
+
+/* ---------- Écran 10-dirigeants.dc.html ---------- */
+@keyframes di-up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes di-modal{from{opacity:0;transform:translateY(16px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes di-fade{from{opacity:0}to{opacity:1}}
+.di-up{animation:di-up .6s cubic-bezier(.2,.7,.2,1) both}
+.di-up.d1{animation-delay:.08s}
+.di-modal{animation:di-modal .4s cubic-bezier(.2,.7,.2,1) both}
+.di-fade{animation:di-fade .3s ease both}
+.di-row:hover{background:#FBF8F1}
+.di-label{font-size:13px;font-weight:700;color:#1A2333;display:flex;gap:4px;align-items:baseline}
+.di-req{color:#B08A1E}
+.di-help{font-size:12px;color:#6B7280;line-height:1.45}
+.di-input{height:46px;box-sizing:border-box;width:100%;border-radius:12px;border:1.5px solid #E2DCCD;background:#FFFFFF;padding:0 14px;font:inherit;font-size:14px;color:#0B1424;transition:border-color .15s ease,box-shadow .15s ease}
+.di-input::placeholder{color:#9AA3B2}
+.di-input:focus{outline:none;border-color:#C9A44C;box-shadow:0 0 0 4px rgba(201,164,76,.18)}
+select.di-input{cursor:pointer;padding-right:10px}
+.di-drop:hover{border-color:#C9A44C;background:#FDF8EA}
+.di-primary:hover{background:#D9B65E}
+@media (prefers-reduced-motion:reduce){.di-up,.di-modal,.di-fade{animation:none}}
+
+
+/* ---------- Écran 11-import-export.dc.html ---------- */
+@keyframes ie-up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes ie-grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.ie-up{animation:ie-up .55s cubic-bezier(.2,.7,.2,1) both}
+.ie-up.d1{animation-delay:.08s}.ie-up.d2{animation-delay:.16s}
+.ie-bar{transform-origin:left;animation:ie-grow 1.2s cubic-bezier(.2,.7,.2,1) both}
+.ie-drop:hover{border-color:#C9A44C;background:#FDF8EA}
+.ie-primary:hover{background:#D9B65E}
+.ie-card{transition:border-color .15s ease,box-shadow .15s ease}
+.ie-card:hover{border-color:#D9B65E}
+@media (prefers-reduced-motion:reduce){.ie-up,.ie-bar{animation:none}}
+
+/* ---------- SenegalMap : désactivation des animations SMIL si mouvement réduit ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .cs-flow, .cs-pulse { display: none; }
+  .cs-region { opacity: 1 !important; }
+}
+
+/* ---------- Écran 01 : agencement petits écrans (sans effet au-delà de 640 px) ---------- */
+@media (max-width: 640px) {
+  .ci-hero { padding: 32px 24px !important; }
+  .ci-titre { font-size: 40px !important; overflow-wrap: anywhere; }
+  .ci-carte { min-height: 0 !important; display: flex; flex-direction: column; gap: 16px; }
+  .ci-carte-fond { position: relative !important; inset: auto !important; }
+  .ci-kpi { position: relative !important; right: auto !important; top: auto !important; width: 100% !important; animation: none; }
+}

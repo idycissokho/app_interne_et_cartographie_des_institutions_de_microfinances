@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Espace supervision — Carto IMF</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:#FAF7F0}
+a{color:#8A6A1F}a:hover{color:#6E5416}
+@keyframes su-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes su-grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.su-in{animation:su-in .7s cubic-bezier(.2,.7,.2,1) both}
+.su-in.d1{animation-delay:.08s}.su-in.d2{animation-delay:.16s}.su-in.d3{animation-delay:.24s}.su-in.d4{animation-delay:.32s}
+.su-bar{transform-origin:left;animation:su-grow 1.1s cubic-bezier(.2,.7,.2,1) both .3s}
+.su-card{transition:transform .2s ease,box-shadow .2s ease}
+.su-card:hover{transform:translateY(-3px);box-shadow:0 18px 40px rgba(11,20,36,.10)}
+@media (prefers-reduced-motion:reduce){.su-in,.su-bar{animation:none}}
+</style>
+</helmet>
+<div style="min-height: 1300px; display: flex; flex-wrap: wrap; background: #FAF7F0; color: #0B1424">
+  <div style="flex: 1 1 248px; max-width: 272px; background: #0B1424; display: flex">
+    <dc-import name="Sidebar" active="supervision" role="superviseur" hint-size="100%,1300px"></dc-import>
+  </div>
+
+  <main style="flex: 999 1 640px; min-width: 0; padding: 28px 32px 48px 32px; box-sizing: border-box; display: flex; flex-direction: column; gap: 22px">
+    <header class="su-in" style="display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <span style="font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #8A6A1F">Division Supervision · ROLE_SUPERVISOR</span>
+        <h1 style="margin: 0; font-size: 34px; font-weight: 800; letter-spacing: -0.03em">Espace supervision</h1>
+        <p style="margin: 0; font-size: 14px; color: #4A5568">Ce qui demande votre attention aujourd'hui. <span style="font-weight: 700; color: #8A6A1F">Données fictives de démonstration.</span></p>
+      </div>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap">
+        <button type="button" style="height: 46px; padding: 0 18px; border-radius: 14px; border: 1px solid #ECE5D5; background: #FFFFFF; font: inherit; font-size: 14px; font-weight: 700; color: #0B1424; display: flex; align-items: center; gap: 8px; cursor: pointer"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6z"></path><path d="M14 3v6h6M8 13h8M8 17h5"></path></svg>Fiche mission PDF</button>
+        <button type="button" style="height: 46px; padding: 0 18px; border-radius: 14px; border: none; background: #C9A44C; font: inherit; font-size: 14px; font-weight: 800; color: #0B1424; display: flex; align-items: center; gap: 8px; cursor: pointer; box-shadow: 0 10px 24px rgba(201,164,76,.35)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Préparer une mission</button>
+      </div>
+    </header>
+
+    <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px">
+      <sc-for list="{{alerts}}" as="a" hint-placeholder-count="4">
+        <article class="su-card su-in d1" style="background: #FFFFFF; border: 1px solid #ECE5D5; border-radius: 20px; padding: 18px; display: flex; flex-direction: column; gap: 12px; position: relative; overflow: hidden">
+          <span style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: {{a.color}}"></span>
+          <div style="display: flex; justify-content: space-between; align-items: center"><span style="font-size: 13px; font-weight: 700; color: #4A5568">{{a.label}}</span><span style="width: 36px; height: 36px; border-radius: 11px; background: {{a.bg}}; color: {{a.color}}; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{a.icon}}"></path></svg></span></div>
+          <div style="font-size: 34px; font-weight: 800; letter-spacing: -0.03em">{{a.value}}</div>
+          <a href="#" style="font-size: 13px; font-weight: 700; text-decoration: none">{{a.cta}} →</a>
+        </article>
+      </sc-for>
+    </section>
+
+    <section style="display: flex; flex-wrap: wrap; gap: 18px; align-items: stretch">
+      <article class="su-in d2" style="flex: 1.3 1 480px; min-width: 0; background: #0B1424; color: #F4EFE3; border-radius: 26px; padding: 22px; display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap">
+          <div><h2 style="margin: 0; font-size: 19px; font-weight: 800">Zones sous-desservies</h2><p style="margin: 4px 0 0 0; font-size: 13px; color: #A9B3C4">Points de service par région : plus la région est claire, moins elle est couverte.</p></div>
+          <span style="font-size: 12px; font-weight: 700; color: #0B1424; background: #F3D98C; padding: 6px 12px; border-radius: 999px">{{under}} régions en alerte</span>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: center">
+          <div style="flex: 1.4 1 320px; min-width: 0; height: 360px">
+            <dc-import name="CarteSenegal" theme="dark" fill-mode="choro" indicator="pts" selected="{{zone}}" flow="{{ true }}" on-pick="{{pickZone}}" hint-size="100%,360px"></dc-import>
+          </div>
+          <div style="flex: 1 1 200px; min-width: 0; display: flex; flex-direction: column; gap: 8px">
+            <span style="font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #A9B3C4">Les moins couvertes</span>
+            <sc-for list="{{low}}" as="z" hint-placeholder-count="5">
+              <button type="button" onClick="{{z.pick}}" style="{{z.style}}">
+                <span style="flex: 1; text-align: left; font-weight: 700; font-size: 14px">{{z.id}}</span>
+                <span style="font-size: 13px; font-weight: 800; color: #F3D98C">{{z.pts}}</span>
+                <span style="font-size: 11px; color: #A9B3C4">pts</span>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+      </article>
+
+      <article class="su-in d3" style="flex: 1 1 360px; min-width: 0; background: #FFFFFF; border: 1px solid #ECE5D5; border-radius: 26px; padding: 22px; display: flex; flex-direction: column; gap: 14px">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap">
+          <h2 style="margin: 0; font-size: 19px; font-weight: 800">Missions de supervision</h2>
+          <div role="tablist" aria-label="Statut des missions" style="display: flex; padding: 4px; border-radius: 12px; background: #F6F1E4">
+            <sc-for list="{{tabs}}" as="t" hint-placeholder-count="3">
+              <button type="button" role="tab" aria-selected="{{t.on}}" onClick="{{t.pick}}" style="{{t.style}}">{{t.label}}</button>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px">
+          <sc-for list="{{missions}}" as="m" hint-placeholder-count="3">
+            <div style="display: flex; gap: 14px; padding: 14px; border-radius: 18px; background: #FAF7F0; border: 1px solid #F1ECE0">
+              <div style="width: 52px; flex: none; border-radius: 14px; background: #0B1424; color: #F3D98C; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px 0"><span style="font-size: 20px; font-weight: 800; line-height: 1">{{m.day}}</span><span style="font-size: 11px; font-weight: 700; text-transform: uppercase">{{m.month}}</span></div>
+              <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+                <div style="display: flex; justify-content: space-between; gap: 8px"><b style="font-size: 14px">{{m.title}}</b><span style="{{m.badge}}">{{m.kind}}</span></div>
+                <div style="font-size: 12px; color: #6B7280">{{m.where}} · Équipe : {{m.team}}</div>
+                <div style="display: flex; align-items: center; gap: 10px"><div style="flex: 1; height: 6px; border-radius: 99px; background: #ECE5D5; overflow: hidden"><div class="su-bar" style="height: 100%; border-radius: 99px; background: #C9A44C; width: {{m.prog}}"></div></div><span style="font-size: 12px; font-weight: 700; color: #4A5568">{{m.prog}}</span></div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </article>
+    </section>
+
+    <section style="display: flex; flex-wrap: wrap; gap: 18px; align-items: stretch">
+      <article class="su-in d3" style="flex: 2 1 520px; min-width: 0; background: #FFFFFF; border: 1px solid #ECE5D5; border-radius: 26px; padding: 22px; display: flex; flex-direction: column; gap: 14px">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px"><h2 style="margin: 0; font-size: 19px; font-weight: 800">File de validation</h2><span style="font-size: 12px; font-weight: 800; color: #0B1424; background: #F3D98C; padding: 5px 10px; border-radius: 999px">{{queueCount}} en attente</span></div>
+        <div style="overflow-x: auto">
+          <div style="min-width: 560px; display: flex; flex-direction: column">
+            <div style="display: grid; grid-template-columns: 1.3fr 1fr 1fr 0.8fr 1.2fr; gap: 12px; padding: 0 10px 10px 10px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #6B7280; border-bottom: 1px solid #F1ECE0"><span>Modification</span><span>IMF</span><span>Soumis par</span><span>Date</span><span style="text-align: right">Décision</span></div>
+            <sc-for list="{{queue}}" as="q" hint-placeholder-count="4">
+              <div style="display: grid; grid-template-columns: 1.3fr 1fr 1fr 0.8fr 1.2fr; gap: 12px; align-items: center; padding: 12px 10px; border-bottom: 1px solid #F6F1E4; font-size: 13px">
+                <span style="display: flex; align-items: center; gap: 8px; font-weight: 700"><span style="width: 8px; height: 8px; border-radius: 50%; background: {{q.dot}}"></span>{{q.what}}</span>
+                <span>{{q.imf}}</span><span style="color: #4A5568">{{q.who}}</span><span style="color: #6B7280">{{q.when}}</span>
+                <span style="display: flex; gap: 6px; justify-content: flex-end">
+                  <sc-if value="{{q.pending}}" hint-placeholder-val="{{ true }}">
+                    <button type="button" onClick="{{q.reject}}" style="height: 34px; padding: 0 12px; border-radius: 10px; border: 1px solid #ECE5D5; background: #FFFFFF; font: inherit; font-size: 12px; font-weight: 700; color: #B91C1C; cursor: pointer">Rejeter</button>
+                    <button type="button" onClick="{{q.accept}}" style="height: 34px; padding: 0 12px; border-radius: 10px; border: none; background: #0B1424; font: inherit; font-size: 12px; font-weight: 700; color: #F3D98C; cursor: pointer">Valider</button>
+                  </sc-if>
+                  <sc-if value="{{q.done}}" hint-placeholder-val="{{ false }}"><span style="{{q.doneStyle}}">{{q.doneLabel}}</span></sc-if>
+                </span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </article>
+
+      <article class="su-in d4" style="flex: 1 1 300px; min-width: 0; background: #FFFFFF; border: 1px solid #ECE5D5; border-radius: 26px; padding: 22px; display: flex; flex-direction: column; gap: 16px">
+        <h2 style="margin: 0; font-size: 19px; font-weight: 800">Qualité des référentiels</h2>
+        <sc-for list="{{quality}}" as="k" hint-placeholder-count="4">
+          <div>
+            <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px"><span style="font-weight: 600">{{k.label}}</span><b style="color: {{k.color}}">{{k.v}}</b></div>
+            <div style="height: 10px; border-radius: 99px; background: #F1ECE0; overflow: hidden"><div class="su-bar" style="height: 100%; border-radius: 99px; background: {{k.color}}; width: {{k.v}}"></div></div>
+            <div style="font-size: 12px; color: #6B7280; margin-top: 5px">{{k.hint}}</div>
+          </div>
+        </sc-for>
+      </article>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1300}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { data: null, zone: 'Kédougou', tab: 'À venir', decisions: {} };
+  }
+  componentDidMount() {
+    var self = this;
+    fetch('/_blob/9e3a69493b9e44df6dcf02b06ceb565b').then(function (r) { return r.json(); }).then(function (d) { self.setState({ data: d }); }).catch(function () {});
+  }
+  renderVals() {
+    var self = this, st = this.state;
+    var R = st.data ? st.data.regions.slice().sort(function (a, b) { return a.pts - b.pts; }) : [];
+    var seg = 'border: none; font: inherit; font-size: 12px; font-weight: 700; padding: 8px 12px; border-radius: 10px; cursor: pointer; ';
+    var M = {
+      'À venir': [
+        { day: '18', month: 'nov', title: 'Contrôle sur place · [IMF A]', where: 'Kolda', team: '3 agents', kind: 'Sur place', prog: '20%' },
+        { day: '25', month: 'nov', title: 'Vérification gouvernance · [IMF C]', where: 'Kaolack', team: '2 agents', kind: 'Gouvernance', prog: '10%' },
+        { day: '02', month: 'déc', title: 'Revue des mandats · [IMF E]', where: 'Ziguinchor', team: '2 agents', kind: 'Documentaire', prog: '0%' }
+      ],
+      'En cours': [
+        { day: '10', month: 'nov', title: 'Contrôle sur place · [IMF B]', where: 'Thiès', team: '4 agents', kind: 'Sur place', prog: '65%' },
+        { day: '06', month: 'nov', title: 'Audit des points de service · [IMF D]', where: 'Dakar', team: '3 agents', kind: 'Terrain', prog: '82%' }
+      ],
+      'Terminées': [
+        { day: '28', month: 'oct', title: 'Contrôle sur place · [IMF F]', where: 'Saint-Louis', team: '3 agents', kind: 'Sur place', prog: '100%' }
+      ]
+    };
+    var KB = { 'Sur place': ['#E0ECF7', '#1F4E79'], 'Gouvernance': ['#F3ECDC', '#6E5416'], 'Documentaire': ['#E7F3EE', '#1F5E4F'], 'Terrain': ['#F6E9DD', '#7A4E2D'] };
+    var Q = [
+      { id: 1, what: 'Nouveau DG déclaré', imf: '[IMF A]', who: 'Cellule Conventions', when: 'Aujourd’hui', dot: '#C9A44C' },
+      { id: 2, what: '48 points importés (CSV)', imf: '[IMF B]', who: 'Cellule SIG', when: 'Hier', dot: '#1F4E79' },
+      { id: 3, what: 'Agence passée « fermée »', imf: '[IMF D]', who: 'Analyse financière', when: '11 nov.', dot: '#B91C1C' },
+      { id: 4, what: 'Coordonnées GPS corrigées', imf: '[IMF C]', who: 'Cellule SIG', when: '10 nov.', dot: '#2E7D6B' }
+    ];
+    var dec = st.decisions;
+    var pending = Q.filter(function (q) { return !dec[q.id]; }).length;
+    var decide = function (id, v) { return function () { var o = Object.assign({}, dec); o[id] = v; self.setState({ decisions: o }); }; };
+    return {
+      alerts: [
+        { label: 'Mandats expirés ou < 30 j', value: '7', color: '#B91C1C', bg: '#FDECEC', cta: 'Relancer les IMF', icon: 'M12 8v5l3 2M12 3a9 9 0 1 0 0 18 9 9 0 1 0 0-18' },
+        { label: 'Points sans coordonnées GPS', value: '131', color: '#B45309', bg: '#FEF3C7', cta: 'Géolocaliser', icon: 'M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z' },
+        { label: 'Fiches IMF incomplètes', value: '18', color: '#8A6A1F', bg: '#F3ECDC', cta: 'Compléter', icon: 'M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6zM14 3v6h6' },
+        { label: "IMF en cours d'agrément", value: '26', color: '#1F4E79', bg: '#E0ECF7', cta: 'Suivre les dossiers', icon: 'M12 3 4 6v6c0 4.5 3.4 8 8 9 4.6-1 8-4.5 8-9V6l-8-3z' }
+      ],
+      zone: st.zone, under: Math.min(5, R.length),
+      pickZone: function (id) { self.setState({ zone: id }); },
+      low: R.slice(0, 5).map(function (r) {
+        var on = r.id === st.zone;
+        return { id: r.id, pts: r.pts, pick: function () { self.setState({ zone: r.id }); },
+          style: 'display: flex; align-items: center; gap: 8px; width: 100%; font: inherit; color: #F4EFE3; padding: 11px 12px; border-radius: 12px; cursor: pointer; ' +
+            (on ? 'background: rgba(201,164,76,.18); border: 1px solid rgba(201,164,76,.55);' : 'background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);') };
+      }),
+      tabs: ['À venir', 'En cours', 'Terminées'].map(function (t) {
+        var on = t === st.tab;
+        return { label: t, on: on ? 'true' : 'false', pick: function () { self.setState({ tab: t }); }, style: seg + (on ? 'background: #FFFFFF; color: #0B1424; box-shadow: 0 2px 8px rgba(11,20,36,.08);' : 'background: transparent; color: #6B7280;') };
+      }),
+      missions: M[st.tab].map(function (m) {
+        var c = KB[m.kind];
+        return Object.assign({}, m, { badge: 'font-size: 11px; font-weight: 800; padding: 3px 9px; border-radius: 999px; white-space: nowrap; background: ' + c[0] + '; color: ' + c[1] + ';' });
+      }),
+      queueCount: pending,
+      queue: Q.map(function (q) {
+        var d = dec[q.id];
+        return Object.assign({}, q, { pending: !d, done: !!d, doneLabel: d === 'ok' ? 'Validé' : 'Rejeté',
+          doneStyle: 'font-size: 12px; font-weight: 800; padding: 6px 12px; border-radius: 999px; ' + (d === 'ok' ? 'background: #DCFCE7; color: #166534;' : 'background: #FDECEC; color: #991B1B;'),
+          accept: decide(q.id, 'ok'), reject: decide(q.id, 'ko') });
+      }),
+      quality: [
+        { label: 'Référentiel IMF', v: '94%', color: '#15803D', hint: 'Contacts et adresses du siège renseignés' },
+        { label: 'Points de service', v: '81%', color: '#C9A44C', hint: '131 points sans coordonnées GPS' },
+        { label: 'Dirigeants', v: '67%', color: '#B45309', hint: 'Justificatifs manquants pour 52 mandats' },
+        { label: 'Bailleurs associés', v: '48%', color: '#B91C1C', hint: 'Champ optionnel peu renseigné' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

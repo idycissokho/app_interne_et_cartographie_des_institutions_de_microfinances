@@ -8,16 +8,25 @@ const BASE = "/api/v1";
 const CLE_ACCESS = "imf.access";
 const CLE_REFRESH = "imf.refresh";
 
+/**
+ * Jetons JWT : localStorage si « Rester connecté sur ce poste » est coché,
+ * sinon sessionStorage (effacés à la fermeture du navigateur).
+ */
+const stockage = () => (localStorage.getItem(CLE_REFRESH) ? localStorage : sessionStorage);
+
 export const jetons = {
-  access: () => localStorage.getItem(CLE_ACCESS),
-  refresh: () => localStorage.getItem(CLE_REFRESH),
-  enregistrer(access: string, refresh?: string) {
-    localStorage.setItem(CLE_ACCESS, access);
-    if (refresh) localStorage.setItem(CLE_REFRESH, refresh);
+  access: () => stockage().getItem(CLE_ACCESS),
+  refresh: () => stockage().getItem(CLE_REFRESH),
+  enregistrer(access: string, refresh?: string, persistant?: boolean) {
+    const cible = persistant === undefined ? stockage() : persistant ? localStorage : sessionStorage;
+    cible.setItem(CLE_ACCESS, access);
+    if (refresh) cible.setItem(CLE_REFRESH, refresh);
   },
   effacer() {
-    localStorage.removeItem(CLE_ACCESS);
-    localStorage.removeItem(CLE_REFRESH);
+    [localStorage, sessionStorage].forEach((s) => {
+      s.removeItem(CLE_ACCESS);
+      s.removeItem(CLE_REFRESH);
+    });
   },
 };
 

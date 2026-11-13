@@ -6,7 +6,7 @@ import type { Utilisateur } from "../api/types";
 interface ContexteAuth {
   utilisateur: Utilisateur | null;
   chargement: boolean;
-  connecter: (email: string, motDePasse: string) => Promise<void>;
+  connecter: (email: string, motDePasse: string, resterConnecte?: boolean) => Promise<void>;
   deconnecter: () => Promise<void>;
   /** SUPERVISEUR ou ADMIN : droits d'écriture sur les référentiels. */
   peutEcrire: boolean;
@@ -37,12 +37,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => evenementDeconnexion.removeEventListener("deconnexion", surDeconnexion);
   }, []);
 
-  const connecter = useCallback(async (email: string, motDePasse: string) => {
+  const connecter = useCallback(async (email: string, motDePasse: string, resterConnecte = false) => {
     const res = await api.post<{ access: string; refresh: string; utilisateur: Utilisateur }>("/auth/login/", {
       email,
       password: motDePasse,
     });
-    jetons.enregistrer(res.access, res.refresh);
+    jetons.effacer();
+    jetons.enregistrer(res.access, res.refresh, resterConnecte);
     setUtilisateur(res.utilisateur);
   }, []);
 

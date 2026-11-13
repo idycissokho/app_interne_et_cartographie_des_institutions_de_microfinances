@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Carte macro — Carto IMF</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:#FAF7F0}
+a{color:#8A6A1F}a:hover{color:#6E5416}
+@keyframes cm-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.cm-in{animation:cm-in .7s cubic-bezier(.2,.7,.2,1) both}
+.cm-in.d1{animation-delay:.08s}.cm-in.d2{animation-delay:.16s}.cm-in.d3{animation-delay:.24s}
+.cm-row:hover{background:#F6F1E4}
+@media (prefers-reduced-motion:reduce){.cm-in{animation:none}}
+</style>
+</helmet>
+<div style="min-height: 1000px; display: flex; flex-wrap: wrap; background: #FAF7F0; color: #0B1424">
+  <div style="flex: 1 1 248px; max-width: 272px; background: #0B1424; display: flex">
+    <dc-import name="Sidebar" active="macro" role="superviseur" hint-size="100%,1000px"></dc-import>
+  </div>
+
+  <main style="flex: 999 1 640px; min-width: 0; padding: 28px 32px 40px 32px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px">
+    <header class="cm-in" style="display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <span style="font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #8A6A1F">Pilotage · Vision territoriale</span>
+        <h1 style="margin: 0; font-size: 34px; font-weight: 800; letter-spacing: -0.03em">Carte macro du secteur</h1>
+        <p style="margin: 0; font-size: 14px; color: #4A5568">Agrégats par zone : IMF présentes, points de service, membres, encours. <span style="font-weight: 700; color: #8A6A1F">Données fictives de démonstration.</span></p>
+      </div>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center">
+        <div role="group" aria-label="Niveau territorial" style="display: flex; padding: 5px; border-radius: 14px; background: #FFFFFF; border: 1px solid #ECE5D5">
+          <sc-for list="{{levels}}" as="lv" hint-placeholder-count="3">
+            <button type="button" onClick="{{lv.pick}}" style="{{lv.style}}">{{lv.label}}</button>
+          </sc-for>
+        </div>
+        <button type="button" style="height: 46px; padding: 0 18px; border-radius: 14px; border: none; background: #0B1424; color: #F3D98C; font: inherit; font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px; cursor: pointer"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"></path></svg>Exporter</button>
+      </div>
+    </header>
+
+    <section class="cm-in d1" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px">
+      <sc-for list="{{kpis}}" as="k" hint-placeholder-count="4">
+        <div style="{{k.style}}">
+          <div style="font-size: 12px; font-weight: 700; color: {{k.sub}}">{{k.label}}</div>
+          <div style="font-size: 28px; font-weight: 800; letter-spacing: -0.02em; margin-top: 4px">{{k.value}}</div>
+        </div>
+      </sc-for>
+    </section>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start">
+      <section class="cm-in d2" style="flex: 999 1 560px; min-width: 0; position: relative; border-radius: 28px; background: #FFFFFF; border: 1px solid #ECE5D5; box-shadow: 0 30px 60px -30px rgba(11,20,36,.25); padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; gap: 10px; overflow: hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; position: relative; z-index: 2">
+          <div role="group" aria-label="Mode de coloration" style="display: flex; padding: 4px; border-radius: 12px; background: #F6F1E4">
+            <sc-for list="{{modes}}" as="m" hint-placeholder-count="2">
+              <button type="button" onClick="{{m.pick}}" style="{{m.style}}">{{m.label}}</button>
+            </sc-for>
+          </div>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap">
+            <sc-for list="{{indicators}}" as="ind" hint-placeholder-count="4">
+              <button type="button" onClick="{{ind.pick}}" style="{{ind.style}}">{{ind.label}}</button>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="height: 600px; position: relative; background-image: radial-gradient(#EFE7D3 1px, transparent 1px); background-size: 18px 18px; border-radius: 20px">
+          <dc-import name="CarteSenegal" theme="light" fill-mode="{{fillMode}}" indicator="{{ind}}" selected="{{sel}}" flow="{{ true }}" on-pick="{{pickRegion}}" hint-size="100%,600px"></dc-import>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap">
+          <sc-if value="{{isChoro}}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; align-items: center; gap: 12px; font-size: 12px; color: #4A5568"><b style="color: #0B1424">{{indLabel}}</b><span>faible</span><span style="width: 180px; height: 10px; border-radius: 99px; background: linear-gradient(90deg, #F7EED3, #EBD594, #D9B65E, #C29433, #9A7124, #6E4F17, #43300D)"></span><span>élevé</span></div>
+          </sc-if>
+          <sc-if value="{{isRegions}}" hint-placeholder-val="{{ true }}">
+            <div style="font-size: 12px; color: #4A5568">Chaque région a sa couleur. Cliquez une région pour afficher son profil.</div>
+          </sc-if>
+          <div style="font-size: 11px; color: #6B7280">Limites administratives : Gouvernement du Sénégal / OCHA via geoBoundaries (CC BY 3.0 IGO)</div>
+        </div>
+      </section>
+
+      <aside style="flex: 1 1 340px; max-width: 400px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+        <article class="cm-in d2" style="border-radius: 24px; background: #0B1424; color: #F4EFE3; padding: 22px; display: flex; flex-direction: column; gap: 16px; position: relative; overflow: hidden">
+          <div style="position: absolute; right: -40px; top: -40px; width: 160px; height: 160px; border-radius: 50%; background: {{selColor}}; opacity: .35; filter: blur(30px)"></div>
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; position: relative">
+            <div style="display: flex; align-items: center; gap: 12px">
+              <span style="width: 14px; height: 40px; border-radius: 6px; background: {{selColor}}"></span>
+              <div><div style="font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #F3D98C">Région</div><div style="font-size: 26px; font-weight: 800; letter-spacing: -0.02em">{{cur.id}}</div></div>
+            </div>
+            <span style="font-size: 12px; font-weight: 800; color: #0B1424; background: #F3D98C; padding: 6px 10px; border-radius: 999px">{{cur.rank}}ᵉ / 14</span>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; position: relative">
+            <div style="padding: 14px; border-radius: 16px; background: rgba(255,255,255,.06)"><div style="font-size: 24px; font-weight: 800">{{cur.imf}}</div><div style="font-size: 12px; color: #A9B3C4">IMF présentes</div></div>
+            <div style="padding: 14px; border-radius: 16px; background: rgba(255,255,255,.06)"><div style="font-size: 24px; font-weight: 800">{{cur.pts}}</div><div style="font-size: 12px; color: #A9B3C4">Points de service</div></div>
+            <div style="padding: 14px; border-radius: 16px; background: rgba(255,255,255,.06)"><div style="font-size: 24px; font-weight: 800">{{cur.membres}}</div><div style="font-size: 12px; color: #A9B3C4">Membres</div></div>
+            <div style="padding: 14px; border-radius: 16px; background: rgba(255,255,255,.06)"><div style="font-size: 24px; font-weight: 800">{{cur.encours}}</div><div style="font-size: 12px; color: #A9B3C4">Encours (Mds FCFA)</div></div>
+          </div>
+          <div style="position: relative">
+            <div style="display: flex; justify-content: space-between; font-size: 12px; color: #A9B3C4; margin-bottom: 6px"><span>Part nationale · {{indLabel}}</span><b style="color: #F3D98C">{{cur.share}}</b></div>
+            <div style="height: 8px; border-radius: 99px; background: rgba(255,255,255,.08); overflow: hidden"><div style="height: 100%; border-radius: 99px; background: linear-gradient(90deg, #C9A44C, #F3D98C); width: {{cur.shareW}}; transition: width .6s cubic-bezier(.2,.7,.2,1)"></div></div>
+          </div>
+          <div style="font-size: 13px; color: #A9B3C4; position: relative">Principaux bailleurs : <span style="color: #F4EFE3; font-weight: 600">[Bailleur A] · [Bailleur B]</span></div>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap; position: relative">
+            <a href="CarteMicro.dc.html" style="flex: 1; min-width: 140px; height: 44px; border-radius: 12px; background: #C9A44C; color: #0B1424; font-size: 13px; font-weight: 800; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px">Voir les points <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+            <a href="#" style="flex: 1; min-width: 120px; height: 44px; border-radius: 12px; border: 1px solid rgba(255,255,255,.18); color: #F4EFE3; font-size: 13px; font-weight: 700; text-decoration: none; display: flex; align-items: center; justify-content: center">Liste des IMF</a>
+          </div>
+        </article>
+
+        <article class="cm-in d3" style="border-radius: 24px; background: #FFFFFF; border: 1px solid #ECE5D5; padding: 18px; display: flex; flex-direction: column; gap: 4px">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; padding: 4px 8px 10px 8px"><h2 style="margin: 0; font-size: 16px; font-weight: 800">Classement des 14 régions</h2><span style="font-size: 12px; color: #6B7280">{{indLabel}}</span></div>
+          <sc-for list="{{ranking}}" as="r" hint-placeholder-count="14">
+            <button type="button" class="cm-row" onClick="{{r.pick}}" style="{{r.style}}">
+              <span style="width: 20px; font-size: 12px; font-weight: 800; color: #9AA3B2">{{r.rank}}</span>
+              <span style="width: 10px; height: 10px; border-radius: 3px; background: {{r.color}}"></span>
+              <span style="flex: 1; text-align: left; font-size: 14px; font-weight: 600">{{r.id}}</span>
+              <span style="width: 90px; height: 6px; border-radius: 99px; background: #F1ECE0; overflow: hidden"><span style="display: block; height: 100%; border-radius: 99px; background: {{r.color}}; width: {{r.w}}; transition: width .6s ease"></span></span>
+              <span style="width: 56px; text-align: right; font-size: 13px; font-weight: 800">{{r.v}}</span>
+            </button>
+          </sc-for>
+        </article>
+      </aside>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { data: null, sel: 'Dakar', ind: 'pts', mode: 'regions', level: 'Régions' };
+  }
+  componentDidMount() {
+    var self = this;
+    fetch('/_blob/9e3a69493b9e44df6dcf02b06ceb565b').then(function (r) { return r.json(); }).then(function (d) { self.setState({ data: d }); }).catch(function () {});
+  }
+  renderVals() {
+    var self = this, st = this.state;
+    var R = st.data ? st.data.regions : [];
+    var ind = st.ind;
+    var IND = [{ k: 'pts', label: 'Points de service' }, { k: 'imf', label: 'IMF' }, { k: 'membres', label: 'Membres' }, { k: 'encours', label: 'Encours' }];
+    var fmt = function (k, v) {
+      if (k === 'membres') return v >= 1000 ? Math.round(v / 1000) + ' k' : String(v);
+      if (k === 'encours') return v.toFixed(1).replace('.', ',');
+      return String(v);
+    };
+    var sum = function (k) { return R.reduce(function (a, r) { return a + r[k]; }, 0); };
+    var total = sum(ind) || 1;
+    var max = R.length ? Math.max.apply(null, R.map(function (r) { return r[ind]; })) : 1;
+    var sorted = R.slice().sort(function (a, b) { return b[ind] - a[ind]; });
+    var cur = R.filter(function (r) { return r.id === st.sel; })[0] || { id: st.sel, imf: '–', pts: '–', membres: 0, encours: 0, color: '#C9A44C' };
+    var rank = sorted.indexOf(cur) + 1;
+    var share = R.length ? cur[ind] / total : 0;
+    var seg = 'border: none; font: inherit; font-size: 13px; font-weight: 700; padding: 9px 14px; border-radius: 10px; cursor: pointer; ';
+    var pill = 'font: inherit; font-size: 13px; font-weight: 700; padding: 8px 14px; border-radius: 999px; cursor: pointer; ';
+    var kp = 'border-radius: 18px; padding: 16px 18px; ';
+    return {
+      levels: ['Régions', 'Départements', 'Communes'].map(function (l) {
+        var on = l === st.level;
+        return { label: l, pick: function () { self.setState({ level: l }); }, style: seg + (on ? 'background: #0B1424; color: #F3D98C;' : 'background: transparent; color: #4A5568;') };
+      }),
+      modes: [{ k: 'regions', label: 'Par région' }, { k: 'choro', label: 'Par indicateur' }].map(function (m) {
+        var on = m.k === st.mode;
+        return { label: m.label, pick: function () { self.setState({ mode: m.k }); }, style: seg + (on ? 'background: #FFFFFF; color: #0B1424; box-shadow: 0 2px 8px rgba(11,20,36,.08);' : 'background: transparent; color: #6B7280;') };
+      }),
+      indicators: IND.map(function (i) {
+        var on = i.k === ind;
+        return { label: i.label, pick: function () { self.setState({ ind: i.k, mode: 'choro' }); },
+          style: pill + (on ? 'background: #C9A44C; color: #0B1424; border: 1px solid #C9A44C;' : 'background: #FFFFFF; color: #4A5568; border: 1px solid #ECE5D5;') };
+      }),
+      kpis: [
+        { label: 'IMF présentes', value: String(sum('imf')), style: kp + 'background: #0B1424; color: #F4EFE3;', sub: '#F3D98C' },
+        { label: 'Points de service', value: sum('pts').toLocaleString('fr-FR'), style: kp + 'background: #FFFFFF; border: 1px solid #ECE5D5;', sub: '#8A6A1F' },
+        { label: 'Membres', value: (sum('membres') / 1e6).toFixed(2).replace('.', ',') + ' M', style: kp + 'background: #FFFFFF; border: 1px solid #ECE5D5;', sub: '#8A6A1F' },
+        { label: 'Encours (Mds FCFA)', value: sum('encours').toFixed(0), style: kp + 'background: #FFFFFF; border: 1px solid #ECE5D5;', sub: '#8A6A1F' }
+      ],
+      fillMode: st.mode, ind: ind, sel: st.sel, isChoro: st.mode === 'choro', isRegions: st.mode === 'regions',
+      indLabel: IND.filter(function (i) { return i.k === ind; })[0].label,
+      pickRegion: function (id) { self.setState({ sel: id }); },
+      selColor: cur.color,
+      cur: { id: cur.id, rank: rank || '–', imf: cur.imf, pts: cur.pts, membres: fmt('membres', cur.membres || 0), encours: fmt('encours', cur.encours || 0),
+        share: (share * 100).toFixed(1).replace('.', ',') + ' %', shareW: Math.max(2, Math.round(share * 100 * 2.2)) + '%' },
+      ranking: sorted.map(function (r, i) {
+        var on = r.id === st.sel;
+        return { rank: i + 1, id: r.id, color: r.color, v: fmt(ind, r[ind]), w: Math.round(100 * r[ind] / max) + '%',
+          pick: function () { self.setState({ sel: r.id }); },
+          style: 'display: flex; align-items: center; gap: 10px; width: 100%; border: none; font: inherit; color: #0B1424; padding: 9px 8px; border-radius: 12px; cursor: pointer; ' + (on ? 'background: #F3ECDC;' : 'background: transparent;') };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

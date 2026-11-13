@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Connexion — Carto IMF</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:#0B1424}
+a{color:#8A6A1F}a:hover{color:#6E5416}
+@keyframes ci-pulse{0%{transform:scale(1);opacity:.75}100%{transform:scale(4.2);opacity:0}}
+@keyframes ci-up{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes ci-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes ci-draw{from{stroke-dashoffset:2400}to{stroke-dashoffset:0}}
+.ci-ring{transform-box:fill-box;transform-origin:center;animation:ci-pulse 2.6s ease-out infinite}
+.ci-ring.d2{animation-delay:.6s}.ci-ring.d3{animation-delay:1.2s}.ci-ring.d4{animation-delay:1.8s}
+.ci-up{animation:ci-up .9s cubic-bezier(.2,.7,.2,1) both}
+.ci-up.d1{animation-delay:.12s}.ci-up.d2{animation-delay:.24s}.ci-up.d3{animation-delay:.36s}
+.ci-float{animation:ci-float 6s ease-in-out infinite}
+.ci-outline{stroke-dasharray:2400;animation:ci-draw 3.2s ease-out both}
+.ci-input:focus{outline:none;border-color:#C9A44C;box-shadow:0 0 0 4px rgba(201,164,76,.18)}
+.ci-btn:hover{background:#D9B65E}
+@media (prefers-reduced-motion:reduce){.ci-ring,.ci-up,.ci-float,.ci-outline{animation:none}}
+</style>
+</helmet>
+<div style="min-height: 900px; display: flex; flex-wrap: wrap; background: #0B1424; color: #F4EFE3">
+
+  <section style="flex: 1.25 1 640px; min-width: 0; position: relative; overflow: hidden; padding: 40px 56px 40px 56px; box-sizing: border-box; display: flex; flex-direction: column; gap: 28px; background: radial-gradient(900px 600px at 70% 60%, #15253F 0%, #0B1424 70%)">
+    <header style="display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap">
+      <div style="display: flex; align-items: center; gap: 12px">
+        <div style="width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, #E9D49A, #C9A44C); display: flex; align-items: center; justify-content: center">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0B1424" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"></path><circle cx="12" cy="9.5" r="2.5"></circle></svg>
+        </div>
+        <div style="display: flex; flex-direction: column">
+          <span style="font-weight: 800; font-size: 18px; letter-spacing: -0.01em">Carto IMF</span>
+          <span style="font-size: 12px; color: #A9B3C4">DRS-SFD · Ministère des Finances et du Budget</span>
+        </div>
+      </div>
+      <span style="font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: #E9D49A; border: 1px solid rgba(201,164,76,.35); border-radius: 999px; padding: 7px 14px">Intranet · Accès restreint</span>
+    </header>
+
+    <div style="max-width: 620px; display: flex; flex-direction: column; gap: 16px; position: relative; z-index: 2">
+      <h1 class="ci-up" style="margin: 0; font-size: 54px; line-height: 1.04; font-weight: 800; letter-spacing: -0.03em">La microfinance du Sénégal, <span style="color: #D9B65E">sur une seule carte.</span></h1>
+      <p class="ci-up d1" style="margin: 0; font-size: 17px; line-height: 1.6; color: #B9C2D0; max-width: 520px">Sièges, agences, caisses et guichets. Dirigeants et mandats. Indicateurs par région, département et commune. Un référentiel unique pour la supervision.</p>
+    </div>
+
+    <div style="position: relative; flex: 1 1 auto; min-height: 380px">
+      <div style="position: absolute; inset: 0">
+        <dc-import name="CarteSenegal" theme="dark" fill-mode="muted" flow="{{ true }}" show-points="{{ true }}" show-labels="{{ false }}" hint-size="100%,100%"></dc-import>
+      </div>
+      <sc-if value="{{showOld}}" hint-placeholder-val="{{ false }}">
+      <svg viewBox="0 0 640 450" aria-hidden="true" style="position: absolute; inset: 0; width: 100%; height: 100%">
+        <defs>
+          <pattern id="ciDots" width="8" height="8" patternUnits="userSpaceOnUse"><circle cx="4" cy="4" r="1.5" fill="#C9A44C" fill-opacity=".38"></circle></pattern>
+          <radialGradient id="ciGlow"><stop offset="0" stop-color="#F3D98C" stop-opacity=".95"></stop><stop offset="1" stop-color="#C9A44C" stop-opacity="0"></stop></radialGradient>
+        </defs>
+        <path d="M110 70 L132 28 L185 27 L230 17 L263 9 L320 13 L365 55 L405 90 L435 109 L475 150 L515 183 L540 200 L555 230 L580 265 L595 305 L610 355 L623 433 L560 435 L520 433 L460 427 L390 408 L310 407 L240 407 L190 432 L135 438 L88 442 L81 415 L85 369 L140 365 L210 360 L280 350 L330 350 L380 340 L380 323 L330 327 L270 327 L210 317 L105 315 L85 290 L65 245 L45 213 L18 209 L7 200 L30 192 L50 180 L80 140 Z" fill="url(#ciDots)"></path>
+        <path class="ci-outline" d="M110 70 L132 28 L185 27 L230 17 L263 9 L320 13 L365 55 L405 90 L435 109 L475 150 L515 183 L540 200 L555 230 L580 265 L595 305 L610 355 L623 433 L560 435 L520 433 L460 427 L390 408 L310 407 L240 407 L190 432 L135 438 L88 442 L81 415 L85 369 L140 365 L210 360 L280 350 L330 350 L380 340 L380 323 L330 327 L270 327 L210 317 L105 315 L85 290 L65 245 L45 213 L18 209 L7 200 L30 192 L50 180 L80 140 Z" fill="none" stroke="#C9A44C" stroke-opacity=".7" stroke-width="1.2" stroke-linejoin="round"></path>
+        <path d="M85 369 L140 365 L210 360 L280 350 L330 350 L380 340 L380 323 L330 327 L270 327 L210 317 L105 315 L78 330 Z" fill="none" stroke="#5B6A82" stroke-dasharray="3 4" stroke-width="1"></path>
+        <g fill="#F3D98C">
+          <circle cx="40" cy="214" r="2"></circle><circle cx="28" cy="200" r="2"></circle><circle cx="74" cy="186" r="2"></circle><circle cx="96" cy="230" r="2"></circle><circle cx="162" cy="246" r="2"></circle><circle cx="180" cy="280" r="2"></circle><circle cx="230" cy="250" r="2"></circle><circle cx="120" cy="140" r="2"></circle><circle cx="150" cy="92" r="2"></circle><circle cx="300" cy="60" r="2"></circle><circle cx="250" cy="40" r="2"></circle><circle cx="470" cy="190" r="2"></circle><circle cx="420" cy="260" r="2"></circle><circle cx="340" cy="290" r="2"></circle><circle cx="300" cy="392" r="2"></circle><circle cx="170" cy="398" r="2"></circle><circle cx="110" cy="408" r="2"></circle><circle cx="500" cy="400" r="2"></circle><circle cx="230" cy="420" r="2"></circle><circle cx="60" cy="260" r="2"></circle>
+        </g>
+        <g>
+          <circle class="ci-ring" cx="16" cy="206" r="5" fill="none" stroke="#F3D98C" stroke-width="1.5"></circle>
+          <circle class="ci-ring d2" cx="153" cy="260" r="5" fill="none" stroke="#F3D98C" stroke-width="1.5"></circle>
+          <circle class="ci-ring d3" cx="111" cy="72" r="5" fill="none" stroke="#F3D98C" stroke-width="1.5"></circle>
+          <circle class="ci-ring d4" cx="133" cy="417" r="5" fill="none" stroke="#F3D98C" stroke-width="1.5"></circle>
+          <circle class="ci-ring d2" cx="393" cy="298" r="5" fill="none" stroke="#F3D98C" stroke-width="1.5"></circle>
+          <circle class="ci-ring d3" cx="67" cy="196" r="5" fill="none" stroke="#F3D98C" stroke-width="1.5"></circle>
+          <circle cx="16" cy="206" r="14" fill="url(#ciGlow)"></circle>
+          <circle cx="16" cy="206" r="4.5" fill="#FFF4D2"></circle>
+          <circle cx="67" cy="196" r="3.5" fill="#FFF4D2"></circle>
+          <circle cx="137" cy="210" r="3.5" fill="#FFF4D2"></circle>
+          <circle cx="119" cy="241" r="3.5" fill="#FFF4D2"></circle>
+          <circle cx="153" cy="260" r="4" fill="#FFF4D2"></circle>
+          <circle cx="205" cy="265" r="3.5" fill="#FFF4D2"></circle>
+          <circle cx="138" cy="113" r="3.5" fill="#FFF4D2"></circle>
+          <circle cx="111" cy="72" r="4" fill="#FFF4D2"></circle>
+          <circle cx="434" cy="109" r="3.5" fill="#FFF4D2"></circle>
+          <circle cx="393" cy="298" r="4" fill="#FFF4D2"></circle>
+          <circle cx="542" cy="419" r="3.5" fill="#FFF4D2"></circle>
+          <circle cx="265" cy="386" r="3.5" fill="#FFF4D2"></circle>
+          <circle cx="204" cy="404" r="3.5" fill="#FFF4D2"></circle>
+          <circle cx="133" cy="417" r="4" fill="#FFF4D2"></circle>
+        </g>
+        <g font-family="Plus Jakarta Sans, sans-serif" font-size="11" font-weight="600" fill="#C8D0DC">
+          <text x="24" y="232">Dakar</text><text x="119" y="62">Saint-Louis</text><text x="161" y="277">Kaolack</text><text x="402" y="294">Tambacounda</text><text x="111" y="435" text-anchor="end">Ziguinchor</text><text x="442" y="104">Matam</text>
+        </g>
+      </svg>
+      </sc-if>
+
+      <div class="ci-float" style="position: absolute; right: 2%; top: 4%; width: 250px; box-sizing: border-box; padding: 16px 18px; border-radius: 18px; background: rgba(19,33,58,.62); border: 1px solid rgba(233,212,154,.22); backdrop-filter: blur(14px); box-shadow: 0 20px 50px rgba(0,0,0,.35)">
+        <div style="font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #A9B3C4">Points de service géolocalisés</div>
+        <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 6px"><span style="font-size: 34px; font-weight: 800; color: #F3D98C; letter-spacing: -0.02em">[N]</span><span style="font-size: 13px; color: #B9C2D0">sur 14 régions</span></div>
+        <div style="height: 6px; border-radius: 99px; background: rgba(255,255,255,.08); margin-top: 12px; overflow: hidden"><div style="width: 78%; height: 100%; background: linear-gradient(90deg, #C9A44C, #F3D98C); border-radius: 99px"></div></div>
+        <div style="font-size: 12px; color: #A9B3C4; margin-top: 8px">Couverture GPS du référentiel</div>
+      </div>
+    </div>
+
+    <footer style="display: flex; gap: 12px; flex-wrap: wrap; position: relative; z-index: 2">
+      <div style="flex: 1 1 160px; padding: 14px 16px; border-radius: 14px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08)"><div style="font-size: 22px; font-weight: 800; color: #F4EFE3">IMF</div><div style="font-size: 12px; color: #A9B3C4">Référentiel réglementaire</div></div>
+      <div style="flex: 1 1 160px; padding: 14px 16px; border-radius: 14px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08)"><div style="font-size: 22px; font-weight: 800; color: #F4EFE3">Dirigeants</div><div style="font-size: 12px; color: #A9B3C4">PCA, DG, Gérants, comités</div></div>
+      <div style="flex: 1 1 160px; padding: 14px 16px; border-radius: 14px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08)"><div style="font-size: 22px; font-weight: 800; color: #F4EFE3">Territoires</div><div style="font-size: 12px; color: #A9B3C4">Régions · Départements · Communes</div></div>
+    </footer>
+  </section>
+
+  <section style="flex: 1 1 420px; min-width: 0; background: #FAF7F0; color: #0B1424; display: flex; align-items: center; justify-content: center; padding: 48px 32px; box-sizing: border-box">
+    <div class="ci-up d2" style="width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 28px">
+      <img src="/_blob/aad277a4ac7cc330079ef488e884ccb8" alt="Direction de la Réglementation et de la Supervision des SFD" style="width: 230px; height: auto; display: block">
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <h2 style="margin: 0; font-size: 32px; font-weight: 800; letter-spacing: -0.02em">Connexion</h2>
+        <p style="margin: 0; font-size: 15px; color: #4A5568; line-height: 1.55">Accédez à l'espace de cartographie et de gouvernance des institutions de microfinance.</p>
+      </div>
+      <form style="display: flex; flex-direction: column; gap: 18px">
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <label for="ci-email" style="font-size: 13px; font-weight: 700; color: #1A2333">Email professionnel</label>
+          <input id="ci-email" class="ci-input" type="email" placeholder="prenom.nom@finances.gouv.sn" style="height: 52px; border-radius: 14px; border: 1.5px solid #E2DCCD; background: #FFFFFF; padding: 0 16px; font: inherit; font-size: 15px; color: #0B1424">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <div style="display: flex; justify-content: space-between; align-items: baseline"><label for="ci-pass" style="font-size: 13px; font-weight: 700; color: #1A2333">Mot de passe</label><a href="#" style="font-size: 13px; font-weight: 600">Mot de passe oublié ?</a></div>
+          <input id="ci-pass" class="ci-input" type="password" placeholder="••••••••••" style="height: 52px; border-radius: 14px; border: 1.5px solid #E2DCCD; background: #FFFFFF; padding: 0 16px; font: inherit; font-size: 15px; color: #0B1424">
+        </div>
+        <label style="display: flex; align-items: center; gap: 10px; font-size: 14px; color: #4A5568"><input type="checkbox" style="width: 18px; height: 18px; accent-color: #C9A44C"> Rester connecté sur ce poste</label>
+        <button class="ci-btn" type="button" style="height: 54px; border: none; border-radius: 14px; background: #C9A44C; color: #0B1424; font: inherit; font-size: 16px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 10px 24px rgba(201,164,76,.35)">Se connecter <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
+      </form>
+      <div style="display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: 14px; background: #F3ECDC; color: #5B4A1E; font-size: 13px; line-height: 1.5">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 1px"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
+        <span>Accès réservé aux agents de la DRS-SFD. Les consultations des fiches dirigeants sont journalisées.</span>
+      </div>
+      <div style="font-size: 12px; color: #6B7280">République du Sénégal · Un Peuple – Un But – Une Foi</div>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

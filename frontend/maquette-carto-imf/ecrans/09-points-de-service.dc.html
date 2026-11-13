@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Points de service — Carto IMF</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:#FAF7F0}
+a{color:#8A6A1F}a:hover{color:#6E5416}
+@keyframes ps-up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes ps-drawer{from{transform:translateX(40px);opacity:0}to{transform:none;opacity:1}}
+@keyframes ps-fade{from{opacity:0}to{opacity:1}}
+.ps-up{animation:ps-up .6s cubic-bezier(.2,.7,.2,1) both}
+.ps-up.d1{animation-delay:.08s}.ps-up.d2{animation-delay:.16s}
+.ps-drawer{animation:ps-drawer .45s cubic-bezier(.2,.7,.2,1) both}
+.ps-fade{animation:ps-fade .3s ease both}
+.ps-row:hover{background:#FBF8F1}
+.ps-label{font-size:13px;font-weight:700;color:#1A2333;display:flex;gap:4px;align-items:baseline}
+.ps-req{color:#B08A1E}
+.ps-help{font-size:12px;color:#6B7280;line-height:1.45}
+.ps-input{height:46px;box-sizing:border-box;width:100%;border-radius:12px;border:1.5px solid #E2DCCD;background:#FFFFFF;padding:0 14px;font:inherit;font-size:14px;color:#0B1424;transition:border-color .15s ease,box-shadow .15s ease}
+.ps-input::placeholder{color:#9AA3B2}
+.ps-input:focus{outline:none;border-color:#C9A44C;box-shadow:0 0 0 4px rgba(201,164,76,.18)}
+.ps-input.auto{background:#FDFBF6;border-style:dashed}
+select.ps-input{cursor:pointer;padding-right:10px;accent-color:#C9A44C}
+.ps-unit{position:relative}
+.ps-unit>span{position:absolute;right:14px;top:14px;font-size:12px;font-weight:800;color:#8A6A1F}
+.ps-unit>.ps-input{padding-right:64px}
+.ps-primary:hover{background:#D9B65E}
+@media (prefers-reduced-motion:reduce){.ps-up,.ps-drawer,.ps-fade{animation:none}}
+</style>
+</helmet>
+<div style="min-height: 1100px; position: relative; display: flex; flex-wrap: wrap; background: #FAF7F0; color: #0B1424; overflow: hidden">
+  <div style="flex: 1 1 248px; max-width: 272px; background: #0B1424; display: flex">
+    <dc-import name="Sidebar" active="points" role="superviseur" hint-size="100%,1100px"></dc-import>
+  </div>
+
+  <main style="flex: 999 1 640px; min-width: 0; padding: 28px 32px 40px 32px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px">
+    <header class="ps-up" style="display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <span style="font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #8A6A1F">Référentiels</span>
+        <h1 style="margin: 0; font-size: 34px; font-weight: 800; letter-spacing: -0.03em">Points de service</h1>
+        <p style="margin: 0; font-size: 14px; color: #4A5568">Sièges, agences, guichets et bureaux de représentation. <span style="font-weight: 700; color: #8A6A1F">Données fictives.</span></p>
+      </div>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap">
+        <a href="CarteMicro.dc.html" style="height: 46px; padding: 0 16px; border-radius: 14px; border: 1px solid #ECE5D5; background: #FFFFFF; font-size: 14px; font-weight: 700; color: #0B1424; display: flex; align-items: center; gap: 8px; text-decoration: none"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"></path></svg>Voir sur la carte</a>
+        <button type="button" onClick="{{open}}" style="height: 46px; padding: 0 18px; border-radius: 14px; border: none; background: #C9A44C; font: inherit; font-size: 14px; font-weight: 800; color: #0B1424; display: flex; align-items: center; gap: 8px; cursor: pointer; box-shadow: 0 10px 24px rgba(201,164,76,.35)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Nouveau point</button>
+      </div>
+    </header>
+
+    <section class="ps-up d1" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px">
+      <sc-for list="{{kpis}}" as="k" hint-placeholder-count="4">
+        <div style="padding: 16px; border-radius: 18px; background: #FFFFFF; border: 1px solid #ECE5D5; display: flex; align-items: center; gap: 12px">
+          <span style="width: 12px; height: 40px; border-radius: 6px; background: {{k.color}}"></span>
+          <div><div style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em">{{k.n}}</div><div style="font-size: 12px; font-weight: 700; color: #6B7280">{{k.label}}</div></div>
+        </div>
+      </sc-for>
+    </section>
+
+    <section class="ps-up d2" style="border-radius: 24px; background: #FFFFFF; border: 1px solid #ECE5D5; overflow: hidden">
+      <div style="overflow-x: auto">
+        <table style="width: 100%; min-width: 860px; border-collapse: collapse; font-size: 14px">
+          <thead><tr style="text-align: left; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #6B7280; background: #FDFBF6"><th style="padding: 12px 18px">Point de service</th><th style="padding: 12px 8px">IMF</th><th style="padding: 12px 8px">Type</th><th style="padding: 12px 8px">Localisation</th><th style="padding: 12px 8px">Statut</th><th style="padding: 12px 8px; text-align: right">Membres</th><th style="padding: 12px 18px; text-align: right">Encours</th></tr></thead>
+          <tbody>
+            <sc-for list="{{rows}}" as="r" hint-placeholder-count="8">
+              <tr class="ps-row" style="border-top: 1px solid #F6F1E4">
+                <td style="padding: 13px 18px"><div style="display: flex; align-items: center; gap: 10px"><span style="width: 10px; height: 10px; border-radius: 50%; background: {{r.color}}; box-shadow: 0 0 0 4px {{r.halo}}"></span><b>{{r.nom}}</b></div></td>
+                <td style="padding: 13px 8px; color: #4A5568; font-weight: 600">{{r.imf}}</td>
+                <td style="padding: 13px 8px">{{r.type}}</td>
+                <td style="padding: 13px 8px"><div style="font-weight: 600">{{r.commune}}</div><div style="font-size: 12px; color: #6B7280">{{r.region}}</div></td>
+                <td style="padding: 13px 8px"><span style="{{r.badge}}">{{r.statut}}</span></td>
+                <td style="padding: 13px 8px; text-align: right; font-weight: 700">{{r.membres}}</td>
+                <td style="padding: 13px 18px; text-align: right; font-weight: 800">{{r.encours}}</td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <sc-if value="{{drawer}}" hint-placeholder-val="{{ true }}">
+    <div class="ps-fade" onClick="{{close}}" style="position: absolute; inset: 0; background: rgba(11,20,36,.38); backdrop-filter: blur(2px); z-index: 10"></div>
+    <aside class="ps-drawer" role="dialog" aria-modal="true" aria-labelledby="ps-title" style="position: absolute; top: 0; right: 0; bottom: 0; width: 560px; max-width: 100%; z-index: 11; background: #FFFFFF; box-shadow: -30px 0 60px rgba(11,20,36,.22); display: flex; flex-direction: column">
+      <div style="padding: 22px 26px; border-bottom: 1px solid #F1ECE0; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px">
+        <div><span style="font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #8A6A1F">Points de service</span><h2 id="ps-title" style="margin: 4px 0 0 0; font-size: 24px; font-weight: 800; letter-spacing: -0.02em">Nouveau point de service</h2></div>
+        <button type="button" aria-label="Fermer" onClick="{{close}}" style="width: 40px; height: 40px; border-radius: 12px; border: 1px solid #ECE5D5; background: #FFFFFF; color: #0B1424; cursor: pointer; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
+      </div>
+
+      <form style="flex: 1; overflow-y: auto; padding: 22px 26px; display: flex; flex-direction: column; gap: 22px">
+        <div style="display: flex; flex-direction: column; gap: 14px">
+          <div style="display: flex; flex-direction: column; gap: 8px"><label class="ps-label" for="ps-imf">Institution <span class="ps-req">*</span></label><select id="ps-imf" class="ps-input"><option>IMF Baobab (IB)</option><option>IMF Alpha (IA)</option><option>IMF Cauris (IC)</option></select></div>
+          <div style="display: flex; flex-direction: column; gap: 8px"><label class="ps-label" for="ps-nom">Nom du point <span class="ps-req">*</span></label><input id="ps-nom" class="ps-input" value="Agence de Tivaouane" placeholder="Ex. Agence de …"></div>
+          <fieldset style="border: none; margin: 0; padding: 0">
+            <legend class="ps-label" style="margin-bottom: 8px">Type de point <span class="ps-req">*</span></legend>
+            <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+              <sc-for list="{{types}}" as="t" hint-placeholder-count="4">
+                <button type="button" role="radio" aria-checked="{{t.on}}" onClick="{{t.pick}}" style="{{t.style}}"><span style="{{t.dot}}"></span>{{t.label}}</button>
+              </sc-for>
+            </div>
+          </fieldset>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+            <fieldset style="border: none; margin: 0; padding: 0; min-width: 0">
+              <legend class="ps-label" style="margin-bottom: 8px">Statut du point</legend>
+              <div style="display: flex; padding: 4px; border-radius: 12px; background: #F6F1E4; gap: 2px">
+                <sc-for list="{{statuts}}" as="s" hint-placeholder-count="3"><button type="button" role="radio" aria-checked="{{s.on}}" onClick="{{s.pick}}" style="{{s.style}}">{{s.label}}</button></sc-for>
+              </div>
+            </fieldset>
+            <div style="display: flex; flex-direction: column; gap: 8px; min-width: 0"><label class="ps-label" for="ps-reg">Statut réglementaire</label><select id="ps-reg" class="ps-input"><option>En cours d'agrément</option><option>Agréé</option><option>Radié</option></select></div>
+          </div>
+        </div>
+
+        <div style="height: 1px; background: #F1ECE0"></div>
+
+        <div style="display: flex; flex-direction: column; gap: 14px">
+          <h3 style="margin: 0; font-size: 15px; font-weight: 800; display: flex; align-items: center; gap: 8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8A6A1F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"></path><circle cx="12" cy="9.5" r="2.5"></circle></svg>Localisation</h3>
+          <div style="display: flex; flex-direction: column; gap: 8px"><label class="ps-label" for="ps-adr">Adresse</label><input id="ps-adr" class="ps-input" value="Route nationale 2, face marché central" placeholder="Rue, quartier"></div>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+            <div style="display: flex; flex-direction: column; gap: 8px"><label class="ps-label" for="ps-lat">Latitude</label><input id="ps-lat" class="ps-input" value="15.0517" inputmode="decimal"></div>
+            <div style="display: flex; flex-direction: column; gap: 8px"><label class="ps-label" for="ps-lon">Longitude</label><input id="ps-lon" class="ps-input" value="-16.8269" inputmode="decimal"></div>
+          </div>
+          <div style="display: flex; gap: 10px; padding: 12px 14px; border-radius: 12px; background: #F3ECDC; color: #5B4A1E; font-size: 13px; line-height: 1.5"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 8h.01M11 12h1v4h1"></path></svg><span>Région, département et commune sont <b>déduits automatiquement</b> des coordonnées GPS à l'enregistrement. Vous pouvez les corriger.</span></div>
+          <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+            <div style="display: flex; flex-direction: column; gap: 8px; min-width: 0"><label class="ps-label" for="ps-r">Région</label><select id="ps-r" class="ps-input auto"><option>Thiès</option></select></div>
+            <div style="display: flex; flex-direction: column; gap: 8px; min-width: 0"><label class="ps-label" for="ps-d">Département</label><select id="ps-d" class="ps-input auto"><option>Tivaouane</option></select></div>
+            <div style="display: flex; flex-direction: column; gap: 8px; min-width: 0"><label class="ps-label" for="ps-c">Commune</label><select id="ps-c" class="ps-input auto"><option>Tivaouane</option></select></div>
+          </div>
+        </div>
+
+        <div style="height: 1px; background: #F1ECE0"></div>
+
+        <div style="display: flex; flex-direction: column; gap: 14px">
+          <h3 style="margin: 0; font-size: 15px; font-weight: 800">Contact et ouverture</h3>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+            <div style="display: flex; flex-direction: column; gap: 8px"><label class="ps-label" for="ps-tel">Téléphone</label><input id="ps-tel" class="ps-input" placeholder="+221 33 000 00 00" inputmode="tel"></div>
+            <div style="display: flex; flex-direction: column; gap: 8px"><label class="ps-label" for="ps-mail">Email</label><input id="ps-mail" type="email" class="ps-input" placeholder="agence@imf.sn"></div>
+            <div style="display: flex; flex-direction: column; gap: 8px"><label class="ps-label" for="ps-date">Date d'ouverture</label><input id="ps-date" type="date" class="ps-input" value="2024-03-18"></div>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 14px">
+          <h3 style="margin: 0; font-size: 15px; font-weight: 800; display: flex; align-items: center; gap: 8px">Indicateurs <span style="font-size: 11px; font-weight: 700; color: #6B7280; background: #F1ECE0; padding: 3px 8px; border-radius: 999px">Optionnel</span></h3>
+          <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+            <div style="display: flex; flex-direction: column; gap: 8px; min-width: 0"><label class="ps-label" for="ps-mb">Membres</label><input id="ps-mb" class="ps-input" inputmode="numeric" placeholder="0"></div>
+            <div style="display: flex; flex-direction: column; gap: 8px; min-width: 0"><label class="ps-label" for="ps-enc">Encours</label><div class="ps-unit"><input id="ps-enc" class="ps-input" inputmode="decimal" placeholder="0"><span>FCFA</span></div></div>
+            <div style="display: flex; flex-direction: column; gap: 8px; min-width: 0"><label class="ps-label" for="ps-dep">Dépôts</label><div class="ps-unit"><input id="ps-dep" class="ps-input" inputmode="decimal" placeholder="0"><span>FCFA</span></div></div>
+          </div>
+        </div>
+      </form>
+
+      <div style="padding: 16px 26px; border-top: 1px solid #F1ECE0; display: flex; justify-content: flex-end; gap: 10px; background: #FDFBF6">
+        <button type="button" onClick="{{close}}" style="height: 48px; padding: 0 18px; border-radius: 14px; border: 1px solid #ECE5D5; background: #FFFFFF; font: inherit; font-size: 14px; font-weight: 700; color: #0B1424; cursor: pointer">Annuler</button>
+        <button type="button" class="ps-primary" onClick="{{close}}" style="height: 48px; padding: 0 22px; border-radius: 14px; border: none; background: #C9A44C; font: inherit; font-size: 14px; font-weight: 800; color: #0B1424; cursor: pointer; box-shadow: 0 10px 24px rgba(201,164,76,.35)">Enregistrer le point</button>
+      </div>
+    </aside>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1100}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { drawer: true, type: 'AGENCE', statut: 'OUVERT' };
+  }
+  renderVals() {
+    var self = this, st = this.state;
+    var TC = { 'Siège social': '#C9A44C', 'Agence': '#1F4E79', 'Guichet': '#B5763A', 'Bureau de représentation': '#2E7D6B' };
+    var SB = { 'Ouvert': ['#DCFCE7', '#166534'], 'Suspendu': ['#FEF3C7', '#92400E'], 'Fermé': ['#E5E7EB', '#374151'] };
+    var R = [
+      ['Siège Baobab', 'IMF Baobab', 'Siège social', 'Thiès', 'Thiès', 'Ouvert', '12 480', '2,4 Mds'],
+      ['Agence de Mbour', 'IMF Baobab', 'Agence', 'Mbour', 'Thiès', 'Ouvert', '6 210', '840 M'],
+      ['Guichet Marché Tilène', 'IMF Alpha', 'Guichet', 'Dakar-Plateau', 'Dakar', 'Ouvert', '1 950', '96 M'],
+      ['Agence de Kaolack Médina', 'IMF Cauris', 'Agence', 'Kaolack', 'Kaolack', 'Suspendu', '3 405', '310 M'],
+      ['Bureau de Ziguinchor', 'IMF Étoile', 'Bureau de représentation', 'Ziguinchor', 'Ziguinchor', 'Ouvert', '—', '—'],
+      ['Guichet de Podor', 'IMF Delta', 'Guichet', 'Podor', 'Saint-Louis', 'Fermé', '820', '24 M'],
+      ['Agence de Touba', 'IMF Gaïndé', 'Agence', 'Touba', 'Diourbel', 'Ouvert', '8 760', '1,1 Md'],
+      ['Agence de Tambacounda', 'IMF Horizon', 'Agence', 'Tambacounda', 'Tambacounda', 'Ouvert', '2 130', '180 M']
+    ];
+    var TY = [['SIEGE', 'Siège social'], ['AGENCE', 'Agence'], ['GUICHET', 'Guichet'], ['BUREAU', 'Bureau de représentation']];
+    var STS = [['OUVERT', 'Ouvert'], ['SUSPENDU', 'Suspendu'], ['FERME', 'Fermé']];
+    return {
+      drawer: st.drawer,
+      open: function () { self.setState({ drawer: true }); },
+      close: function () { self.setState({ drawer: false }); },
+      kpis: [{ n: '64', label: 'Sièges sociaux', color: '#C9A44C' }, { n: '1 012', label: 'Agences', color: '#1F4E79' }, { n: '498', label: 'Guichets', color: '#B5763A' }, { n: '68', label: 'Bureaux de représentation', color: '#2E7D6B' }],
+      rows: R.map(function (r) {
+        var c = SB[r[5]];
+        return { nom: r[0], imf: r[1], type: r[2], commune: r[3], region: r[4], statut: r[5], membres: r[6], encours: r[7], color: TC[r[2]], halo: TC[r[2]] + '22',
+          badge: 'font-size: 12px; font-weight: 800; padding: 5px 10px; border-radius: 999px; background: ' + c[0] + '; color: ' + c[1] + ';' };
+      }),
+      types: TY.map(function (t) {
+        var on = st.type === t[0];
+        return { label: t[1], on: on ? 'true' : 'false', pick: function () { self.setState({ type: t[0] }); },
+          style: 'display: flex; align-items: center; gap: 10px; height: 46px; padding: 0 12px; border-radius: 12px; font: inherit; font-size: 13px; font-weight: 700; color: #0B1424; cursor: pointer; text-align: left; ' + (on ? 'background: #FDF8EA; border: 1.5px solid #C9A44C;' : 'background: #FFFFFF; border: 1.5px solid #E2DCCD;'),
+          dot: 'width: 12px; height: 12px; flex: none; border-radius: 50%; background: ' + TC[t[1]] + ';' + (on ? ' box-shadow: 0 0 0 4px ' + TC[t[1]] + '33;' : '') };
+      }),
+      statuts: STS.map(function (s) {
+        var on = st.statut === s[0];
+        return { label: s[1], on: on ? 'true' : 'false', pick: function () { self.setState({ statut: s[0] }); },
+          style: 'flex: 1; height: 38px; border: none; border-radius: 9px; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; ' + (on ? 'background: #FFFFFF; color: #0B1424; box-shadow: 0 2px 8px rgba(11,20,36,.10);' : 'background: transparent; color: #6B7280;') };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

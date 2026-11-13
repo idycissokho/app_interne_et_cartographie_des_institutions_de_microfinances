@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Nouvelle IMF — Carto IMF</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:#FAF7F0}
+a{color:#8A6A1F}a:hover{color:#6E5416}
+@keyframes fi-up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes fi-toast{from{opacity:0;transform:translateY(16px) scale(.98)}to{opacity:1;transform:none}}
+.fi-up{animation:fi-up .6s cubic-bezier(.2,.7,.2,1) both}
+.fi-up.d1{animation-delay:.06s}.fi-up.d2{animation-delay:.12s}.fi-up.d3{animation-delay:.18s}.fi-up.d4{animation-delay:.24s}.fi-up.d5{animation-delay:.3s}
+.fi-toast{animation:fi-toast .4s cubic-bezier(.2,.7,.2,1) both}
+.fi-label{font-size:13px;font-weight:700;color:#1A2333;display:flex;gap:4px;align-items:baseline}
+.fi-req{color:#B08A1E}
+.fi-help{font-size:12px;color:#6B7280;line-height:1.45}
+.fi-err{font-size:12px;color:#B91C1C;font-weight:600;display:flex;gap:6px;align-items:center}
+.fi-input{height:48px;box-sizing:border-box;width:100%;border-radius:12px;border:1.5px solid #E2DCCD;background:#FFFFFF;padding:0 14px;font:inherit;font-size:15px;color:#0B1424;transition:border-color .15s ease,box-shadow .15s ease}
+.fi-input::placeholder{color:#9AA3B2}
+.fi-input:hover{border-color:#D3C9B2}
+.fi-input:focus{outline:none;border-color:#C9A44C;box-shadow:0 0 0 4px rgba(201,164,76,.18)}
+.fi-input.bad{border-color:#DC2626;box-shadow:0 0 0 4px rgba(220,38,38,.10)}
+textarea.fi-input{height:auto;min-height:88px;padding:12px 14px;resize:vertical;line-height:1.5}
+.fi-addon{display:flex;align-items:stretch}
+.fi-addon>span{display:flex;align-items:center;padding:0 12px;border:1.5px solid #E2DCCD;border-right:none;border-radius:12px 0 0 12px;background:#FAF7F0;color:#4A5568;font-size:14px;font-weight:700}
+.fi-addon>.fi-input{border-radius:0 12px 12px 0}
+.fi-choice{transition:border-color .15s ease,box-shadow .15s ease,background .15s ease}
+.fi-choice:hover{border-color:#D9B65E}
+.fi-nav:hover{background:#F6F1E4}
+.fi-ghost:hover{background:#F6F1E4}
+.fi-primary:hover{background:#D9B65E}
+@media (prefers-reduced-motion:reduce){.fi-up,.fi-toast{animation:none}}
+</style>
+</helmet>
+<div style="min-height: 1560px; display: flex; flex-wrap: wrap; background: #FAF7F0; color: #0B1424">
+  <div style="flex: 1 1 248px; max-width: 272px; background: #0B1424; display: flex">
+    <dc-import name="Sidebar" active="imf" role="superviseur" hint-size="100%,1560px"></dc-import>
+  </div>
+
+  <main style="flex: 999 1 640px; min-width: 0; padding: 28px 32px 0 32px; box-sizing: border-box; display: flex; flex-direction: column; gap: 22px">
+    <header class="fi-up" style="display: flex; flex-direction: column; gap: 8px">
+      <nav aria-label="Fil d'Ariane" style="display: flex; gap: 8px; align-items: center; font-size: 13px; color: #6B7280"><a href="Institutions.dc.html" style="font-weight: 700; text-decoration: none">Institutions</a><span>›</span><span style="color: #0B1424; font-weight: 600">Nouvelle institution</span></nav>
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap">
+        <div><h1 style="margin: 0; font-size: 34px; font-weight: 800; letter-spacing: -0.03em">Nouvelle institution</h1><p style="margin: 6px 0 0 0; font-size: 14px; color: #4A5568">Renseignez l'identité, le statut et le siège de l'IMF. Vous pourrez ensuite ajouter ses points de service et ses dirigeants.</p></div>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 14px; background: #FFFFFF; border: 1px solid #ECE5D5">
+          <svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="16" fill="none" stroke="#F1ECE0" stroke-width="5"></circle><circle cx="20" cy="20" r="16" fill="none" stroke="#C9A44C" stroke-width="5" stroke-linecap="round" stroke-dasharray="{{ring}}" transform="rotate(-90 20 20)" style="transition: stroke-dasharray .4s ease"></circle></svg>
+          <div><div style="font-size: 18px; font-weight: 800">{{pct}}</div><div style="font-size: 12px; color: #6B7280">de la fiche complétée</div></div>
+        </div>
+      </div>
+    </header>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+      <nav aria-label="Sections du formulaire" class="fi-up d1" style="flex: 1 1 220px; max-width: 250px; min-width: 0; display: flex; flex-direction: column; gap: 4px; padding: 10px; border-radius: 20px; background: #FFFFFF; border: 1px solid #ECE5D5">
+        <sc-for list="{{sections}}" as="s" hint-placeholder-count="5">
+          <a class="fi-nav" href="#{{s.id}}" style="display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 12px; text-decoration: none; color: #0B1424">
+            <span style="{{s.dot}}">{{s.mark}}</span>
+            <span style="flex: 1; font-size: 14px; font-weight: 700">{{s.label}}</span>
+          </a>
+        </sc-for>
+      </nav>
+
+      <form style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 18px">
+
+        <section id="identite" class="fi-up d1" style="border-radius: 22px; background: #FFFFFF; border: 1px solid #ECE5D5; padding: 24px; display: flex; flex-direction: column; gap: 20px">
+          <div style="display: flex; gap: 14px; align-items: center"><span style="width: 36px; height: 36px; border-radius: 11px; background: #0B1424; color: #F3D98C; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px">1</span><div><h2 style="margin: 0; font-size: 18px; font-weight: 800">Identité</h2><p style="margin: 2px 0 0 0; font-size: 13px; color: #6B7280">Comment l'institution est désignée officiellement.</p></div></div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px">
+            <div style="display: flex; flex-direction: column; gap: 8px; grid-column: span 2">
+              <label class="fi-label" for="fi-nom">Dénomination sociale <span class="fi-req">*</span></label>
+              <input id="fi-nom" class="{{nomClass}}" value="{{f.nom}}" onInput="{{set.nom}}" placeholder="Ex. Mutuelle d'épargne et de crédit de …">
+              <sc-if value="{{err.nom}}" hint-placeholder-val="{{ false }}"><span class="fi-err">⚠ La dénomination sociale est obligatoire.</span></sc-if>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <label class="fi-label" for="fi-sigle">Sigle</label>
+              <input id="fi-sigle" class="fi-input" value="{{f.sigle}}" onInput="{{set.sigle}}" placeholder="Ex. MEC-XX" maxlength="50">
+              <span class="fi-help">50 caractères maximum. Affiché sur la carte et dans les listes.</span>
+            </div>
+          </div>
+          <fieldset style="border: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px">
+            <legend class="fi-label" style="margin-bottom: 10px">Type d'IMF <span class="fi-req">*</span></legend>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px">
+              <sc-for list="{{types}}" as="t" hint-placeholder-count="3">
+                <button type="button" class="fi-choice" role="radio" aria-checked="{{t.on}}" onClick="{{t.pick}}" style="{{t.style}}">
+                  <span style="{{t.iconStyle}}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{t.icon}}"></path></svg></span>
+                  <span style="display: flex; flex-direction: column; gap: 2px; text-align: left"><b style="font-size: 14px">{{t.label}}</b><span style="font-size: 12px; color: #6B7280; font-weight: 500">{{t.desc}}</span></span>
+                  <span style="{{t.radio}}"></span>
+                </button>
+              </sc-for>
+            </div>
+          </fieldset>
+        </section>
+
+        <section id="statut" class="fi-up d2" style="border-radius: 22px; background: #FFFFFF; border: 1px solid #ECE5D5; padding: 24px; display: flex; flex-direction: column; gap: 18px">
+          <div style="display: flex; gap: 14px; align-items: center"><span style="width: 36px; height: 36px; border-radius: 11px; background: #0B1424; color: #F3D98C; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px">2</span><div><h2 style="margin: 0; font-size: 18px; font-weight: 800">Statut réglementaire <span class="fi-req">*</span></h2><p style="margin: 2px 0 0 0; font-size: 13px; color: #6B7280">Situation de l'institution vis-à-vis de l'agrément.</p></div></div>
+          <div role="radiogroup" aria-label="Statut réglementaire" style="display: flex; padding: 5px; border-radius: 14px; background: #F6F1E4; gap: 4px; flex-wrap: wrap">
+            <sc-for list="{{statuts}}" as="s" hint-placeholder-count="3">
+              <button type="button" role="radio" aria-checked="{{s.on}}" onClick="{{s.pick}}" style="{{s.style}}"><span style="width: 8px; height: 8px; border-radius: 50%; background: {{s.color}}"></span>{{s.label}}</button>
+            </sc-for>
+          </div>
+          <sc-if value="{{isRadiee}}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; gap: 10px; padding: 12px 14px; border-radius: 12px; background: #FDECEC; color: #991B1B; font-size: 13px; line-height: 1.5"><b>Attention :</b> une IMF radiée n'apparaît plus sur les cartes publiques. Ses points de service restent consultables dans l'historique.</div>
+          </sc-if>
+        </section>
+
+        <section id="siege" class="fi-up d3" style="border-radius: 22px; background: #FFFFFF; border: 1px solid #ECE5D5; padding: 24px; display: flex; flex-direction: column; gap: 18px">
+          <div style="display: flex; gap: 14px; align-items: center"><span style="width: 36px; height: 36px; border-radius: 11px; background: #0B1424; color: #F3D98C; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px">3</span><div><h2 style="margin: 0; font-size: 18px; font-weight: 800">Siège et localisation</h2><p style="margin: 2px 0 0 0; font-size: 13px; color: #6B7280">L'adresse et la position GPS du siège social.</p></div></div>
+          <div style="display: flex; flex-wrap: wrap; gap: 18px">
+            <div style="flex: 1 1 280px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+              <div style="display: flex; flex-direction: column; gap: 8px">
+                <label class="fi-label" for="fi-adr">Adresse du siège <span class="fi-req">*</span></label>
+                <textarea id="fi-adr" class="fi-input" onInput="{{set.adresse}}" placeholder="Rue, quartier, ville" value="{{f.adresse}}"></textarea>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+                <div style="display: flex; flex-direction: column; gap: 8px"><label class="fi-label" for="fi-lat">Latitude</label><input id="fi-lat" class="{{latClass}}" inputmode="decimal" value="{{f.lat}}" onInput="{{set.lat}}" placeholder="14.6928"></div>
+                <div style="display: flex; flex-direction: column; gap: 8px"><label class="fi-label" for="fi-lon">Longitude</label><input id="fi-lon" class="{{lonClass}}" inputmode="decimal" value="{{f.lon}}" onInput="{{set.lon}}" placeholder="-17.4467"></div>
+              </div>
+              <sc-if value="{{err.gps}}" hint-placeholder-val="{{ false }}"><span class="fi-err">⚠ Ces coordonnées sont en dehors du Sénégal (lat. 12,3 à 16,7 ; long. −17,6 à −11,3).</span></sc-if>
+              <sc-if value="{{gpsOk}}" hint-placeholder-val="{{ true }}"><span class="fi-help" style="display: flex; gap: 8px; align-items: center"><span style="color: #15803D; font-weight: 800">✓</span>Position située en région de <b style="color: #0B1424">{{region}}</b> (déduite des coordonnées).</span></sc-if>
+              <button type="button" style="align-self: flex-start; height: 40px; padding: 0 14px; border-radius: 11px; border: 1px dashed #C9A44C; background: #FDFBF6; font: inherit; font-size: 13px; font-weight: 700; color: #6E5416; display: flex; align-items: center; gap: 8px; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path></svg>Utiliser ma position actuelle</button>
+            </div>
+            <div style="flex: 1 1 300px; min-width: 0; height: 300px; border-radius: 18px; border: 1px solid #ECE5D5; background-color: #FDFBF6; background-image: radial-gradient(#EFE7D3 1px, transparent 1px); background-size: 16px 16px; padding: 8px; box-sizing: border-box; position: relative">
+              <dc-import name="CarteSenegal" theme="light" fill-mode="muted" flow="{{ false }}" show-labels="{{ true }}" selected="{{region}}" selected-point="{{pin}}" hint-size="100%,284px"></dc-import>
+              <span style="position: absolute; left: 12px; bottom: 10px; font-size: 11px; font-weight: 700; color: #6B7280; background: rgba(255,255,255,.85); padding: 4px 8px; border-radius: 8px">Aperçu de la position</span>
+            </div>
+          </div>
+        </section>
+
+        <section id="contacts" class="fi-up d4" style="border-radius: 22px; background: #FFFFFF; border: 1px solid #ECE5D5; padding: 24px; display: flex; flex-direction: column; gap: 18px">
+          <div style="display: flex; gap: 14px; align-items: center"><span style="width: 36px; height: 36px; border-radius: 11px; background: #0B1424; color: #F3D98C; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px">4</span><div><h2 style="margin: 0; font-size: 18px; font-weight: 800">Contacts</h2><p style="margin: 2px 0 0 0; font-size: 13px; color: #6B7280">Coordonnées générales de l'institution.</p></div></div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px">
+            <div style="display: flex; flex-direction: column; gap: 8px"><label class="fi-label" for="fi-tel">Téléphone</label><div class="fi-addon"><span>+221</span><input id="fi-tel" class="fi-input" inputmode="tel" value="{{f.tel}}" onInput="{{set.tel}}" placeholder="33 800 00 00"></div></div>
+            <div style="display: flex; flex-direction: column; gap: 8px"><label class="fi-label" for="fi-mail">Email</label><input id="fi-mail" type="email" class="{{mailClass}}" value="{{f.email}}" onInput="{{set.email}}" placeholder="contact@imf.sn"><sc-if value="{{err.email}}" hint-placeholder-val="{{ false }}"><span class="fi-err">⚠ Adresse email invalide.</span></sc-if></div>
+            <div style="display: flex; flex-direction: column; gap: 8px"><label class="fi-label" for="fi-web">Site web</label><div class="fi-addon"><span>https://</span><input id="fi-web" class="fi-input" value="{{f.web}}" onInput="{{set.web}}" placeholder="www.imf.sn"></div></div>
+          </div>
+        </section>
+
+        <section id="bailleurs" class="fi-up d5" style="border-radius: 22px; background: #FFFFFF; border: 1px solid #ECE5D5; padding: 24px; display: flex; flex-direction: column; gap: 16px">
+          <div style="display: flex; gap: 14px; align-items: center"><span style="width: 36px; height: 36px; border-radius: 11px; background: #0B1424; color: #F3D98C; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px">5</span><div><h2 style="margin: 0; font-size: 18px; font-weight: 800">Bailleurs associés <span style="font-size: 12px; font-weight: 700; color: #6B7280; background: #F1ECE0; padding: 3px 8px; border-radius: 999px; margin-left: 6px">Optionnel</span></h2><p style="margin: 2px 0 0 0; font-size: 13px; color: #6B7280">Sélectionnez les partenaires qui financent ou accompagnent l'IMF.</p></div></div>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap">
+            <sc-for list="{{bailleurs}}" as="b" hint-placeholder-count="5">
+              <button type="button" role="checkbox" aria-checked="{{b.on}}" onClick="{{b.pick}}" style="{{b.style}}"><span style="{{b.box}}">{{b.tick}}</span>{{b.label}}</button>
+            </sc-for>
+          </div>
+        </section>
+
+        <div style="position: sticky; bottom: 0; z-index: 5; margin: 6px -32px 0 -32px; padding: 16px 32px; background: rgba(250,247,240,.92); backdrop-filter: blur(10px); border-top: 1px solid #ECE5D5; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap">
+          <span style="font-size: 13px; color: #6B7280"><span class="fi-req">*</span> Champs obligatoires</span>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap">
+            <a class="fi-ghost" href="Institutions.dc.html" style="height: 48px; padding: 0 18px; border-radius: 14px; font-size: 14px; font-weight: 700; color: #0B1424; display: flex; align-items: center; text-decoration: none">Annuler</a>
+            <button type="button" onClick="{{saveAndPoint}}" style="height: 48px; padding: 0 18px; border-radius: 14px; border: 1.5px solid #0B1424; background: #FFFFFF; font: inherit; font-size: 14px; font-weight: 800; color: #0B1424; cursor: pointer">Enregistrer et ajouter un point</button>
+            <button type="button" class="fi-primary" onClick="{{save}}" style="height: 48px; padding: 0 22px; border-radius: 14px; border: none; background: #C9A44C; font: inherit; font-size: 14px; font-weight: 800; color: #0B1424; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 10px 24px rgba(201,164,76,.35)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg>Enregistrer l'institution</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <sc-if value="{{toast}}" hint-placeholder-val="{{ false }}">
+    <div class="fi-toast" role="status" style="position: fixed; right: 28px; bottom: 96px; z-index: 20; display: flex; gap: 12px; align-items: center; padding: 14px 18px; border-radius: 16px; background: {{toastBg}}; color: #F4EFE3; box-shadow: 0 20px 50px rgba(11,20,36,.35); max-width: 380px">
+      <span style="width: 32px; height: 32px; flex: none; border-radius: 10px; background: {{toastIcon}}; color: #0B1424; display: flex; align-items: center; justify-content: center; font-weight: 800">{{toastMark}}</span>
+      <div style="font-size: 13px; line-height: 1.45"><b style="display: block; font-size: 14px">{{toastTitle}}</b>{{toastText}}</div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1560}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { f: { nom: 'Mutuelle Baobab de Thiès', sigle: 'MBT', type: 'MUTUELLE', statut: 'EN_COURS', adresse: 'Avenue Léopold Sédar Senghor, Thiès', lat: '14.7910', lon: '-16.9359', tel: '', email: 'contact@baobab', web: '', bailleurs: { '[Bailleur A]': true } }, touched: true, toast: null };
+  }
+  renderVals() {
+    var self = this, st = this.state, f = st.f;
+    var upd = function (k) { return function (e) { var o = Object.assign({}, f); o[k] = e.target.value; self.setState({ f: o, toast: null }); }; };
+    var lat = parseFloat(String(f.lat).replace(',', '.')), lon = parseFloat(String(f.lon).replace(',', '.'));
+    var hasGps = f.lat !== '' && f.lon !== '' && !isNaN(lat) && !isNaN(lon);
+    var inSn = hasGps && lat >= 12.28 && lat <= 16.71 && lon >= -17.56 && lon <= -11.34;
+    var C = Math.cos(14.5 * Math.PI / 180), k = 620 / ((-11.34 + 17.56) * C);
+    var REG = [['Dakar', 14.72, -17.3], ['Thiès', 14.8, -16.75], ['Diourbel', 14.7, -16.2], ['Louga', 15.5, -15.7], ['Saint-Louis', 16.2, -15.3], ['Matam', 15.4, -13.6], ['Fatick', 14.1, -16.45], ['Kaolack', 13.9, -15.95], ['Kaffrine', 14.0, -15.2], ['Tambacounda', 13.8, -13.1], ['Kédougou', 12.6, -12.2], ['Kolda', 12.9, -14.6], ['Sédhiou', 12.8, -15.5], ['Ziguinchor', 12.6, -16.3]];
+    var region = '';
+    if (inSn) { var best = 1e9; REG.forEach(function (r) { var d = Math.pow(r[1] - lat, 2) + Math.pow((r[2] - lon) * C, 2); if (d < best) { best = d; region = r[0]; } }); }
+    var emailBad = f.email !== '' && !/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(f.email);
+    var err = { nom: st.touched && !f.nom.trim(), email: emailBad, gps: hasGps && !inSn };
+    var done = { identite: !!f.nom.trim() && !!f.type, statut: !!f.statut, siege: !!f.adresse.trim() && inSn, contacts: (f.tel || f.email) && !emailBad, bailleurs: Object.keys(f.bailleurs).some(function (b) { return f.bailleurs[b]; }) };
+    var nDone = Object.keys(done).filter(function (x) { return done[x]; }).length;
+    var circ = 2 * Math.PI * 16;
+    var TY = [
+      { k: 'MUTUELLE', label: 'Mutuelle', desc: "Mutuelle d'épargne et de crédit", icon: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 3a4 4 0 1 0 0 8 4 4 0 1 0 0-8M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8' },
+      { k: 'COOPERATIVE', label: 'Coopérative', desc: 'Coopérative financière', icon: 'M12 2l9 5-9 5-9-5 9-5zM3 12l9 5 9-5M3 17l9 5 9-5' },
+      { k: 'SA', label: 'Société Anonyme', desc: 'Société de capitaux', icon: 'M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6' }
+    ];
+    var ST = [{ k: 'AGREE', label: 'Agréée', color: '#15803D' }, { k: 'EN_COURS', label: "En cours d'agrément", color: '#D97706' }, { k: 'RADIEE', label: 'Radiée', color: '#B91C1C' }];
+    var SECT = [['identite', 'Identité'], ['statut', 'Statut'], ['siege', 'Siège & GPS'], ['contacts', 'Contacts'], ['bailleurs', 'Bailleurs']];
+    var setF = function (patch) { self.setState({ f: Object.assign({}, f, patch), toast: null }); };
+    var canSave = !err.nom && !err.email && !err.gps && f.nom.trim() && f.adresse.trim();
+    var doSave = function (next) { return function () {
+      if (!canSave) { self.setState({ touched: true, toast: 'ko' }); return; }
+      self.setState({ toast: next ? 'next' : 'ok' });
+    }; };
+    var t = st.toast;
+    return {
+      f: f,
+      set: { nom: upd('nom'), sigle: upd('sigle'), adresse: upd('adresse'), lat: upd('lat'), lon: upd('lon'), tel: upd('tel'), email: upd('email'), web: upd('web') },
+      err: err, gpsOk: inSn, region: region,
+      pin: inSn ? { x: (lon + 17.56) * C * k + 10, y: (16.71 - lat) * k + 10 } : null,
+      nomClass: 'fi-input' + (err.nom ? ' bad' : ''), mailClass: 'fi-input' + (err.email ? ' bad' : ''),
+      latClass: 'fi-input' + (err.gps ? ' bad' : ''), lonClass: 'fi-input' + (err.gps ? ' bad' : ''),
+      pct: Math.round(100 * nDone / 5) + ' %', ring: (circ * nDone / 5).toFixed(1) + ' ' + circ.toFixed(1),
+      sections: SECT.map(function (s) {
+        var ok = done[s[0]];
+        return { id: s[0], label: s[1], mark: ok ? '✓' : '', dot: 'width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; ' + (ok ? 'background: #15803D; color: #FFFFFF;' : 'border: 2px solid #D3C9B2; box-sizing: border-box;') };
+      }),
+      types: TY.map(function (ty) {
+        var on = f.type === ty.k;
+        return { label: ty.label, desc: ty.desc, icon: ty.icon, on: on ? 'true' : 'false', pick: function () { setF({ type: ty.k }); },
+          style: 'display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 16px; font: inherit; color: #0B1424; cursor: pointer; ' + (on ? 'background: #FDF8EA; border: 1.5px solid #C9A44C; box-shadow: 0 0 0 4px rgba(201,164,76,.14);' : 'background: #FFFFFF; border: 1.5px solid #E2DCCD;'),
+          iconStyle: 'width: 40px; height: 40px; flex: none; border-radius: 12px; display: flex; align-items: center; justify-content: center; ' + (on ? 'background: #0B1424; color: #F3D98C;' : 'background: #F6F1E4; color: #8A6A1F;'),
+          radio: 'margin-left: auto; width: 18px; height: 18px; flex: none; border-radius: 50%; box-sizing: border-box; ' + (on ? 'border: 5px solid #C9A44C; background: #FFFFFF;' : 'border: 2px solid #D3C9B2;') };
+      }),
+      statuts: ST.map(function (s) {
+        var on = f.statut === s.k;
+        return { label: s.label, color: s.color, on: on ? 'true' : 'false', pick: function () { setF({ statut: s.k }); },
+          style: 'flex: 1 1 160px; display: flex; align-items: center; justify-content: center; gap: 8px; height: 44px; border: none; border-radius: 11px; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; ' + (on ? 'background: #FFFFFF; color: #0B1424; box-shadow: 0 2px 10px rgba(11,20,36,.10);' : 'background: transparent; color: #6B7280;') };
+      }),
+      isRadiee: f.statut === 'RADIEE',
+      bailleurs: ['[Bailleur A]', '[Bailleur B]', '[Bailleur C]', '[Bailleur D]', '[Bailleur E]'].map(function (b) {
+        var on = !!f.bailleurs[b];
+        return { label: b, on: on ? 'true' : 'false', tick: on ? '✓' : '', pick: function () { var o = Object.assign({}, f.bailleurs); o[b] = !o[b]; setF({ bailleurs: o }); },
+          style: 'display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 16px 0 12px; border-radius: 12px; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; ' + (on ? 'background: #0B1424; color: #F4EFE3; border: 1.5px solid #0B1424;' : 'background: #FFFFFF; color: #1A2333; border: 1.5px solid #E2DCCD;'),
+          box: 'width: 20px; height: 20px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; box-sizing: border-box; ' + (on ? 'background: #C9A44C; color: #0B1424;' : 'border: 2px solid #D3C9B2;') };
+      }),
+      save: doSave(false), saveAndPoint: doSave(true),
+      toast: !!t, toastBg: t === 'ko' ? '#7F1D1D' : '#0B1424', toastIcon: t === 'ko' ? '#FCA5A5' : '#C9A44C', toastMark: t === 'ko' ? '!' : '✓',
+      toastTitle: t === 'ko' ? 'Fiche incomplète' : 'Institution enregistrée',
+      toastText: t === 'ko' ? 'Corrigez les champs signalés en rouge avant d’enregistrer.' : (t === 'next' ? 'Redirection vers l’ajout d’un point de service…' : 'La fiche est disponible dans le référentiel.')
+    };
+  }
+}
+</script>
+</body>
+</html>

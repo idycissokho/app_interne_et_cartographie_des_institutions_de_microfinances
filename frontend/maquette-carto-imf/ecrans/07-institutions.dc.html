@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Institutions — Carto IMF</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:#FAF7F0}
+a{color:#8A6A1F}a:hover{color:#6E5416}
+@keyframes in-up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.in-up{animation:in-up .6s cubic-bezier(.2,.7,.2,1) both}
+.in-up.d1{animation-delay:.08s}.in-up.d2{animation-delay:.16s}
+.in-row{transition:background .15s ease}
+.in-row:hover{background:#FBF8F1}
+.in-icon{width:34px;height:34px;border-radius:10px;border:1px solid transparent;background:transparent;color:#4A5568;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.in-icon:hover{background:#F3ECDC;color:#6E5416;border-color:#ECE5D5}
+.in-search:focus-within{border-color:#C9A44C;box-shadow:0 0 0 4px rgba(201,164,76,.18)}
+.in-check{width:18px;height:18px;accent-color:#C9A44C;cursor:pointer}
+@media (prefers-reduced-motion:reduce){.in-up{animation:none}}
+</style>
+</helmet>
+<div style="min-height: 1100px; display: flex; flex-wrap: wrap; background: #FAF7F0; color: #0B1424">
+  <div style="flex: 1 1 248px; max-width: 272px; background: #0B1424; display: flex">
+    <dc-import name="Sidebar" active="imf" role="superviseur" hint-size="100%,1100px"></dc-import>
+  </div>
+
+  <main style="flex: 999 1 640px; min-width: 0; padding: 28px 32px 40px 32px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px">
+    <header class="in-up" style="display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <span style="font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #8A6A1F">Référentiels</span>
+        <h1 style="margin: 0; font-size: 34px; font-weight: 800; letter-spacing: -0.03em">Institutions de microfinance</h1>
+        <p style="margin: 0; font-size: 14px; color: #4A5568">Le référentiel réglementaire des IMF : identité, statut, siège et bailleurs. <span style="font-weight: 700; color: #8A6A1F">Données fictives.</span></p>
+      </div>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap">
+        <a href="ImportExport.dc.html" style="height: 46px; padding: 0 16px; border-radius: 14px; border: 1px solid #ECE5D5; background: #FFFFFF; font-size: 14px; font-weight: 700; color: #0B1424; display: flex; align-items: center; gap: 8px; text-decoration: none"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5M4 21h16"></path></svg>Importer</a>
+        <button type="button" style="height: 46px; padding: 0 16px; border-radius: 14px; border: 1px solid #ECE5D5; background: #FFFFFF; font: inherit; font-size: 14px; font-weight: 700; color: #0B1424; display: flex; align-items: center; gap: 8px; cursor: pointer"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"></path></svg>Exporter CSV</button>
+        <a href="FormulaireIMF.dc.html" style="height: 46px; padding: 0 18px; border-radius: 14px; background: #C9A44C; font-size: 14px; font-weight: 800; color: #0B1424; display: flex; align-items: center; gap: 8px; text-decoration: none; box-shadow: 0 10px 24px rgba(201,164,76,.35)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Nouvelle IMF</a>
+      </div>
+    </header>
+
+    <nav class="in-up d1" aria-label="Filtrer par statut réglementaire" style="display: flex; gap: 6px; border-bottom: 1px solid #ECE5D5; flex-wrap: wrap">
+      <sc-for list="{{tabs}}" as="t" hint-placeholder-count="4">
+        <button type="button" onClick="{{t.pick}}" style="{{t.style}}">{{t.label}} <span style="{{t.countStyle}}">{{t.count}}</span></button>
+      </sc-for>
+    </nav>
+
+    <section class="in-up d2" style="border-radius: 24px; background: #FFFFFF; border: 1px solid #ECE5D5; box-shadow: 0 24px 50px -30px rgba(11,20,36,.22); overflow: hidden">
+      <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 16px 18px; border-bottom: 1px solid #F1ECE0">
+        <label class="in-search" style="flex: 1 1 280px; display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 14px; border-radius: 12px; border: 1.5px solid #ECE5D5; background: #FFFFFF; color: #6B7280">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+          <input type="search" aria-label="Rechercher une institution" placeholder="Rechercher par nom, sigle ou adresse…" value="{{q}}" onInput="{{search}}" style="border: none; outline: none; background: transparent; font: inherit; font-size: 14px; flex: 1; min-width: 0; color: #0B1424">
+        </label>
+        <sc-for list="{{typeChips}}" as="c" hint-placeholder-count="4">
+          <button type="button" onClick="{{c.pick}}" style="{{c.style}}">{{c.label}}</button>
+        </sc-for>
+      </div>
+
+      <sc-if value="{{hasSel}}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; align-items: center; gap: 12px; padding: 10px 18px; background: #0B1424; color: #F4EFE3; font-size: 13px; flex-wrap: wrap">
+          <b style="color: #F3D98C">{{selCount}} sélectionnée(s)</b>
+          <button type="button" style="height: 32px; padding: 0 12px; border-radius: 9px; border: 1px solid rgba(255,255,255,.18); background: transparent; color: #F4EFE3; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer">Exporter la sélection</button>
+          <button type="button" style="height: 32px; padding: 0 12px; border-radius: 9px; border: 1px solid rgba(255,255,255,.18); background: transparent; color: #F4EFE3; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer">Changer le statut</button>
+          <button type="button" onClick="{{clearSel}}" style="margin-left: auto; height: 32px; padding: 0 12px; border-radius: 9px; border: none; background: rgba(255,255,255,.08); color: #F4EFE3; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer">Annuler</button>
+        </div>
+      </sc-if>
+
+      <div style="overflow-x: auto">
+        <table style="width: 100%; min-width: 980px; border-collapse: collapse; font-size: 14px">
+          <thead>
+            <tr style="text-align: left; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #6B7280; background: #FDFBF6">
+              <th style="padding: 12px 18px; width: 18px"><input type="checkbox" class="in-check" aria-label="Tout sélectionner" checked="{{allSel}}" onChange="{{toggleAll}}"></th>
+              <th style="padding: 12px 8px">Institution</th><th style="padding: 12px 8px">Type</th><th style="padding: 12px 8px">Statut</th><th style="padding: 12px 8px">Siège</th><th style="padding: 12px 8px; text-align: right">Points</th><th style="padding: 12px 8px; text-align: right">Dirigeants</th><th style="padding: 12px 8px">Bailleurs</th><th style="padding: 12px 18px; text-align: right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <sc-for list="{{rows}}" as="r" hint-placeholder-count="8">
+              <tr class="in-row" style="border-top: 1px solid #F6F1E4">
+                <td style="padding: 14px 18px"><input type="checkbox" class="in-check" aria-label="Sélectionner {{r.nom}}" checked="{{r.sel}}" onChange="{{r.toggle}}"></td>
+                <td style="padding: 14px 8px"><div style="display: flex; align-items: center; gap: 12px"><span style="width: 40px; height: 40px; flex: none; border-radius: 12px; background: {{r.tone}}; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800">{{r.sigle}}</span><div><div style="font-weight: 800">{{r.nom}}</div><div style="font-size: 12px; color: #6B7280">{{r.email}}</div></div></div></td>
+                <td style="padding: 14px 8px; color: #1A2333; font-weight: 600">{{r.type}}</td>
+                <td style="padding: 14px 8px"><span style="{{r.badge}}"><span style="width: 6px; height: 6px; border-radius: 50%; background: currentColor"></span>{{r.statut}}</span></td>
+                <td style="padding: 14px 8px"><div style="font-weight: 600">{{r.region}}</div><div style="font-size: 12px; color: #6B7280; display: flex; align-items: center; gap: 4px"><sc-if value="{{r.gps}}" hint-placeholder-val="{{ true }}"><span style="color: #15803D; font-weight: 700">● GPS</span></sc-if><sc-if value="{{r.noGps}}" hint-placeholder-val="{{ false }}"><span style="color: #B45309; font-weight: 700">○ sans GPS</span></sc-if></div></td>
+                <td style="padding: 14px 8px; text-align: right; font-weight: 800">{{r.pts}}</td>
+                <td style="padding: 14px 8px; text-align: right; font-weight: 800">{{r.dir}}</td>
+                <td style="padding: 14px 8px"><div style="display: flex; gap: 4px; flex-wrap: wrap"><sc-for list="{{r.bailleurs}}" as="b" hint-placeholder-count="2"><span style="font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 7px; background: #F3ECDC; color: #6E5416">{{b}}</span></sc-for></div></td>
+                <td style="padding: 14px 18px; text-align: right; white-space: nowrap">
+                  <a class="in-icon" href="Consultation.dc.html" aria-label="Voir la fiche"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg></a>
+                  <a class="in-icon" href="FormulaireIMF.dc.html" aria-label="Modifier"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path></svg></a>
+                  <button type="button" class="in-icon" aria-label="Archiver"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="4" rx="1"></rect><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8M10 12h4"></path></svg></button>
+                </td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+
+      <sc-if value="{{empty}}" hint-placeholder-val="{{ false }}">
+        <div style="padding: 48px 18px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center">
+          <span style="width: 56px; height: 56px; border-radius: 18px; background: #F3ECDC; color: #8A6A1F; display: flex; align-items: center; justify-content: center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg></span>
+          <b style="font-size: 16px">Aucune institution ne correspond</b>
+          <span style="font-size: 13px; color: #6B7280">Essayez un autre mot-clé ou retirez un filtre.</span>
+        </div>
+      </sc-if>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 14px 18px; border-top: 1px solid #F1ECE0; font-size: 13px; color: #4A5568">
+        <span>{{rangeTxt}}</span>
+        <div style="display: flex; gap: 6px">
+          <button type="button" aria-label="Page précédente" style="width: 36px; height: 36px; border-radius: 10px; border: 1px solid #ECE5D5; background: #FFFFFF; color: #4A5568; cursor: pointer">‹</button>
+          <button type="button" style="width: 36px; height: 36px; border-radius: 10px; border: none; background: #0B1424; color: #F3D98C; font: inherit; font-weight: 800; cursor: pointer">1</button>
+          <button type="button" style="width: 36px; height: 36px; border-radius: 10px; border: 1px solid #ECE5D5; background: #FFFFFF; font: inherit; font-weight: 700; color: #0B1424; cursor: pointer">2</button>
+          <button type="button" style="width: 36px; height: 36px; border-radius: 10px; border: 1px solid #ECE5D5; background: #FFFFFF; font: inherit; font-weight: 700; color: #0B1424; cursor: pointer">3</button>
+          <button type="button" aria-label="Page suivante" style="width: 36px; height: 36px; border-radius: 10px; border: 1px solid #ECE5D5; background: #FFFFFF; color: #4A5568; cursor: pointer">›</button>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1100}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { tab: 'Toutes', type: 'Tous', q: '', sel: {} };
+  }
+  renderVals() {
+    var self = this, st = this.state;
+    var D = [
+      { nom: 'IMF Alpha', sigle: 'IA', type: 'Mutuelle', statut: 'Agréée', region: 'Dakar', pts: 42, dir: 9, b: ['[Bailleur A]', '[Bailleur B]'], gps: true, tone: '#1F4E79' },
+      { nom: 'IMF Baobab', sigle: 'IB', type: 'Mutuelle', statut: 'Agréée', region: 'Thiès', pts: 31, dir: 8, b: ['[Bailleur A]'], gps: true, tone: '#2E7D6B' },
+      { nom: 'IMF Cauris', sigle: 'IC', type: 'Coopérative', statut: "En cours d'agrément", region: 'Kaolack', pts: 12, dir: 6, b: [], gps: false, tone: '#8C5A3C' },
+      { nom: 'IMF Delta', sigle: 'ID', type: 'Société Anonyme', statut: 'Agréée', region: 'Saint-Louis', pts: 27, dir: 11, b: ['[Bailleur C]'], gps: true, tone: '#C9A44C' },
+      { nom: 'IMF Étoile', sigle: 'IE', type: 'Coopérative', statut: 'Agréée', region: 'Ziguinchor', pts: 18, dir: 7, b: ['[Bailleur B]'], gps: true, tone: '#5E7FA8' },
+      { nom: 'IMF Fleuve', sigle: 'IF', type: 'Mutuelle', statut: 'Radiée', region: 'Matam', pts: 0, dir: 4, b: [], gps: false, tone: '#7A4E2D' },
+      { nom: 'IMF Gaïndé', sigle: 'IG', type: 'Mutuelle', statut: 'Agréée', region: 'Diourbel', pts: 22, dir: 8, b: ['[Bailleur A]', '[Bailleur C]'], gps: true, tone: '#3E6B5A' },
+      { nom: 'IMF Horizon', sigle: 'IH', type: 'Société Anonyme', statut: "En cours d'agrément", region: 'Tambacounda', pts: 5, dir: 5, b: [], gps: true, tone: '#8F6A9A' }
+    ];
+    var SB = { 'Agréée': ['#DCFCE7', '#166534'], "En cours d'agrément": ['#FEF3C7', '#92400E'], 'Radiée': ['#FDECEC', '#991B1B'] };
+    var TABMAP = { 'Toutes': null, 'Agréées': 'Agréée', 'En cours': "En cours d'agrément", 'Radiées': 'Radiée' };
+    var q = st.q.toLowerCase();
+    var base = D.filter(function (d) { return (st.type === 'Tous' || d.type === st.type) && (!q || (d.nom + ' ' + d.sigle + ' ' + d.region).toLowerCase().indexOf(q) >= 0); });
+    var rows = base.filter(function (d) { return !TABMAP[st.tab] || d.statut === TABMAP[st.tab]; });
+    var selN = Object.keys(st.sel).filter(function (k) { return st.sel[k]; }).length;
+    var chip = function (label, on, fn) {
+      return { label: label, pick: fn, style: 'height: 44px; font: inherit; font-size: 13px; font-weight: 700; padding: 0 14px; border-radius: 12px; cursor: pointer; ' + (on ? 'background: #0B1424; color: #F3D98C; border: 1px solid #0B1424;' : 'background: #FFFFFF; color: #4A5568; border: 1px solid #ECE5D5;') };
+    };
+    return {
+      q: st.q, search: function (e) { self.setState({ q: e.target.value }); },
+      tabs: Object.keys(TABMAP).map(function (t) {
+        var on = t === st.tab;
+        var n = base.filter(function (d) { return !TABMAP[t] || d.statut === TABMAP[t]; }).length;
+        return { label: t, count: n, pick: function () { self.setState({ tab: t }); },
+          style: 'border: none; background: transparent; font: inherit; font-size: 14px; font-weight: 700; padding: 12px 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; margin-bottom: -1px; ' + (on ? 'color: #0B1424; box-shadow: inset 0 -2px 0 #C9A44C;' : 'color: #6B7280;'),
+          countStyle: 'font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 999px; ' + (on ? 'background: #C9A44C; color: #0B1424;' : 'background: #F1ECE0; color: #4A5568;') };
+      }),
+      typeChips: ['Tous', 'Mutuelle', 'Coopérative', 'Société Anonyme'].map(function (c) { return chip(c, c === st.type, function () { self.setState({ type: c }); }); }),
+      rows: rows.map(function (d) {
+        var c = SB[d.statut];
+        return { nom: d.nom, sigle: d.sigle, type: d.type, statut: d.statut, region: d.region, pts: d.pts, dir: d.dir, bailleurs: d.b, gps: d.gps, noGps: !d.gps, tone: d.tone,
+          email: 'contact@' + d.nom.toLowerCase().replace(/[^a-z]/g, '') + '.sn',
+          badge: 'display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 800; padding: 5px 10px; border-radius: 999px; white-space: nowrap; background: ' + c[0] + '; color: ' + c[1] + ';',
+          sel: !!st.sel[d.nom], toggle: function () { var o = Object.assign({}, st.sel); o[d.nom] = !o[d.nom]; self.setState({ sel: o }); } };
+      }),
+      empty: rows.length === 0,
+      hasSel: selN > 0, selCount: selN, allSel: rows.length > 0 && selN === rows.length,
+      toggleAll: function () { var o = {}; var all = selN !== rows.length; rows.forEach(function (d) { o[d.nom] = all; }); self.setState({ sel: o }); },
+      clearSel: function () { self.setState({ sel: {} }); },
+      rangeTxt: rows.length ? '1–' + rows.length + ' sur ' + rows.length + ' institutions affichées' : '0 institution'
+    };
+  }
+}
+</script>
+</body>
+</html>

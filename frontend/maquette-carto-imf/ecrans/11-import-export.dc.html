@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Import / Export — Carto IMF</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:#FAF7F0}
+a{color:#8A6A1F}a:hover{color:#6E5416}
+@keyframes ie-up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes ie-grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.ie-up{animation:ie-up .55s cubic-bezier(.2,.7,.2,1) both}
+.ie-up.d1{animation-delay:.08s}.ie-up.d2{animation-delay:.16s}
+.ie-bar{transform-origin:left;animation:ie-grow 1.2s cubic-bezier(.2,.7,.2,1) both}
+.ie-drop:hover{border-color:#C9A44C;background:#FDF8EA}
+.ie-primary:hover{background:#D9B65E}
+.ie-card{transition:border-color .15s ease,box-shadow .15s ease}
+.ie-card:hover{border-color:#D9B65E}
+@media (prefers-reduced-motion:reduce){.ie-up,.ie-bar{animation:none}}
+</style>
+</helmet>
+<div style="min-height: 1100px; display: flex; flex-wrap: wrap; background: #FAF7F0; color: #0B1424">
+  <div style="flex: 1 1 248px; max-width: 272px; background: #0B1424; display: flex">
+    <dc-import name="Sidebar" active="import" role="superviseur" hint-size="100%,1100px"></dc-import>
+  </div>
+
+  <main style="flex: 999 1 640px; min-width: 0; padding: 28px 32px 40px 32px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px">
+    <header class="ie-up" style="display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <span style="font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #8A6A1F">Données</span>
+        <h1 style="margin: 0; font-size: 34px; font-weight: 800; letter-spacing: -0.03em">Import et export</h1>
+        <p style="margin: 0; font-size: 14px; color: #4A5568">Alimentez les référentiels depuis le canevas Excel standard, ou extrayez-les en CSV.</p>
+      </div>
+      <div role="tablist" aria-label="Import ou export" style="display: flex; padding: 5px; border-radius: 14px; background: #FFFFFF; border: 1px solid #ECE5D5">
+        <sc-for list="{{tabs}}" as="t" hint-placeholder-count="2"><button type="button" role="tab" aria-selected="{{t.on}}" onClick="{{t.pick}}" style="{{t.style}}">{{t.label}}</button></sc-for>
+      </div>
+    </header>
+
+    <sc-if value="{{isImport}}" hint-placeholder-val="{{ true }}">
+      <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start">
+        <section class="ie-up d1" style="flex: 999 1 560px; min-width: 0; border-radius: 26px; background: #FFFFFF; border: 1px solid #ECE5D5; box-shadow: 0 24px 50px -30px rgba(11,20,36,.22); overflow: hidden">
+          <ol style="list-style: none; margin: 0; padding: 20px 24px; display: flex; gap: 12px; border-bottom: 1px solid #F1ECE0; background: #FDFBF6">
+            <sc-for list="{{steps}}" as="s" hint-placeholder-count="3">
+              <li style="flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+                <div style="{{s.bar}}"></div>
+                <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: {{s.color}}"><span style="{{s.num}}">{{s.mark}}</span>{{s.label}}</div>
+              </li>
+            </sc-for>
+          </ol>
+
+          <div style="padding: 24px; display: flex; flex-direction: column; gap: 20px">
+            <sc-if value="{{s1}}" hint-placeholder-val="{{ true }}">
+              <fieldset style="border: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px">
+                <legend style="font-size: 13px; font-weight: 700; color: #1A2333; margin-bottom: 10px">Quel référentiel voulez-vous alimenter ? <span style="color: #B08A1E">*</span></legend>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px">
+                  <sc-for list="{{types}}" as="t" hint-placeholder-count="3">
+                    <button type="button" role="radio" aria-checked="{{t.on}}" class="ie-card" onClick="{{t.pick}}" style="{{t.style}}">
+                      <span style="{{t.iconStyle}}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{t.icon}}"></path></svg></span>
+                      <b style="font-size: 14px">{{t.label}}</b>
+                      <span style="font-size: 12px; color: #6B7280; font-weight: 500">{{t.desc}}</span>
+                    </button>
+                  </sc-for>
+                </div>
+              </fieldset>
+              <label class="ie-drop" for="ie-file" style="display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 34px 20px; border-radius: 20px; border: 2px dashed #D3C9B2; background: #FDFBF6; cursor: pointer; text-align: center; transition: border-color .15s ease, background .15s ease">
+                <span style="width: 60px; height: 60px; border-radius: 18px; background: #0B1424; color: #F3D98C; display: flex; align-items: center; justify-content: center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5M4 21h16"></path></svg></span>
+                <b style="font-size: 16px">Glissez votre fichier ici</b>
+                <span style="font-size: 13px; color: #6B7280">CSV ou Excel (.xlsx) · ou <span style="color: #8A6A1F; font-weight: 700">parcourir</span></span>
+                <input id="ie-file" type="file" accept=".csv,.xlsx,.xls" style="position: absolute; width: 1px; height: 1px; opacity: 0">
+              </label>
+              <div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px; border: 1px solid #ECE5D5"><span style="font-size: 11px; font-weight: 800; color: #FFFFFF; background: #15803D; padding: 4px 6px; border-radius: 6px">XLSX</span><span style="flex: 1; font-size: 14px; font-weight: 600">points_service_thies_2026.xlsx <span style="color: #6B7280; font-weight: 500">· 86 Ko · 214 lignes</span></span><button type="button" aria-label="Retirer le fichier" style="border: none; background: transparent; color: #6B7280; cursor: pointer; font-size: 18px">×</button></div>
+              <div style="display: flex; gap: 10px; align-items: center; padding: 12px 14px; border-radius: 14px; background: #F3ECDC; color: #5B4A1E; font-size: 13px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6z"></path><path d="M14 3v6h6M12 18v-6M9 15l3 3 3-3"></path></svg><span style="flex: 1">Utilisez le canevas standard pour éviter les erreurs de colonnes.</span><a href="#" style="font-weight: 800; text-decoration: none">Télécharger le canevas</a></div>
+            </sc-if>
+
+            <sc-if value="{{s2}}" hint-placeholder-val="{{ false }}">
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 40px 10px; text-align: center">
+                <span style="width: 64px; height: 64px; border-radius: 20px; background: #0B1424; color: #F3D98C; display: flex; align-items: center; justify-content: center"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.2-8.6"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"></animateTransform></path></svg></span>
+                <b style="font-size: 18px">Traitement du fichier…</b>
+                <span style="font-size: 14px; color: #6B7280">Lecture des lignes, contrôle des champs et géolocalisation.</span>
+                <div style="width: 100%; max-width: 420px; height: 10px; border-radius: 99px; background: #F1ECE0; overflow: hidden"><div class="ie-bar" style="height: 100%; width: 72%; border-radius: 99px; background: linear-gradient(90deg, #C9A44C, #E9C76A)"></div></div>
+                <span style="font-size: 13px; font-weight: 700; color: #4A5568">154 / 214 lignes</span>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{s3}}" hint-placeholder-val="{{ false }}">
+              <div style="display: flex; flex-wrap: wrap; gap: 14px; align-items: stretch">
+                <div style="flex: 1 1 200px; display: flex; align-items: center; gap: 16px; padding: 18px; border-radius: 18px; background: #0B1424; color: #F4EFE3">
+                  <svg width="72" height="72" viewBox="0 0 72 72" aria-hidden="true"><circle cx="36" cy="36" r="30" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="8"></circle><circle cx="36" cy="36" r="30" fill="none" stroke="#C9A44C" stroke-width="8" stroke-linecap="round" stroke-dasharray="176.1 188.5" transform="rotate(-90 36 36)"><animate attributeName="stroke-dasharray" from="0 188.5" to="176.1 188.5" dur="1.2s" fill="freeze"></animate></circle></svg>
+                  <div><div style="font-size: 30px; font-weight: 800; color: #F3D98C">93,5 %</div><div style="font-size: 12px; color: #A9B3C4">Taux de succès</div></div>
+                </div>
+                <div style="flex: 1 1 120px; padding: 18px; border-radius: 18px; background: #FAF7F0"><div style="font-size: 28px; font-weight: 800">214</div><div style="font-size: 12px; font-weight: 700; color: #6B7280">Lignes lues</div></div>
+                <div style="flex: 1 1 120px; padding: 18px; border-radius: 18px; background: #F0FAF3"><div style="font-size: 28px; font-weight: 800; color: #15803D">200</div><div style="font-size: 12px; font-weight: 700; color: #6B7280">Importées</div></div>
+                <div style="flex: 1 1 120px; padding: 18px; border-radius: 18px; background: #FDF1F1"><div style="font-size: 28px; font-weight: 800; color: #B91C1C">14</div><div style="font-size: 12px; font-weight: 700; color: #6B7280">En erreur</div></div>
+              </div>
+              <div style="border-radius: 18px; border: 1px solid #ECE5D5; overflow: hidden">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: #FDFBF6; border-bottom: 1px solid #F1ECE0"><b style="font-size: 15px">Rapport d'erreurs</b><a href="#" style="font-size: 13px; font-weight: 700; text-decoration: none">Télécharger le rapport (CSV)</a></div>
+                <div style="overflow-x: auto">
+                  <table style="width: 100%; min-width: 520px; border-collapse: collapse; font-size: 13px">
+                    <thead><tr style="text-align: left; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #6B7280"><th style="padding: 10px 16px">Ligne</th><th style="padding: 10px 8px">Champ</th><th style="padding: 10px 8px">Valeur</th><th style="padding: 10px 16px">Problème</th></tr></thead>
+                    <tbody>
+                      <sc-for list="{{errors}}" as="e" hint-placeholder-count="4">
+                        <tr style="border-top: 1px solid #F6F1E4"><td style="padding: 11px 16px; font-weight: 800">{{e.l}}</td><td style="padding: 11px 8px"><code style="font-size: 12px; background: #F6F1E4; padding: 3px 7px; border-radius: 6px; color: #6E5416">{{e.c}}</code></td><td style="padding: 11px 8px; color: #B91C1C; font-weight: 600">{{e.v}}</td><td style="padding: 11px 16px; color: #4A5568">{{e.m}}</td></tr>
+                      </sc-for>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+
+          <div style="padding: 16px 24px; border-top: 1px solid #F1ECE0; display: flex; justify-content: space-between; gap: 10px; background: #FDFBF6">
+            <button type="button" onClick="{{prev}}" style="height: 48px; padding: 0 18px; border-radius: 14px; border: 1px solid #ECE5D5; background: #FFFFFF; font: inherit; font-size: 14px; font-weight: 700; color: #0B1424; cursor: pointer">{{prevLabel}}</button>
+            <button type="button" class="ie-primary" onClick="{{next}}" style="height: 48px; padding: 0 22px; border-radius: 14px; border: none; background: #C9A44C; font: inherit; font-size: 14px; font-weight: 800; color: #0B1424; cursor: pointer; box-shadow: 0 10px 24px rgba(201,164,76,.35)">{{nextLabel}}</button>
+          </div>
+        </section>
+
+        <aside class="ie-up d2" style="flex: 1 1 300px; max-width: 380px; min-width: 0; border-radius: 24px; background: #FFFFFF; border: 1px solid #ECE5D5; padding: 20px; display: flex; flex-direction: column; gap: 4px">
+          <h2 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 800">Derniers imports</h2>
+          <sc-for list="{{history}}" as="h" hint-placeholder-count="5">
+            <div style="display: flex; gap: 12px; align-items: center; padding: 12px 4px; border-bottom: 1px solid #F6F1E4">
+              <span style="width: 38px; height: 38px; flex: none; border-radius: 12px; background: #F6F1E4; color: #8A6A1F; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800">{{h.ext}}</span>
+              <div style="flex: 1; min-width: 0"><div style="font-size: 13px; font-weight: 700">{{h.type}}</div><div style="font-size: 12px; color: #6B7280">{{h.meta}}</div></div>
+              <span style="{{h.badge}}">{{h.statut}}</span>
+            </div>
+          </sc-for>
+        </aside>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{isExport}}" hint-placeholder-val="{{ false }}">
+      <section class="ie-up d1" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px">
+        <sc-for list="{{exports}}" as="x" hint-placeholder-count="3">
+          <article style="border-radius: 24px; background: #FFFFFF; border: 1px solid #ECE5D5; padding: 22px; display: flex; flex-direction: column; gap: 16px">
+            <div style="display: flex; align-items: center; gap: 14px"><span style="width: 48px; height: 48px; border-radius: 15px; background: #0B1424; color: #F3D98C; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{x.icon}}"></path></svg></span><div><h2 style="margin: 0; font-size: 17px; font-weight: 800">{{x.label}}</h2><div style="font-size: 13px; color: #6B7280">{{x.count}}</div></div></div>
+            <div style="display: flex; flex-direction: column; gap: 8px"><label for="{{x.id}}" style="font-size: 12px; font-weight: 700; color: #4A5568">Périmètre</label><select id="{{x.id}}" style="height: 44px; border-radius: 12px; border: 1.5px solid #E2DCCD; background: #FFFFFF; padding: 0 12px; font: inherit; font-size: 14px; color: #0B1424"><option>Toutes les régions</option><option>Dakar</option><option>Thiès</option></select></div>
+            <label style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: #4A5568"><input type="checkbox" checked style="width: 18px; height: 18px; accent-color: #C9A44C"> Inclure les éléments archivés</label>
+            <button type="button" class="ie-primary" style="margin-top: auto; height: 46px; border-radius: 14px; border: none; background: #C9A44C; font: inherit; font-size: 14px; font-weight: 800; color: #0B1424; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"></path></svg>Exporter en CSV</button>
+          </article>
+        </sc-for>
+      </section>
+    </sc-if>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1100}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { tab: 'import', step: 3, type: 'POINTS_SERVICE' };
+  }
+  renderVals() {
+    var self = this, st = this.state, step = st.step;
+    var I = {
+      IMF: 'M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6',
+      POINTS_SERVICE: 'M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21zM12 7a2.5 2.5 0 1 0 0 5 2.5 2.5 0 1 0 0-5',
+      DIRIGEANTS: 'M9 4.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 1 0 0-7M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c2 .7 3.2 2.5 3.6 5.2'
+    };
+    var TY = [['IMF', 'Institutions', 'Identité, statut, siège'], ['POINTS_SERVICE', 'Points de service', 'Agences, guichets, GPS'], ['DIRIGEANTS', 'Dirigeants', 'Dirigeants et mandats']];
+    var SB = { 'Terminé': ['#DCFCE7', '#166534'], 'En cours': ['#E0ECF7', '#1F4E79'], 'Échec': ['#FDECEC', '#991B1B'], 'En attente': ['#F1ECE0', '#4A5568'] };
+    var seg = function (on) { return 'border: none; font: inherit; font-size: 14px; font-weight: 700; padding: 10px 18px; border-radius: 10px; cursor: pointer; ' + (on ? 'background: #0B1424; color: #F3D98C;' : 'background: transparent; color: #4A5568;'); };
+    return {
+      tabs: [['import', 'Importer'], ['export', 'Exporter']].map(function (t) { return { label: t[1], on: st.tab === t[0] ? 'true' : 'false', pick: function () { self.setState({ tab: t[0] }); }, style: seg(st.tab === t[0]) }; }),
+      isImport: st.tab === 'import', isExport: st.tab === 'export',
+      steps: ['Type et fichier', 'Traitement', 'Rapport'].map(function (l, i) {
+        var n = i + 1, done = step > n, cur = step === n;
+        return { label: l, mark: done ? '✓' : String(n), color: cur || done ? '#0B1424' : '#9AA3B2',
+          bar: 'height: 4px; border-radius: 99px; background: ' + (done || cur ? '#C9A44C' : '#ECE5D5') + ';',
+          num: 'width: 22px; height: 22px; flex: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; ' + (done ? 'background: #15803D; color: #FFFFFF;' : (cur ? 'background: #0B1424; color: #F3D98C;' : 'background: #F1ECE0; color: #6B7280;')) };
+      }),
+      s1: step === 1, s2: step === 2, s3: step === 3,
+      types: TY.map(function (t) {
+        var on = st.type === t[0];
+        return { label: t[1], desc: t[2], icon: I[t[0]], on: on ? 'true' : 'false', pick: function () { self.setState({ type: t[0] }); },
+          style: 'display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 16px; border-radius: 16px; font: inherit; color: #0B1424; cursor: pointer; text-align: left; ' + (on ? 'background: #FDF8EA; border: 1.5px solid #C9A44C; box-shadow: 0 0 0 4px rgba(201,164,76,.14);' : 'background: #FFFFFF; border: 1.5px solid #E2DCCD;'),
+          iconStyle: 'width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; ' + (on ? 'background: #0B1424; color: #F3D98C;' : 'background: #F6F1E4; color: #8A6A1F;') };
+      }),
+      errors: [
+        { l: '17', c: 'latitude', v: '41.25', m: 'Coordonnée hors du Sénégal (lat. attendue entre 12,3 et 16,7).' },
+        { l: '42', c: 'imf_sigle', v: 'MEC-XYZ', m: 'Aucune IMF ne correspond à ce sigle.' },
+        { l: '88', c: 'type_point', v: 'Caisse', m: 'Valeur non reconnue : SIEGE, AGENCE, GUICHET ou BUREAU.' },
+        { l: '131', c: 'date_ouverture', v: '31/02/2023', m: 'Date invalide.' },
+        { l: '176', c: 'email', v: 'agence@', m: 'Adresse email invalide.' }
+      ],
+      prev: function () { self.setState({ step: Math.max(1, step - 1) }); },
+      prevLabel: step === 1 ? 'Annuler' : 'Retour',
+      next: function () { self.setState({ step: step >= 3 ? 1 : step + 1 }); },
+      nextLabel: step === 1 ? 'Lancer l’import' : (step === 2 ? 'Voir le rapport' : 'Nouvel import'),
+      history: [
+        ['XLSX', 'Points de service', 'Cellule SIG · aujourd’hui 09:12', 'Terminé'],
+        ['CSV', 'Dirigeants', 'Conventions · hier', 'Terminé'],
+        ['XLSX', 'Institutions', 'Administrateur · 11 nov.', 'Échec'],
+        ['CSV', 'Points de service', 'Cellule SIG · 10 nov.', 'Terminé'],
+        ['XLSX', 'Dirigeants', 'Supervision · 8 nov.', 'En attente']
+      ].map(function (h) { var c = SB[h[3]]; return { ext: h[0], type: h[1], meta: h[2], statut: h[3], badge: 'font-size: 11px; font-weight: 800; padding: 4px 9px; border-radius: 999px; white-space: nowrap; background: ' + c[0] + '; color: ' + c[1] + ';' }; }),
+      exports: [
+        { id: 'ex-imf', label: 'Institutions', count: '187 IMF', icon: I.IMF },
+        { id: 'ex-pts', label: 'Points de service', count: '1 642 points', icon: I.POINTS_SERVICE },
+        { id: 'ex-dir', label: 'Dirigeants et mandats', count: '1 104 mandats', icon: I.DIRIGEANTS }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

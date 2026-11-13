@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Composant — Carte du Sénégal (14 régions)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div style="width: 100%; height: 100%; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; color: #0B1424; display: flex; align-items: center; justify-content: center">
+  <sc-if value="{{loaded}}" hint-placeholder-val="{{ true }}">
+    <svg viewBox="-6 -6 652 488" role="img" aria-label="Carte des 14 régions du Sénégal" style="width: 100%; height: 100%; overflow: visible">
+      <defs>
+        <filter id="csShadow" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#0B1424" flood-opacity="{{shadowOp}}"></feDropShadow></filter>
+        <filter id="csGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.4" result="b"></feGaussianBlur><feMerge><feMergeNode in="b"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge></filter>
+        <pattern id="csHatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="{{hatch}}" stroke-width="1"></line></pattern>
+      </defs>
+
+      <g filter="url(#csShadow)">
+        <sc-for list="{{regions}}" as="r" hint-placeholder-count="14">
+          <path d="{{r.d}}" fill="{{r.fill}}" fill-opacity="{{r.op}}" stroke="{{edge}}" stroke-width="1.3" stroke-linejoin="round" onClick="{{r.pick}}" onMouseEnter="{{r.enter}}" onMouseLeave="{{leave}}" style="cursor: pointer; transition: fill .45s ease, fill-opacity .25s ease">
+            <animate attributeName="opacity" from="0" to="1" dur="0.9s" begin="{{r.delay}}" fill="freeze"></animate>
+          </path>
+        </sc-for>
+      </g>
+
+      <sc-if value="{{hasSel}}" hint-placeholder-val="{{ false }}">
+        <path d="{{sel.d}}" fill="url(#csHatch)" stroke="{{selStroke}}" stroke-width="2.6" stroke-linejoin="round" filter="url(#csGlow)" style="pointer-events: none"></path>
+      </sc-if>
+
+      <sc-if value="{{flow}}" hint-placeholder-val="{{ true }}">
+        <g style="pointer-events: none">
+          <sc-for list="{{regions}}" as="r" hint-placeholder-count="14">
+            <path d="{{r.d}}" pathLength="1000" fill="none" stroke="{{flowColor}}" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="46 954" filter="url(#csGlow)">
+              <animate attributeName="stroke-dashoffset" from="1000" to="0" dur="{{r.dur}}" begin="{{r.delay}}" repeatCount="indefinite"></animate>
+            </path>
+          </sc-for>
+        </g>
+      </sc-if>
+
+      <sc-if value="{{showPoints}}" hint-placeholder-val="{{ false }}">
+        <g>
+          <sc-for list="{{points}}" as="p" hint-placeholder-count="40">
+            <circle cx="{{p.x}}" cy="{{p.y}}" r="{{p.rad}}" fill="{{p.fill}}" fill-opacity="{{p.op}}" stroke="{{p.stroke}}" stroke-width="1.2" onClick="{{p.pick}}" style="cursor: pointer"></circle>
+          </sc-for>
+          <sc-for list="{{pulses}}" as="q" hint-placeholder-count="6">
+            <circle cx="{{q.x}}" cy="{{q.y}}" r="3" fill="none" stroke="{{q.color}}" stroke-width="1.4" style="pointer-events: none">
+              <animate attributeName="r" values="3;14" dur="2.6s" begin="{{q.delay}}" repeatCount="indefinite"></animate>
+              <animate attributeName="opacity" values="0.9;0" dur="2.6s" begin="{{q.delay}}" repeatCount="indefinite"></animate>
+            </circle>
+          </sc-for>
+        </g>
+      </sc-if>
+
+      <sc-if value="{{hasPointSel}}" hint-placeholder-val="{{ false }}">
+        <g style="pointer-events: none">
+          <circle cx="{{psel.x}}" cy="{{psel.y}}" r="9" fill="none" stroke="#0B1424" stroke-width="2"></circle>
+          <circle cx="{{psel.x}}" cy="{{psel.y}}" r="13" fill="none" stroke="#C9A44C" stroke-width="2">
+            <animate attributeName="r" values="9;18;9" dur="2s" repeatCount="indefinite"></animate>
+          </circle>
+        </g>
+      </sc-if>
+
+      <sc-if value="{{showLabels}}" hint-placeholder-val="{{ true }}">
+        <g style="pointer-events: none; font-family: 'Plus Jakarta Sans', system-ui, sans-serif">
+          <sc-for list="{{regions}}" as="r" hint-placeholder-count="14">
+            <text x="{{r.lx}}" y="{{r.ly}}" text-anchor="middle" font-size="{{r.fs}}" font-weight="{{r.fw}}" fill="{{r.lc}}" stroke="{{r.halo}}" stroke-width="3" paint-order="stroke" stroke-linejoin="round">{{r.id}}</text>
+          </sc-for>
+        </g>
+      </sc-if>
+    </svg>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"fillMode":{"editor":"enum","options":["regions","choro","muted"],"default":"regions"},"indicator":{"editor":"enum","options":["pts","imf","membres","encours"],"default":"pts"},"selected":{"editor":"text","default":""},"flow":{"editor":"boolean","default":true},"showPoints":{"editor":"boolean","default":false},"showLabels":{"editor":"boolean","default":true},"selectedPoint":{"editor":null},"pointFilter":{"editor":null},"onPick":{"editor":null},"onPickPoint":{"editor":null},"$preview":{"width":900,"height":680}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { data: null, hover: '' };
+  }
+  componentDidMount() {
+    var self = this;
+    fetch('/_blob/9e3a69493b9e44df6dcf02b06ceb565b').then(function (r) { return r.json(); }).then(function (d) { self.setState({ data: d }); }).catch(function () {});
+  }
+  mix(a, b, t) {
+    var pa = [1, 3, 5].map(function (i) { return parseInt(a.substr(i, 2), 16); });
+    var pb = [1, 3, 5].map(function (i) { return parseInt(b.substr(i, 2), 16); });
+    return '#' + pa.map(function (v, i) { var x = Math.round(v + (pb[i] - v) * t); return (x < 16 ? '0' : '') + x.toString(16); }).join('');
+  }
+  scale(t) {
+    var S = ['#F7EED3', '#EBD594', '#D9B65E', '#C29433', '#9A7124', '#6E4F17', '#43300D'];
+    var x = Math.max(0, Math.min(1, t)) * (S.length - 1), i = Math.floor(x);
+    return i >= S.length - 1 ? S[S.length - 1] : this.mix(S[i], S[i + 1], x - i);
+  }
+  renderVals() {
+    var self = this, d = this.state.data;
+    var dark = (this.props.theme ?? 'light') === 'dark';
+    var mode = this.props.fillMode ?? 'regions';
+    var ind = this.props.indicator ?? 'pts';
+    var selId = this.props.selected ?? '';
+    var hov = this.state.hover;
+    var flt = this.props.pointFilter || {};
+    if (!d) return { loaded: false, regions: [], points: [], pulses: [], sel: {}, psel: {}, hasSel: false, hasPointSel: false };
+    var max = Math.max.apply(null, d.regions.map(function (r) { return r[ind]; }));
+    var regions = d.regions.map(function (r, i) {
+      var t = Math.sqrt(r[ind] / max), fill, op = 1;
+      if (mode === 'choro') fill = self.scale(t);
+      else if (mode === 'muted') { fill = dark ? '#C9A44C' : '#E9DFC6'; op = dark ? 0.05 + 0.13 * t : 1; }
+      else fill = r.color;
+      var isSel = r.id === selId, isHov = r.id === hov;
+      if (!isSel && selId && mode !== 'muted') op = 0.55;
+      if (isHov && !isSel) op = mode === 'muted' ? op + 0.12 : 0.9;
+      var darkFill = mode === 'regions' || (mode === 'choro' && t > 0.55) || dark;
+      return {
+        id: r.id, d: r.d, fill: fill, op: op, lx: r.lx, ly: r.ly,
+        fs: r.id === 'Dakar' ? 10 : 12, fw: isSel ? 800 : 700,
+        lc: darkFill ? '#FFFFFF' : '#0B1424', halo: darkFill ? 'rgba(11,20,36,.45)' : 'rgba(255,255,255,.8)',
+        delay: (0.08 * i).toFixed(2) + 's', dur: (5 + (i % 5) * 0.9).toFixed(1) + 's',
+        pick: function () { if (self.props.onPick) self.props.onPick(r.id); },
+        enter: function () { self.setState({ hover: r.id }); }
+      };
+    });
+    var sel = d.regions.filter(function (r) { return r.id === selId; })[0];
+    var TC = { 'Siège': '#C9A44C', 'Agence': '#1F4E79', 'Caisse': '#2E7D6B', 'Guichet': '#B5763A' };
+    var pts = d.points.filter(function (p) {
+      return (!flt.type || flt.type === 'Tous' || p.t === flt.type) && (!flt.statut || flt.statut === 'Tous' || p.s === flt.statut) &&
+        (!flt.region || flt.region === 'Toutes' || p.r === flt.region) && (!flt.imf || flt.imf === 'Toutes' || p.i === flt.imf);
+    });
+    var points = pts.map(function (p, i) {
+      var closed = p.s === 'Fermé';
+      return { x: p.x, y: p.y, rad: p.t === 'Siège' ? 5 : 3.4,
+        fill: dark ? '#FFF4D2' : (closed ? '#FFFFFF' : TC[p.t]), op: p.s === 'En pause' ? 0.5 : 1,
+        stroke: dark ? 'rgba(243,217,140,.5)' : (closed ? '#6B7280' : '#FFFFFF'),
+        pick: function () { if (self.props.onPickPoint) self.props.onPickPoint(p); } };
+    });
+    var pulses = pts.filter(function (p) { return p.t === 'Siège'; }).slice(0, 10).map(function (p, i) {
+      return { x: p.x, y: p.y, color: dark ? '#F3D98C' : '#C9A44C', delay: (i * 0.35).toFixed(2) + 's' };
+    });
+    var ps = this.props.selectedPoint;
+    return {
+      loaded: true, regions: regions, points: points, pulses: pulses,
+      edge: dark ? 'rgba(201,164,76,.55)' : '#FFFFFF',
+      flow: this.props.flow ?? true, flowColor: dark ? '#F3D98C' : (mode === 'choro' ? '#0B1424' : '#FFF4D2'),
+      showPoints: this.props.showPoints ?? false, showLabels: this.props.showLabels ?? true,
+      shadowOp: dark ? 0.0 : 0.16, hatch: dark ? 'rgba(243,217,140,.35)' : 'rgba(11,20,36,.18)',
+      hasSel: !!sel, sel: sel ? { d: sel.d } : {}, selStroke: dark ? '#F3D98C' : '#0B1424',
+      hasPointSel: !!ps, psel: ps ? { x: ps.x, y: ps.y } : {},
+      leave: function () { self.setState({ hover: '' }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

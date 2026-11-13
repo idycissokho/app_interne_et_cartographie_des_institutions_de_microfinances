@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Carte micro — Carto IMF</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:#FAF7F0}
+a{color:#8A6A1F}a:hover{color:#6E5416}
+@keyframes mi-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes mi-sheet{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+.mi-in{animation:mi-in .7s cubic-bezier(.2,.7,.2,1) both}
+.mi-in.d1{animation-delay:.1s}.mi-in.d2{animation-delay:.2s}
+.mi-sheet{animation:mi-sheet .45s cubic-bezier(.2,.7,.2,1) both}
+.mi-sel{appearance:none;-webkit-appearance:none}
+.mi-sel:focus{outline:none;border-color:#C9A44C;box-shadow:0 0 0 4px rgba(201,164,76,.18)}
+@media (prefers-reduced-motion:reduce){.mi-in,.mi-sheet{animation:none}}
+</style>
+</helmet>
+<div style="min-height: 1000px; display: flex; flex-wrap: wrap; background: #FAF7F0; color: #0B1424">
+  <div style="flex: 1 1 248px; max-width: 272px; background: #0B1424; display: flex">
+    <dc-import name="Sidebar" active="micro" role="superviseur" hint-size="100%,1000px"></dc-import>
+  </div>
+
+  <main style="flex: 999 1 640px; min-width: 0; padding: 28px 32px 32px 32px; box-sizing: border-box; display: flex; flex-direction: column; gap: 18px">
+    <header class="mi-in" style="display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <span style="font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #8A6A1F">Pilotage · Points de service</span>
+        <h1 style="margin: 0; font-size: 34px; font-weight: 800; letter-spacing: -0.03em">Carte micro</h1>
+        <p style="margin: 0; font-size: 14px; color: #4A5568">Sièges, agences, caisses et guichets géolocalisés. <span style="font-weight: 700; color: #8A6A1F">Points fictifs de démonstration.</span></p>
+      </div>
+      <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap">
+        <span style="font-size: 14px; color: #4A5568"><b style="font-size: 22px; color: #0B1424; letter-spacing: -0.02em">{{count}}</b> points affichés</span>
+        <button type="button" onClick="{{reset}}" style="height: 44px; padding: 0 16px; border-radius: 12px; border: 1px solid #ECE5D5; background: #FFFFFF; font: inherit; font-size: 13px; font-weight: 700; color: #0B1424; cursor: pointer">Réinitialiser les filtres</button>
+      </div>
+    </header>
+
+    <section class="mi-in d1" style="position: relative; flex: 1 1 auto; min-height: 780px; border-radius: 28px; background: #FFFFFF; border: 1px solid #ECE5D5; box-shadow: 0 30px 60px -30px rgba(11,20,36,.25); overflow: hidden; display: flex; flex-wrap: wrap">
+
+      <aside style="flex: 1 1 260px; max-width: 290px; min-width: 0; padding: 20px; box-sizing: border-box; border-right: 1px solid #F1ECE0; display: flex; flex-direction: column; gap: 14px; background: #FDFBF6">
+        <div style="display: flex; align-items: center; gap: 10px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8A6A1F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h18l-7 8v6l-4 2v-8L3 5z"></path></svg><h2 style="margin: 0; font-size: 16px; font-weight: 800">Filtres</h2></div>
+        <sc-for list="{{filters}}" as="f" hint-placeholder-count="5">
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <label for="{{f.id}}" style="font-size: 12px; font-weight: 700; color: #4A5568">{{f.label}}</label>
+            <div style="position: relative">
+              <select id="{{f.id}}" class="mi-sel" value="{{f.value}}" onChange="{{f.change}}" style="width: 100%; height: 44px; border-radius: 12px; border: 1.5px solid #ECE5D5; background: #FFFFFF; padding: 0 36px 0 14px; font: inherit; font-size: 14px; font-weight: 600; color: #0B1424; cursor: pointer">
+                <sc-for list="{{f.options}}" as="o" hint-placeholder-count="4"><option value="{{o}}">{{o}}</option></sc-for>
+              </select>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A6A1F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="position: absolute; right: 12px; top: 14px; pointer-events: none"><path d="m6 9 6 6 6-6"></path></svg>
+            </div>
+          </div>
+        </sc-for>
+        <div style="margin-top: 6px; padding: 14px; border-radius: 16px; background: #0B1424; color: #F4EFE3; display: flex; flex-direction: column; gap: 10px">
+          <span style="font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #F3D98C">Répartition par statut</span>
+          <div style="display: flex; height: 8px; border-radius: 99px; overflow: hidden; gap: 2px"><span style="flex: {{stat.o}}; background: #22A05A"></span><span style="flex: {{stat.p}}; background: #E0A33A"></span><span style="flex: {{stat.f}}; background: #9AA3B2"></span></div>
+          <div style="display: flex; justify-content: space-between; font-size: 12px; color: #C8D0DC"><span>Ouverts <b style="color: #FFFFFF">{{stat.o}}</b></span><span>Pause <b style="color: #FFFFFF">{{stat.p}}</b></span><span>Fermés <b style="color: #FFFFFF">{{stat.f}}</b></span></div>
+        </div>
+      </aside>
+
+      <div style="flex: 999 1 480px; min-width: 0; position: relative; background-image: radial-gradient(#EFE7D3 1px, transparent 1px); background-size: 18px 18px">
+        <div style="position: absolute; inset: 24px 24px 64px 24px">
+          <dc-import name="CarteSenegal" theme="light" fill-mode="muted" flow="{{ true }}" show-points="{{ true }}" show-labels="{{ true }}" selected="{{selRegion}}" point-filter="{{flt}}" selected-point="{{pt}}" on-pick-point="{{pickPoint}}" on-pick="{{pickRegion}}" hint-size="100%,100%"></dc-import>
+        </div>
+
+        <div style="position: absolute; left: 20px; bottom: 18px; display: flex; gap: 14px; flex-wrap: wrap; padding: 10px 14px; border-radius: 14px; background: rgba(255,255,255,.85); border: 1px solid #ECE5D5; backdrop-filter: blur(10px); font-size: 12px; font-weight: 600; color: #1A2333">
+          <span style="display: flex; align-items: center; gap: 6px"><span style="width: 12px; height: 12px; border-radius: 50%; background: #C9A44C; border: 2px solid #FFFFFF; box-shadow: 0 0 0 1px #C9A44C"></span>Siège</span>
+          <span style="display: flex; align-items: center; gap: 6px"><span style="width: 10px; height: 10px; border-radius: 50%; background: #1F4E79"></span>Agence</span>
+          <span style="display: flex; align-items: center; gap: 6px"><span style="width: 10px; height: 10px; border-radius: 50%; background: #2E7D6B"></span>Caisse</span>
+          <span style="display: flex; align-items: center; gap: 6px"><span style="width: 10px; height: 10px; border-radius: 50%; background: #B5763A"></span>Guichet</span>
+          <span style="display: flex; align-items: center; gap: 6px"><span style="width: 10px; height: 10px; border-radius: 50%; background: #FFFFFF; border: 1.5px solid #6B7280"></span>Fermé</span>
+        </div>
+
+        <div style="position: absolute; right: 20px; bottom: 18px; display: flex; flex-direction: column; gap: 6px">
+          <button type="button" aria-label="Zoom avant" style="width: 40px; height: 40px; border-radius: 12px; border: 1px solid #ECE5D5; background: #FFFFFF; font: inherit; font-size: 20px; font-weight: 700; color: #0B1424; cursor: pointer">+</button>
+          <button type="button" aria-label="Zoom arrière" style="width: 40px; height: 40px; border-radius: 12px; border: 1px solid #ECE5D5; background: #FFFFFF; font: inherit; font-size: 20px; font-weight: 700; color: #0B1424; cursor: pointer">−</button>
+        </div>
+
+        <sc-if value="{{hasPt}}" hint-placeholder-val="{{ true }}">
+          <article class="mi-sheet" style="position: absolute; top: 20px; right: 20px; width: 330px; max-width: calc(100% - 40px); box-sizing: border-box; border-radius: 22px; background: #FFFFFF; border: 1px solid #ECE5D5; box-shadow: 0 30px 70px -20px rgba(11,20,36,.35); overflow: hidden">
+            <div style="padding: 18px 18px 16px 18px; background: #0B1424; color: #F4EFE3; display: flex; flex-direction: column; gap: 10px; position: relative">
+              <button type="button" aria-label="Fermer la fiche" onClick="{{closePt}}" style="position: absolute; right: 12px; top: 12px; width: 34px; height: 34px; border-radius: 10px; border: none; background: rgba(255,255,255,.08); color: #F4EFE3; cursor: pointer; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap"><span style="font-size: 11px; font-weight: 800; color: #0B1424; background: #F3D98C; padding: 4px 10px; border-radius: 999px">{{ptv.t}}</span><span style="{{ptv.badge}}">{{ptv.s}}</span></div>
+              <div style="font-size: 20px; font-weight: 800; letter-spacing: -0.01em; padding-right: 30px">{{ptv.title}}</div>
+              <div style="font-size: 13px; color: #A9B3C4">{{ptv.i}} · Région de {{ptv.r}}</div>
+            </div>
+            <div style="padding: 16px 18px 18px 18px; display: flex; flex-direction: column; gap: 12px; font-size: 13px">
+              <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+                <div style="padding: 10px 12px; border-radius: 12px; background: #FAF7F0"><div style="font-size: 11px; color: #6B7280; font-weight: 700">Département</div><div style="font-weight: 700">[Département]</div></div>
+                <div style="padding: 10px 12px; border-radius: 12px; background: #FAF7F0"><div style="font-size: 11px; color: #6B7280; font-weight: 700">Commune</div><div style="font-weight: 700">[Commune]</div></div>
+                <div style="padding: 10px 12px; border-radius: 12px; background: #FAF7F0"><div style="font-size: 11px; color: #6B7280; font-weight: 700">Ouverture</div><div style="font-weight: 700">[jj/mm/aaaa]</div></div>
+                <div style="padding: 10px 12px; border-radius: 12px; background: #FAF7F0"><div style="font-size: 11px; color: #6B7280; font-weight: 700">Membres</div><div style="font-weight: 700">[N]</div></div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px; color: #4A5568"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A6A1F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"></path></svg>[+221 XX XXX XX XX]</div>
+              <div style="display: flex; align-items: center; gap: 10px; color: #4A5568"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A6A1F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3 7 9 6 9-6"></path></svg>[contact@imf.sn]</div>
+              <div style="display: flex; gap: 8px">
+                <a href="Consultation.dc.html" style="flex: 1; height: 42px; border-radius: 12px; background: #0B1424; color: #F3D98C; font-size: 13px; font-weight: 800; text-decoration: none; display: flex; align-items: center; justify-content: center">Ouvrir la fiche IMF</a>
+                <button type="button" style="height: 42px; padding: 0 14px; border-radius: 12px; border: 1px solid #ECE5D5; background: #FFFFFF; font: inherit; font-size: 13px; font-weight: 700; color: #0B1424; cursor: pointer">Itinéraire</button>
+              </div>
+            </div>
+          </article>
+        </sc-if>
+      </div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { data: null, imf: 'Toutes', region: 'Toutes', type: 'Tous', statut: 'Tous', bailleur: 'Tous', pt: null };
+  }
+  componentDidMount() {
+    var self = this;
+    fetch('/_blob/9e3a69493b9e44df6dcf02b06ceb565b').then(function (r) { return r.json(); }).then(function (d) {
+      var first = d.points.filter(function (p) { return p.t === 'Agence' && p.r === 'Thiès'; })[0] || d.points[0];
+      self.setState({ data: d, pt: first });
+    }).catch(function () {});
+  }
+  renderVals() {
+    var self = this, st = this.state;
+    var P = st.data ? st.data.points : [];
+    var flt = { imf: st.imf, region: st.region, type: st.type, statut: st.statut };
+    var vis = P.filter(function (p) {
+      return (flt.type === 'Tous' || p.t === flt.type) && (flt.statut === 'Tous' || p.s === flt.statut) && (flt.region === 'Toutes' || p.r === flt.region) && (flt.imf === 'Toutes' || p.i === flt.imf);
+    });
+    var cnt = function (s) { return vis.filter(function (p) { return p.s === s; }).length; };
+    var set = function (k) { return function (e) { var o = {}; o[k] = e.target.value; o.pt = null; self.setState(o); }; };
+    var REG = ['Toutes', 'Dakar', 'Diourbel', 'Fatick', 'Kaffrine', 'Kaolack', 'Kédougou', 'Kolda', 'Louga', 'Matam', 'Saint-Louis', 'Sédhiou', 'Tambacounda', 'Thiès', 'Ziguinchor'];
+    var pt = st.pt;
+    var SB = { 'Ouvert': ['#DCFCE7', '#166534'], 'En pause': ['#FEF3C7', '#92400E'], 'Fermé': ['#E5E7EB', '#374151'] };
+    var sb = pt ? SB[pt.s] : SB['Ouvert'];
+    return {
+      count: vis.length,
+      filters: [
+        { id: 'mi-imf', label: 'Institution (IMF)', value: st.imf, change: set('imf'), options: ['Toutes', 'IMF A', 'IMF B', 'IMF C', 'IMF D', 'IMF E', 'IMF F'] },
+        { id: 'mi-reg', label: 'Région', value: st.region, change: set('region'), options: REG },
+        { id: 'mi-type', label: 'Type de point', value: st.type, change: set('type'), options: ['Tous', 'Siège', 'Agence', 'Caisse', 'Guichet'] },
+        { id: 'mi-stat', label: 'Statut', value: st.statut, change: set('statut'), options: ['Tous', 'Ouvert', 'En pause', 'Fermé'] },
+        { id: 'mi-bail', label: 'Bailleur (option)', value: st.bailleur, change: set('bailleur'), options: ['Tous', '[Bailleur A]', '[Bailleur B]', '[Bailleur C]'] }
+      ],
+      stat: { o: cnt('Ouvert'), p: cnt('En pause'), f: cnt('Fermé') },
+      flt: flt, selRegion: st.region === 'Toutes' ? '' : st.region, pt: pt,
+      pickPoint: function (p) { self.setState({ pt: p }); },
+      pickRegion: function (id) { self.setState({ region: id, pt: null }); },
+      closePt: function () { self.setState({ pt: null }); },
+      reset: function () { self.setState({ imf: 'Toutes', region: 'Toutes', type: 'Tous', statut: 'Tous', bailleur: 'Tous', pt: null }); },
+      hasPt: !!pt,
+      ptv: pt ? { t: pt.t, s: pt.s, i: pt.i, r: pt.r, title: pt.t + ' de ' + pt.r,
+        badge: 'font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 999px; background: ' + sb[0] + '; color: ' + sb[1] + ';' } : { t: '', s: '', i: '', r: '', title: '', badge: '' }
+    };
+  }
+}
+</script>
+</body>
+</html>
