@@ -133,8 +133,8 @@ export function Consultation() {
                         <div style={{ ...ligne, borderBottom: "none" }}><span style={{ color: "#6B7280" }}>Site web</span>{cur.site_web ? <a href={cur.site_web} target="_blank" rel="noreferrer" style={{ fontWeight: 700, overflowWrap: "anywhere" }}>{cur.site_web.replace(/^https?:\/\//, "")}</a> : <b>—</b>}</div>
                       </div>
                     </div>
-                    <div style={{ flex: "1 1 280px", minWidth: 0, height: 320, borderRadius: 20, background: "#0B1424", padding: 10, boxSizing: "border-box" }}>
-                      <SenegalMap theme="dark" fillMode="muted" stats={statsParRegion(l.zones)} selected={regionAffichee(cur.region_siege) ?? ""} flow showLabels={false} />
+                    <div style={{ flex: "1 1 280px", minWidth: 0, height: 320, borderRadius: 20, background: "#0B1424", padding: 6, boxSizing: "border-box" }}>
+                      <SenegalMap theme="dark" fillMode="muted" stats={statsParRegion(l.zones)} selected={regionAffichee(cur.region_siege) ?? ""} flow showLabels={false} rayon={15} />
                     </div>
                   </div>
                 )}

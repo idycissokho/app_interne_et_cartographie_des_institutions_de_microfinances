@@ -147,9 +147,9 @@ export function FormulaireIMF() {
                   {inSn && <span className="fi-help" style={{ display: "flex", gap: 8, alignItems: "center" }}><span style={{ color: "#15803D", fontWeight: 800 }}>✓</span><span>Position située en région de <b style={{ color: "#0B1424" }}>{region}</b> (déduite des coordonnées).</span></span>}
                   <button type="button" onClick={() => navigator.geolocation?.getCurrentPosition((p) => setF((x) => ({ ...x, lat: p.coords.latitude.toFixed(5), lon: p.coords.longitude.toFixed(5) })))} style={{ alignSelf: "flex-start", height: 40, padding: "0 14px", borderRadius: 11, border: "1px dashed #C9A44C", background: "#FDFBF6", font: "inherit", fontSize: 13, fontWeight: 700, color: "#6E5416", display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3" /></svg>Utiliser ma position actuelle</button>
                 </div>
-                <div style={{ flex: "1 1 300px", minWidth: 0, height: 300, borderRadius: 18, border: "1px solid #ECE5D5", backgroundColor: "#FDFBF6", backgroundImage: "radial-gradient(#EFE7D3 1px, transparent 1px)", backgroundSize: "16px 16px", padding: 8, boxSizing: "border-box", position: "relative" }}>
-                  <SenegalMap theme="light" fillMode="muted" flow={false} showLabels selected={region} selectedPoint={inSn ? projeter(lon, lat) : null} />
-                  <span style={{ position: "absolute", left: 12, bottom: 10, fontSize: 11, fontWeight: 700, color: "#6B7280", background: "rgba(255,255,255,.85)", padding: "4px 8px", borderRadius: 8 }}>Aperçu de la position</span>
+                <div style={{ flex: "1 1 300px", minWidth: 0, height: 300, borderRadius: 18, border: "1px solid #ECE5D5", boxSizing: "border-box", position: "relative", overflow: "hidden" }}>
+                  <SenegalMap theme="light" fillMode="muted" flow={false} showLabels zoomSelection rayon={17} selected={region} selectedPoint={inSn ? { ...projeter(lon, lat), lon, lat } : null} />
+                  <span style={{ position: "absolute", left: 12, top: 10, zIndex: 3, fontSize: 11, fontWeight: 700, color: "#4A5568", background: "rgba(255,255,255,.92)", padding: "4px 8px", borderRadius: 8, pointerEvents: "none" }}>Aperçu de la position</span>
                 </div>
               </div>
             </section>

@@ -103,8 +103,8 @@ export function CarteMacro() {
               </div>
             </div>
 
-            <div className="cm-carte" style={{ height: 600, position: "relative", backgroundImage: "radial-gradient(#EFE7D3 1px, transparent 1px)", backgroundSize: "18px 18px", borderRadius: 20 }}>
-              <SenegalMap theme="light" fillMode={mode} indicator={ind} stats={stats} selected={sel} flow showLabels={false} onPick={setSel} />
+            <div className="cm-carte" style={{ height: 600, position: "relative", borderRadius: 20 }}>
+              <SenegalMap theme="light" fillMode={mode} indicator={ind} stats={stats} selected={sel} flow showLabels={false} onPick={setSel} rayon={20} />
             </div>
 
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>

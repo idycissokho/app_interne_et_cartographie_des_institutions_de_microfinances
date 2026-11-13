@@ -95,7 +95,7 @@ export function Connexion() {
         {/* Carte + bloc KPI côte à côte : rien ne se superpose ; la carte se réduit pour tenir dans l'espace restant. */}
         <div className="ci-carte" style={{ position: "relative", flex: "1 1 0", minHeight: 0, display: "flex", gap: 16, alignItems: "flex-start" }}>
           <div className="ci-carte-fond" style={{ position: "relative", flex: "1 1 0", minWidth: 0, height: "100%" }}>
-            <SenegalMap theme="dark" fillMode="muted" flow showPoints showLabels={false} stats={stats} points={DEMO_POINTS} />
+            <SenegalMap theme="dark" fillMode="muted" flow showPoints showLabels={false} stats={stats} points={DEMO_POINTS} infos={["pts"]} />
           </div>
           <div className="ci-float ci-kpi" style={{ flex: "none", width: 250, boxSizing: "border-box", padding: "16px 18px", borderRadius: 18, background: "rgba(19,33,58,.62)", border: "1px solid rgba(233,212,154,.22)", backdropFilter: "blur(14px)", boxShadow: "0 20px 50px rgba(0,0,0,.35)", position: "relative", zIndex: 2 }}>
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "#A9B3C4" }}>Points de service géolocalisés</div>

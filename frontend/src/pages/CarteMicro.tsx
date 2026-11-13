@@ -36,7 +36,6 @@ export function CarteMicro() {
   const [f, setF] = useState({ ...VIDE, region: params.get("region") ?? "" });
   const [pt, setPt] = useState<PointMicro | null>(null);
   const [detail, setDetail] = useState<{ date_ouverture: string | null; nombre_membres: number | null } | null>(null);
-  const [zoom, setZoom] = useState(1);
 
   const { donnees: d } = useDonnees<{ geo: { features: FeaturePoint[] }; imfs: Page<{ id: string; nom: string; sigle: string }>; bailleurs: Page<{ id: string; nom: string; sigle: string }> }>({
     geo: `/points-service/geojson/${f.bailleur ? `?bailleur=${f.bailleur}` : ""}`,
@@ -92,7 +91,7 @@ export function CarteMicro() {
           </div>
           <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
             <span style={{ fontSize: 14, color: "#4A5568" }}><b style={{ fontSize: 22, color: "#0B1424", letterSpacing: "-0.02em" }}>{vis.length}</b> points affichés</span>
-            <button type="button" onClick={() => { setF(VIDE); setPt(null); setZoom(1); }} style={{ height: 44, padding: "0 16px", borderRadius: 12, border: "1px solid #ECE5D5", background: "#FFFFFF", font: "inherit", fontSize: 13, fontWeight: 700, color: "#0B1424", cursor: "pointer" }}>Réinitialiser les filtres</button>
+            <button type="button" onClick={() => { setF(VIDE); setPt(null); }} style={{ height: 44, padding: "0 16px", borderRadius: 12, border: "1px solid #ECE5D5", background: "#FFFFFF", font: "inherit", fontSize: 13, fontWeight: 700, color: "#0B1424", cursor: "pointer" }}>Réinitialiser les filtres</button>
           </div>
         </header>
 
@@ -117,13 +116,13 @@ export function CarteMicro() {
             </div>
           </aside>
 
-          <div className="mi-zone" style={{ flex: "999 1 480px", minWidth: 0, position: "relative", overflow: "hidden", backgroundImage: "radial-gradient(#EFE7D3 1px, transparent 1px)", backgroundSize: "18px 18px" }}>
-            <div className="mi-carte-pos" style={{ position: "absolute", inset: "24px 24px 64px 24px", transform: `scale(${zoom})`, transformOrigin: "center", transition: "transform .3s cubic-bezier(.2,.7,.2,1)" }}>
-              <SenegalMap theme="light" fillMode="muted" flow showPoints showLabels={false} selected={f.region} points={points} pointFilter={flt} selectedPoint={pt}
+          <div className="mi-zone" style={{ flex: "999 1 480px", minWidth: 0, position: "relative", overflow: "hidden" }}>
+            <div className="mi-carte-pos" style={{ position: "absolute", inset: 0 }}>
+              <SenegalMap theme="light" fillMode="muted" flow showPoints showLabels={false} zoomSelection molette rayon={0} selected={f.region} points={points} pointFilter={flt} selectedPoint={pt}
                 onPickPoint={(p) => setPt(p as PointMicro)} onPick={(id) => { setF({ ...f, region: id }); setPt(null); }} />
             </div>
 
-            <div className="mi-legende" style={{ position: "absolute", left: 20, bottom: 18, display: "flex", gap: 14, flexWrap: "wrap", padding: "10px 14px", borderRadius: 14, background: "rgba(255,255,255,.85)", border: "1px solid #ECE5D5", backdropFilter: "blur(10px)", fontSize: 12, fontWeight: 600, color: "#1A2333", marginRight: 76 }}>
+            <div className="mi-legende" style={{ position: "absolute", left: 20, bottom: 18, display: "flex", gap: 14, flexWrap: "wrap", padding: "10px 14px", borderRadius: 14, background: "rgba(255,255,255,.92)", border: "1px solid #ECE5D5", backdropFilter: "blur(10px)", boxShadow: "0 10px 24px -12px rgba(11,20,36,.35)", fontSize: 12, fontWeight: 600, color: "#1A2333", marginRight: 76, zIndex: 3 }}>
               <span style={{ display: "flex", alignItems: "center", gap: 6 }}><span style={{ width: 12, height: 12, borderRadius: "50%", background: "#C9A44C", border: "2px solid #FFFFFF", boxShadow: "0 0 0 1px #C9A44C", boxSizing: "content-box" }} />Siège social</span>
               <span style={{ display: "flex", alignItems: "center", gap: 6 }}><span style={point("#1F4E79")} />Agence</span>
               <span style={{ display: "flex", alignItems: "center", gap: 6 }}><span style={point("#2E7D6B")} />Bureau de représentation</span>
@@ -131,13 +130,8 @@ export function CarteMicro() {
               <span style={{ display: "flex", alignItems: "center", gap: 6 }}><span style={point("#FFFFFF", { border: "1.5px solid #6B7280" })} />Fermé</span>
             </div>
 
-            <div className="mi-zoom" style={{ position: "absolute", right: 20, bottom: 18, display: "flex", flexDirection: "column", gap: 6 }}>
-              <button type="button" aria-label="Zoom avant" onClick={() => setZoom((z) => Math.min(3, z + 0.5))} style={{ width: 40, height: 40, borderRadius: 12, border: "1px solid #ECE5D5", background: "#FFFFFF", font: "inherit", fontSize: 20, fontWeight: 700, color: "#0B1424", cursor: "pointer" }}>+</button>
-              <button type="button" aria-label="Zoom arrière" onClick={() => setZoom((z) => Math.max(1, z - 0.5))} style={{ width: 40, height: 40, borderRadius: 12, border: "1px solid #ECE5D5", background: "#FFFFFF", font: "inherit", fontSize: 20, fontWeight: 700, color: "#0B1424", cursor: "pointer" }}>−</button>
-            </div>
-
             {pt && (
-              <article key={pt.id} className="mi-sheet" style={{ position: "absolute", top: 20, right: 20, width: 330, maxWidth: "calc(100% - 40px)", boxSizing: "border-box", borderRadius: 22, background: "#FFFFFF", border: "1px solid #ECE5D5", boxShadow: "0 30px 70px -20px rgba(11,20,36,.35)", overflow: "hidden" }}>
+              <article key={pt.id} className="mi-sheet" style={{ position: "absolute", top: 20, right: 20, zIndex: 5, width: 330, maxWidth: "calc(100% - 40px)", boxSizing: "border-box", borderRadius: 22, background: "#FFFFFF", border: "1px solid #ECE5D5", boxShadow: "0 30px 70px -20px rgba(11,20,36,.35)", overflow: "hidden" }}>
                 <div style={{ padding: "18px 18px 16px 18px", background: "#0B1424", color: "#F4EFE3", display: "flex", flexDirection: "column", gap: 10, position: "relative" }}>
                   <button type="button" aria-label="Fermer la fiche" onClick={() => setPt(null)} style={{ position: "absolute", right: 12, top: 12, width: 34, height: 34, borderRadius: 10, border: "none", background: "rgba(255,255,255,.08)", color: "#F4EFE3", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg></button>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}><span style={{ fontSize: 11, fontWeight: 800, color: "#0B1424", background: "#F3D98C", padding: "4px 10px", borderRadius: 999 }}>{typeLabel(pt.type)}</span><span style={{ fontSize: 11, fontWeight: 800, padding: "4px 10px", borderRadius: 999, background: sb[0], color: sb[1] }}>{statutLabel(pt.statut)}</span></div>

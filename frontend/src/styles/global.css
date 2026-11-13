@@ -193,10 +193,79 @@ select.di-input{cursor:pointer;padding-right:10px}
 .ie-card:hover{border-color:#D9B65E}
 @media (prefers-reduced-motion:reduce){.ie-up,.ie-bar{animation:none}}
 
-/* ---------- SenegalMap : désactivation des animations SMIL si mouvement réduit ---------- */
+/* ---------- SenegalMap : carte géographique (fond réel, fiche de survol, repères animés) ---------- */
+.cs-carte{position:relative;width:100%;height:100%;overflow:hidden;isolation:isolate;container-type:inline-size;font-family:'Plus Jakarta Sans',system-ui,sans-serif}
+.cs-jour{background:#F1ECE0}
+.cs-nuit{background:#0F1B30}
+.cs-carte::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(100deg,transparent 30%,rgba(201,164,76,.16) 50%,transparent 70%);background-size:220% 100%;animation:cs-attente 1.4s linear infinite;transition:opacity .5s ease}
+.cs-carte.cs-prete::before{opacity:0;animation:none}
+/* .cs-carte .cs-fond : priorité sur « .maplibregl-map{position:relative} » de la bibliothèque */
+.cs-carte .cs-fond{position:absolute;inset:0;opacity:0;transform:scale(1.03);transition:opacity .8s ease,transform 1.4s cubic-bezier(.2,.7,.2,1)}
+.cs-prete .cs-fond{opacity:1;transform:none}
+.cs-carte .maplibregl-map{font-family:inherit}
+.cs-carte .maplibregl-canvas:focus-visible{outline:2px solid #C9A44C;outline-offset:-2px}
+@keyframes cs-attente{from{background-position:120% 0}to{background-position:-120% 0}}
+
+/* Boutons de zoom et mention des sources */
+.cs-carte .maplibregl-ctrl-bottom-right{display:flex;flex-direction:column;align-items:flex-end}
+.cs-carte .maplibregl-ctrl-group{border-radius:12px;overflow:hidden;background:#FFFFFF;border:1px solid #ECE5D5;box-shadow:0 10px 24px -10px rgba(11,20,36,.35)}
+.cs-carte .maplibregl-ctrl-group button{width:36px;height:36px}
+.cs-carte .maplibregl-ctrl-group button+button{border-top:1px solid #F1ECE0}
+.cs-carte .maplibregl-ctrl-group button:hover{background:#F6F1E4}
+.cs-nuit .maplibregl-ctrl-group{background:#13213A;border-color:rgba(233,212,154,.25)}
+.cs-nuit .maplibregl-ctrl-group button+button{border-top-color:rgba(255,255,255,.1)}
+.cs-nuit .maplibregl-ctrl-group button:hover{background:#1B2D4D}
+.cs-nuit .maplibregl-ctrl-group .maplibregl-ctrl-icon{filter:invert(1) sepia(1) saturate(2.2) hue-rotate(2deg) brightness(1.05)}
+.cs-carte .maplibregl-ctrl-attrib{font-size:10px}
+.cs-carte .maplibregl-ctrl-attrib a{color:#4A5568}
+.cs-carte .maplibregl-cooperative-gesture-screen{font-family:inherit;font-size:15px;font-weight:700;padding:16px;text-align:center;background:rgba(11,20,36,.55)}
+.cs-hors-ligne{position:absolute;left:10px;top:10px;z-index:2;font-size:11px;font-weight:700;padding:5px 9px;border-radius:8px;background:rgba(255,255,255,.9);color:#92400E}
+
+/* Fiche affichée au survol d'une région */
+@keyframes cs-fiche{from{opacity:0;transform:translateY(8px) scale(.96)}to{opacity:1;transform:none}}
+.cs-fiche{position:absolute;left:0;top:0;z-index:4;pointer-events:none;opacity:0;transition:opacity .16s ease,transform .09s ease-out;will-change:transform}
+.cs-fiche.on{opacity:1}
+.cs-fiche-corps{box-sizing:border-box;width:232px;max-width:calc(100vw - 48px);padding:14px;border-radius:18px;background:rgba(11,20,36,.95);color:#F4EFE3;border:1px solid rgba(233,212,154,.32);box-shadow:0 26px 50px -18px rgba(11,20,36,.6);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);display:flex;flex-direction:column;gap:10px;animation:cs-fiche .28s cubic-bezier(.2,.7,.2,1) both;transform-origin:left bottom}
+.cs-fiche-tete{display:flex;align-items:center;gap:10px}
+.cs-fiche-pastille{flex:none;width:10px;height:34px;border-radius:5px;box-shadow:0 0 0 1px rgba(255,255,255,.18)}
+.cs-fiche-sur{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#F3D98C}
+.cs-fiche-nom{font-size:18px;font-weight:800;letter-spacing:-.01em;line-height:1.2}
+.cs-fiche-grille{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.cs-fiche-grille.une{grid-template-columns:1fr}
+.cs-fiche-case{padding:8px 10px;border-radius:11px;background:rgba(255,255,255,.07)}
+.cs-fiche-val{font-size:17px;font-weight:800;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.cs-fiche-lib{font-size:10.5px;color:#A9B3C4;line-height:1.25}
+.cs-fiche-pied{font-size:11px;color:#A9B3C4;border-top:1px solid rgba(255,255,255,.1);padding-top:8px}
+.cs-nuit .cs-fiche-corps{background:rgba(250,247,240,.97);color:#0B1424;border-color:#E9D49A;box-shadow:0 26px 50px -16px rgba(0,0,0,.7)}
+.cs-nuit .cs-fiche-sur{color:#8A6A1F}
+.cs-nuit .cs-fiche-case{background:#F1ECE0}
+.cs-nuit .cs-fiche-lib,.cs-nuit .cs-fiche-pied{color:#4A5568}
+.cs-nuit .cs-fiche-pied{border-top-color:#E2DCCD}
+.cs-nuit .cs-fiche-pastille{box-shadow:0 0 0 1px rgba(11,20,36,.15)}
+/* Fiche compacte dans les petites cartes (tableau de bord étroit, supervision, consultation, formulaire) */
+@container (max-width: 460px) {
+  .cs-fiche-corps{width:176px;padding:10px;gap:7px;border-radius:14px}
+  .cs-fiche-nom{font-size:15px}
+  .cs-fiche-pastille{height:28px;width:8px}
+  .cs-fiche-grille{gap:4px}
+  .cs-fiche-case{padding:6px 8px;border-radius:9px}
+  .cs-fiche-val{font-size:14px}
+  .cs-fiche-lib{font-size:9.5px}
+  .cs-fiche-pied{display:none}
+}
+
+/* Repère du point sélectionné */
+@keyframes cs-onde{from{transform:scale(.35);opacity:.9}to{transform:scale(1);opacity:0}}
+.cs-repere{width:56px;height:56px;pointer-events:none}
+.cs-onde,.cs-noyau{position:absolute;border-radius:50%}
+.cs-onde{inset:0;border:2px solid #C9A44C;animation:cs-onde 2s ease-out infinite}
+.cs-onde.d2{animation-delay:1s}
+.cs-noyau{left:50%;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;border:2px solid #0B1424;box-sizing:border-box}
+.cs-repere-seul .cs-noyau{background:#C9A44C;border-color:#FFFFFF;box-shadow:0 0 0 2px #0B1424,0 6px 14px rgba(11,20,36,.4)}
 @media (prefers-reduced-motion: reduce) {
-  .cs-flow, .cs-pulse { display: none; }
-  .cs-region { opacity: 1 !important; }
+  .cs-carte::before,.cs-onde,.cs-fiche-corps{animation:none}
+  .cs-fond{transition:none;transform:none}
+  .cs-onde{opacity:.5;transform:scale(.6)}
 }
 
 /* ---------- Écran 01 : sans défilement à partir de 1060 × 560 px (les deux colonnes côte à côte) ; en dessous, la page défile ---------- */
@@ -231,7 +300,6 @@ select.di-input{cursor:pointer;padding-right:10px}
   .mi-carte-pos { position: relative !important; inset: auto !important; height: 300px; }
   .mi-sheet { position: relative !important; top: auto !important; right: auto !important; width: 100% !important; max-width: none !important; order: 3; }
   .mi-legende { position: relative !important; left: auto !important; bottom: auto !important; margin-right: 0 !important; order: 2; }
-  .mi-zoom { position: absolute !important; top: 16px; bottom: auto !important; right: 16px !important; }
 }
 @media (max-width: 760px) { .su-carte { height: 260px !important; flex-basis: 100% !important; } }
 @media (max-width: 760px) {
