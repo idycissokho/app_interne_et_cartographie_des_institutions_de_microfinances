@@ -27,7 +27,9 @@ COPY requirements/ /app/requirements/
 # Si tu as un fichier requirements.txt unique, adapte cette ligne
 RUN pip install --upgrade pip
 # Installation des dépendances (ajuste le chemin selon ton fichier exact)
-RUN pip install -r requirements/base.txt || pip install -r requirements.txt
+# development.txt inclut base.txt + django-extensions / debug-toolbar, exigés par
+# config.settings.development (sans eux : « No module named 'django_extensions' »).
+RUN pip install -r requirements/development.txt
 
 # Copie du reste du code du projet
 COPY . /app/
