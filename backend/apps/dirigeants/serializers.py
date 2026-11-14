@@ -81,7 +81,7 @@ class DirigeantDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Dirigeant
         fields = [
-            "id", "nom", "prenom", "nom_complet", "telephone",
+            "id", "nom", "prenom", "nom_complet", "telephone", "adresse",
             "email_professionnel", "email_secondaire",
             "is_active", "mandats", "date_creation", "date_modification",
         ]

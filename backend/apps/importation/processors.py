@@ -41,6 +41,7 @@ import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import date, datetime
+from functools import cached_property
 from pathlib import Path
 
 from django.db import transaction
@@ -93,7 +94,10 @@ class BilanImport:
 
     lignes_creees: int = 0
     lignes_mises_a_jour: int = 0
+    #: Lignes rejetées.
     erreurs: list[dict] = field(default_factory=list)
+    #: Lignes importées dont une valeur facultative incohérente a été écartée.
+    avertissements: list[dict] = field(default_factory=list)
 
     @property
     def lignes_importees(self) -> int:
@@ -142,26 +146,6 @@ def _date(valeur: str) -> str:
     return valeur
 
 
-def _telephone(valeur: str) -> str:
-    """Ne garde que le premier numéro d'une cellule qui en contient plusieurs ou qui
-    est suivie d'un commentaire (« 33 855 02 50 - 77 438 43 27 », « 77 218 69 80 Caissière »)."""
-    numero = re.match(r"\+?\d[\d .]*", valeur.strip())
-    if not numero:
-        return valeur.strip()
-    numero = numero.group().strip()
-    chiffres = re.sub(r"\D", "", numero)
-    if len(chiffres) <= 12:  # un seul numéro, avec ou sans indicatif 221
-        return numero
-    # Plusieurs numéros accolés : un numéro sénégalais compte 9 chiffres.
-    garde, compte = "", 0
-    for caractere in numero:
-        compte += caractere.isdigit()
-        garde += caractere
-        if compte == 9:
-            break
-    return garde
-
-
 def _choix(valeur: str, choix, synonymes: dict[str, str], colonne: str) -> str:
     """Retourne le code d'un choix à partir de son code, de son libellé ou d'un synonyme."""
     if not valeur:
@@ -177,18 +161,15 @@ def _choix(valeur: str, choix, synonymes: dict[str, str], colonne: str) -> str:
     return code
 
 
-def _localisation(donnees: dict) -> str | None:
-    """Retire latitude / longitude de la ligne et retourne le point GeoJSON correspondant."""
-    lat, lon = donnees.pop("latitude", ""), donnees.pop("longitude", "")
-    if not lat and not lon:
-        return None
-    try:
-        lat_f, lon_f = float(_nombre(lat)), float(_nombre(lon))
-    except ValueError:
-        raise ErreurLigne({"latitude": "Latitude et longitude doivent être deux nombres."}) from None
-    if not (-90 <= lat_f <= 90 and -180 <= lon_f <= 180):
-        raise ErreurLigne({"latitude": f"Coordonnées GPS hors limites ({lat_f} ; {lon_f})."})
-    return json.dumps({"type": "Point", "coordinates": [lon_f, lat_f]})
+# Emprise du Sénégal (avec marge) : des coordonnées en dehors sont une erreur de saisie.
+EMPRISE_SENEGAL = {"latitude": (12.0, 16.9), "longitude": (-17.8, -11.2)}
+
+# Statut réglementaire d'un point de service déduit de celui de son IMF.
+STATUT_POINT_SELON_IMF = {
+    IMF.StatutReglementaire.AGREE: PointService.StatutReglementaire.AGREE,
+    IMF.StatutReglementaire.EN_COURS: PointService.StatutReglementaire.EN_COURS,
+    IMF.StatutReglementaire.RADIEE: PointService.StatutReglementaire.RADIE,
+}
 
 
 def _sans_vides(donnees: dict) -> dict:
@@ -297,13 +278,11 @@ def _resoudre_imf(donnees: dict) -> IMF:
 
 
 def _resoudre_zone(reference: str, type_zone: str) -> ZoneGeographique:
-    zone = (
-        ZoneGeographique.objects.filter(type_zone=type_zone, is_active=True, code=reference).first()
-        or ZoneGeographique.objects.filter(type_zone=type_zone, is_active=True, nom__iexact=reference).first()
-    )
-    if zone is None:
-        raise ErreurLigne({type_zone.lower(): f"Zone introuvable : « {reference} » (code ou nom)."})
-    return zone
+    """Zone active d'un niveau donné, par code ou par nom (sans tenir compte des accents ni de la casse)."""
+    for zone in ZoneGeographique.objects.filter(type_zone=type_zone, is_active=True):
+        if zone.code == reference or cle(zone.nom) == cle(reference):
+            return zone
+    raise ErreurLigne({type_zone.lower(): f"Zone introuvable : « {reference} » (code ou nom)."})
 
 
 # ---------------------------------------------------------------------------
@@ -332,6 +311,8 @@ class BaseImportProcessor(ABC):
         self.importation = importation
         self.bilan = BilanImport()
         self.numero_ligne = 0  # ligne du fichier en cours de traitement
+        # Valeurs facultatives incohérentes de la ligne en cours : écartées, la ligne reste importée.
+        self._avertissements: dict[str, str] = {}
 
     # -- Déroulé ------------------------------------------------------------
 
@@ -427,6 +408,7 @@ class BaseImportProcessor(ABC):
     def _importer_ligne(self, ligne: LigneLue) -> None:
         """Traite une ligne dans son point de sauvegarde et consigne l'erreur éventuelle."""
         self.numero_ligne = ligne.numero
+        self._avertissements = {}
         try:
             with transaction.atomic():
                 creee = self.traiter_ligne(self.preparer(ligne.valeurs))
@@ -440,23 +422,89 @@ class BaseImportProcessor(ABC):
                 self.bilan.lignes_creees += 1
             else:
                 self.bilan.lignes_mises_a_jour += 1
+            if self._avertissements:
+                self._consigner(ligne, self._avertissements, avertissement=True)
             return
+        self._consigner(ligne, erreurs, avertissement=False)
 
-        message = " ; ".join(f"{colonne} : {texte}" for colonne, texte in erreurs.items())
-        logger.warning("Import %s : ligne %d rejetée — %s", self.importation.pk, ligne.numero, message)
-        self.bilan.erreurs.append({
+    def _consigner(self, ligne: LigneLue, erreurs: dict, avertissement: bool) -> None:
+        """Ajoute au rapport une ligne rejetée, ou une ligne importée dont des valeurs ont été écartées."""
+        detail = " ; ".join(f"{colonne} : {texte}" for colonne, texte in erreurs.items())
+        nature = "importée, valeurs écartées" if avertissement else "rejetée"
+        logger.warning("Import %s : ligne %d %s — %s", self.importation.pk, ligne.numero, nature, detail)
+        entree = {
             "ligne": ligne.numero,
             "erreurs": erreurs,
             "valeurs": {c: ligne.valeurs.get(c, "") for c in erreurs if c in ligne.valeurs},
-            "message": f"Ligne {ligne.numero} — {message}",
-        })
+            "message": f"Ligne {ligne.numero} — {detail}",
+            "avertissement": avertissement,
+        }
+        (self.bilan.avertissements if avertissement else self.bilan.erreurs).append(entree)
 
-    def _enregistrer(self, serializer_class, instance, donnees: dict, **save_kwargs):
-        """Valide avec le sérialiseur de l'API puis crée (instance None) ou met à jour."""
-        serializer = serializer_class(instance=instance, data=donnees, partial=instance is not None)
-        if not serializer.is_valid():
-            raise ErreurLigne(_erreurs_en_texte(serializer.errors))
-        return serializer.save(**save_kwargs)
+    def avertir(self, colonne: str, message: str) -> None:
+        """Signale une valeur facultative écartée sans rejeter la ligne."""
+        self._avertissements[colonne] = message
+
+    def nettoyer_telephone(self, donnees: dict, colonne: str = "telephone") -> None:
+        """Écarte un « téléphone » qui n'en est pas un (moins de 7 chiffres)."""
+        valeur = donnees.get(colonne, "")
+        if valeur and len(re.sub(r"\D", "", valeur)) < 7:
+            self.avertir(colonne, f"« {valeur} » n'est pas un numéro de téléphone : valeur écartée.")
+            valeur = ""
+        donnees[colonne] = valeur[:100]
+
+    def point_gps(self, donnees: dict) -> str | None:
+        """Retire latitude / longitude de la ligne et retourne le point GeoJSON
+        correspondant. Des coordonnées illisibles ou hors du Sénégal sont écartées."""
+        lat, lon = donnees.pop("latitude", ""), donnees.pop("longitude", "")
+        if not lat and not lon:
+            return None
+        try:
+            lat_f, lon_f = float(_nombre(lat)), float(_nombre(lon))
+        except ValueError:
+            self.avertir("latitude", f"Coordonnées GPS illisibles (« {lat} » ; « {lon} ») : écartées.")
+            return None
+        (lat_min, lat_max), (lon_min, lon_max) = EMPRISE_SENEGAL["latitude"], EMPRISE_SENEGAL["longitude"]
+        if not (lat_min <= lat_f <= lat_max and lon_min <= lon_f <= lon_max):
+            self.avertir("latitude", f"Coordonnées GPS hors du Sénégal ({lat_f} ; {lon_f}) : écartées.")
+            return None
+        return json.dumps({"type": "Point", "coordinates": [lon_f, lat_f]})
+
+    @cached_property
+    def regions(self) -> dict[str, ZoneGeographique]:
+        """Régions actives, indexées par leur nom normalisé (« saint_louis »)."""
+        zones = ZoneGeographique.objects.filter(type_zone=ZoneGeographique.TypeZone.REGION, is_active=True)
+        return {cle(zone.nom): zone for zone in zones}
+
+    def region(self, reference: str) -> str:
+        """Identifiant de la région nommée (ou codée) `reference`, "" si elle est vide ou inconnue."""
+        if not reference:
+            return ""
+        zone = self.regions.get(cle(reference)) or next(
+            (z for z in self.regions.values() if z.code == reference), None
+        )
+        if zone is None:
+            self.avertir("region", f"Région inconnue : « {reference} » : valeur écartée.")
+            return ""
+        return str(zone.pk)
+
+    def _enregistrer(self, serializer_class, instance, donnees: dict, obligatoires=(), **save_kwargs):
+        """Valide avec le sérialiseur de l'API puis crée (instance None) ou met à jour.
+
+        Une valeur invalide dans un champ facultatif (email mal formé, nombre illisible…)
+        est écartée et signalée ; dans un champ obligatoire, elle rejette la ligne.
+        """
+        donnees = dict(donnees)
+        for _ in range(2):
+            serializer = serializer_class(instance=instance, data=donnees, partial=instance is not None)
+            if serializer.is_valid():
+                return serializer.save(**save_kwargs)
+            erreurs = _erreurs_en_texte(serializer.errors)
+            if any(champ in obligatoires or champ not in donnees for champ in erreurs):
+                break
+            for champ, message in erreurs.items():
+                self.avertir(champ, f"Valeur « {donnees.pop(champ)} » écartée : {message}")
+        raise ErreurLigne(erreurs)
 
     def _changer_statut(self, statut: str) -> None:
         self.importation.statut = statut
@@ -479,7 +527,9 @@ class BaseImportProcessor(ABC):
         bilan = self.bilan
         self.importation.nb_lignes_importees = bilan.lignes_importees
         self.importation.nb_lignes_erreur = len(bilan.erreurs)
-        self.importation.rapport_erreurs = bilan.erreurs
+        self.importation.rapport_erreurs = sorted(
+            bilan.erreurs + bilan.avertissements, key=lambda entree: entree["ligne"]
+        )
         self.importation.statut = Statut.TERMINE if bilan.lignes_importees else Statut.ECHEC
         self.importation.save()
         logger.info(
@@ -495,23 +545,48 @@ class BaseImportProcessor(ABC):
 # ---------------------------------------------------------------------------
 
 class ImportIMFProcessor(BaseImportProcessor):
-    """Import des IMF. Clé de rapprochement : numéro d'agrément, sinon sigle, sinon nom."""
+    """Import des IMF. Clé de rapprochement : numéro d'agrément, sinon sigle, sinon nom.
+
+    Chaque IMF importée reçoit aussi un point de service « Siège » (adresse, GPS,
+    région, membres) : c'est lui qui la fait apparaître sur les cartes et dans les
+    indicateurs par région, y compris quand elle n'a aucune agence.
+    """
 
     type_import = ImportationFichier.TypeImport.IMF
     colonnes = [
         "nom", "sigle", "type_imf", "statut_reglementaire", "numero_agrement", "adresse_siege",
         "latitude", "longitude", "telephone", "email", "site_web",
+        "region", "lieu_dit", "type_sfd", "affiliation", "forme_juridique", "type_union",
+        "annee_creation", "ninea", "nb_unions_affiliees", "nb_institutions_base", "nb_beneficiaires",
+        "capital", "situation", "nb_membres_ca", "nb_membres_cs", "nb_membres_cc",
+        "reference_externe", "url_fiche", "date_fiche",
     ]
     obligatoires = {"nom", "type_imf", "adresse_siege"}
     feuilles = ("imf", "institutions")
+    numeriques = {
+        "annee_creation", "nb_unions_affiliees", "nb_institutions_base", "nb_beneficiaires",
+        "capital", "nb_membres_ca", "nb_membres_cs", "nb_membres_cc",
+    }
+    dates = {"date_fiche"}
     alias = {
         # Export de l'annuaire DRS-SFD
+        "identifiant_wordpress": "reference_externe",
         "nom_de_l_imf": "nom",
         "numero_d_agrement": "numero_agrement",
-        "forme_juridique": "type_imf",
         "adresse_sfd": "adresse_siege",
         "telephone_sfd": "telephone",
         "e_mail_sfd": "email",
+        "localisation_carte": "lieu_dit",
+        "annee_de_creation": "annee_creation",
+        "type_d_union": "type_union",
+        "nombre_d_unions_affiliees": "nb_unions_affiliees",
+        "nombre_d_institutions_de_base": "nb_institutions_base",
+        "nombre_de_beneficiaires": "nb_beneficiaires",
+        "nombre_de_membres_du_ca": "nb_membres_ca",
+        "nombre_de_membres_du_cs": "nb_membres_cs",
+        "nombre_de_membres_du_cc": "nb_membres_cc",
+        "url_de_la_fiche": "url_fiche",
+        "date_de_creation_fiche": "date_fiche",
     }
     SYNONYMES_TYPE = {
         "imcec": IMF.TypeIMF.MUTUELLE,  # institution mutualiste ou coopérative d'épargne et de crédit
@@ -536,25 +611,38 @@ class ImportIMFProcessor(BaseImportProcessor):
         # IMF déjà créées ou mises à jour par ce fichier : pk -> (numéro de ligne, nom).
         self._deja_traitees: dict = {}
 
+    def verifier_colonnes(self, presentes: set[str]) -> None:
+        # Le type peut être déduit de la forme juridique (annuaire).
+        if "forme_juridique" in presentes or "type_sfd" in presentes:
+            presentes = presentes | {"type_imf"}
+        super().verifier_colonnes(presentes)
+
     def preparer(self, valeurs: dict) -> dict:
         donnees = super().preparer(valeurs)
-        type_imf = _choix(donnees.get("type_imf", ""), IMF.TypeIMF.choices, self.SYNONYMES_TYPE, "type_imf")
+        type_imf = donnees.get("type_imf") or donnees.get("forme_juridique", "")
+        try:
+            type_imf = _choix(type_imf, IMF.TypeIMF.choices, self.SYNONYMES_TYPE, "type_imf")
+        except ErreurLigne:
+            if cle(donnees.get("type_sfd")) not in self.TYPE_SELON_TYPE_SFD:
+                raise
+            type_imf = ""
         donnees["type_imf"] = type_imf or self.TYPE_SELON_TYPE_SFD.get(cle(donnees.get("type_sfd")), "")
         donnees["statut_reglementaire"] = _choix(
             donnees.get("statut_reglementaire", ""), IMF.StatutReglementaire.choices,
             self.SYNONYMES_STATUT, "statut_reglementaire",
         )
-        donnees["telephone"] = _telephone(donnees.get("telephone", ""))
-        # Annuaire : l'adresse manque parfois, le lieu-dit puis la région la remplacent.
+        self.nettoyer_telephone(donnees)
+        # Annuaire : l'adresse manque parfois, la localité puis la région la remplacent.
         donnees["adresse_siege"] = (
-            donnees.get("adresse_siege") or donnees.get("localisation_carte") or donnees.get("region", "")
+            donnees.get("adresse_siege") or donnees.get("lieu_dit") or donnees.get("region", "")
         )
         return donnees
 
     def traiter_ligne(self, donnees: dict) -> bool:
         self.verifier_obligatoires(donnees)
-        localisation = _localisation(donnees)
+        localisation = self.point_gps(donnees)
         champs = {c: donnees.get(c, "") for c in self.colonnes if c not in ("latitude", "longitude")}
+        champs["region"] = self.region(champs["region"])
         if localisation:
             champs["localisation_siege"] = localisation
 
@@ -563,9 +651,32 @@ class ImportIMFProcessor(BaseImportProcessor):
         if existante is None and not champs["statut_reglementaire"] and champs["numero_agrement"]:
             # Une institution qui possède un numéro d'agrément est agréée.
             champs["statut_reglementaire"] = IMF.StatutReglementaire.AGREE
-        imf = self._enregistrer(IMFDetailSerializer, existante, _sans_vides(champs))
+        imf = self._enregistrer(
+            IMFDetailSerializer, existante, _sans_vides(champs), obligatoires=self.obligatoires
+        )
         self._deja_traitees[imf.pk] = (self.numero_ligne, champs["nom"])
+        self._synchroniser_siege(imf)
         return existante is None
+
+    @staticmethod
+    def _synchroniser_siege(imf: IMF) -> None:
+        """Crée ou met à jour le point de service « Siège » de l'IMF à partir de sa fiche."""
+        siege = PointService.objects.filter(
+            imf=imf, type_point=PointService.TypePoint.SIEGE, is_active=True
+        ).first() or PointService(imf=imf, type_point=PointService.TypePoint.SIEGE)
+        siege.nom = f"Siège — {imf.sigle or imf.nom}"[:255]
+        siege.statut_reglementaire = STATUT_POINT_SELON_IMF[imf.statut_reglementaire]
+        siege.adresse = imf.adresse_siege
+        siege.lieu_dit = imf.lieu_dit
+        siege.telephone = imf.telephone
+        siege.email = imf.email
+        siege.localisation = imf.localisation_siege
+        siege.region = imf.region
+        # Les bénéficiaires d'un réseau (union) sont ceux de ses caisses affiliées, déjà
+        # comptés sur leurs propres sièges : on ne les ajoute pas une seconde fois.
+        est_reseau = cle(imf.type_sfd) == "reseau"
+        siege.nombre_membres = None if est_reseau else imf.nb_beneficiaires
+        siege.save()
 
     def _refuser_conflit(self, existante: IMF | None, nom: str) -> None:
         """Deux lignes du même fichier désignent la même IMF sous deux noms différents :
@@ -606,6 +717,11 @@ class ImportPointServiceProcessor(BaseImportProcessor):
 
     Clé de rapprochement : IMF + référence externe si le fichier en fournit une
     (une IMF peut avoir plusieurs points de même nom), sinon IMF + nom du point.
+
+    Région d'un point : colonne « region », sinon déduite du GPS, sinon d'un nom de
+    région présent dans l'intitulé, sinon région de l'IMF quand celle-ci est une
+    caisse de base (affiliée ou non), dont les guichets sont locaux. Les points des
+    réseaux et sociétés nationales restent sans région faute d'indication.
     """
 
     type_import = ImportationFichier.TypeImport.POINTS_SERVICE
@@ -613,7 +729,7 @@ class ImportPointServiceProcessor(BaseImportProcessor):
         "imf_sigle", "imf_agrement", "nom", "reference_externe",
         "type_point", "statut_point", "statut_reglementaire",
         "adresse", "region", "departement", "commune", "latitude", "longitude", "date_ouverture",
-        "telephone", "email", "encours", "depots", "nombre_membres",
+        "telephone", "email", "encours", "depots", "nombre_membres", "lieu_dit", "url_fiche",
     ]
     obligatoires = {"nom"}
     feuilles = ("points_de_service", "points_service", "points")
@@ -628,14 +744,12 @@ class ImportPointServiceProcessor(BaseImportProcessor):
         "identifiant_wordpress": "reference_externe",
         "typologie": "type_point",
         "e_mail": "email",
+        "localisation_carte": "lieu_dit",
+        "url_de_la_fiche": "url_fiche",
     }
     COLONNES_IMF = {"imf_sigle", "imf_agrement", "imf_nom"}
     SYNONYMES_TYPE = {"siege": PointService.TypePoint.SIEGE, "bureau": PointService.TypePoint.BUREAU}
-    STATUT_SELON_IMF = {
-        IMF.StatutReglementaire.AGREE: PointService.StatutReglementaire.AGREE,
-        IMF.StatutReglementaire.EN_COURS: PointService.StatutReglementaire.EN_COURS,
-        IMF.StatutReglementaire.RADIEE: PointService.StatutReglementaire.RADIE,
-    }
+    TYPES_SFD_LOCAUX = {"affilie", "non_affilie"}
 
     def verifier_colonnes(self, presentes: set[str]) -> None:
         super().verifier_colonnes(presentes)
@@ -660,28 +774,44 @@ class ImportPointServiceProcessor(BaseImportProcessor):
             {"agree": PointService.StatutReglementaire.AGREE, "radie": PointService.StatutReglementaire.RADIE},
             "statut_reglementaire",
         )
-        donnees["telephone"] = _telephone(donnees.get("telephone", ""))
+        self.nettoyer_telephone(donnees)
         return donnees
 
     def traiter_ligne(self, donnees: dict) -> bool:
         self.verifier_obligatoires(donnees)
         imf = _resoudre_imf(donnees)
-        localisation = _localisation(donnees)
+        localisation = self.point_gps(donnees)
         ignorees = {"imf_sigle", "imf_agrement", "latitude", "longitude"}
         champs = {c: donnees.get(c, "") for c in self.colonnes if c not in ignorees}
         champs["imf"] = str(imf.pk)
-        for colonne, type_zone in (("region", "REGION"), ("departement", "DEPARTEMENT"), ("commune", "COMMUNE")):
+        champs["region"] = self.region(champs["region"])
+        for colonne, type_zone in (("departement", "DEPARTEMENT"), ("commune", "COMMUNE")):
             if champs[colonne]:
                 champs[colonne] = str(_resoudre_zone(champs[colonne], type_zone).pk)
         if localisation:
             champs["localisation"] = localisation
+        elif not champs["region"]:
+            champs["region"] = self._deduire_region(imf, donnees)
 
         existant = self._trouver(imf, champs)
         if existant is None and not champs["statut_reglementaire"]:
             # À défaut d'indication, un nouveau point suit le statut de son IMF.
-            champs["statut_reglementaire"] = self.STATUT_SELON_IMF[imf.statut_reglementaire]
-        self._enregistrer(PointServiceDetailSerializer, existant, _sans_vides(champs))
+            champs["statut_reglementaire"] = STATUT_POINT_SELON_IMF[imf.statut_reglementaire]
+        self._enregistrer(
+            PointServiceDetailSerializer, existant, _sans_vides(champs), obligatoires={"imf", "nom", "type_point"}
+        )
         return existant is None
+
+    def _deduire_region(self, imf: IMF, donnees: dict) -> str:
+        """Région d'un point sans GPS : nom de région dans son intitulé, sinon région
+        de son IMF si c'est une caisse de base. Retourne l'identifiant ou ""."""
+        intitule = f"_{cle(' '.join(donnees.get(c, '') for c in ('titre', 'nom', 'lieu_dit')))}_"
+        for nom, zone in self.regions.items():
+            if f"_{nom}_" in intitule:
+                return str(zone.pk)
+        if imf.region_id and cle(imf.type_sfd) in self.TYPES_SFD_LOCAUX:
+            return str(imf.region_id)
+        return ""
 
     @staticmethod
     def _trouver(imf: IMF, champs: dict) -> PointService | None:
@@ -743,7 +873,7 @@ class ImportDirigeantProcessor(BaseImportProcessor):
 
     type_import = ImportationFichier.TypeImport.DIRIGEANTS
     colonnes = [
-        "nom", "prenom", "telephone", "email", "email_secondaire",
+        "nom", "prenom", "telephone", "email", "email_secondaire", "adresse",
         "imf_sigle", "imf_agrement", "fonction_mandat", "date_debut", "date_fin", "statut_mandat",
     ]
     obligatoires = {"nom", "prenom"}
@@ -753,13 +883,20 @@ class ImportDirigeantProcessor(BaseImportProcessor):
     COLONNES_MANDAT = ("imf_sigle", "imf_agrement", "imf_nom", "fonction_mandat", "date_debut", "date_fin", "statut_mandat")
 
     # Export de l'annuaire DRS-SFD : les dirigeants sont des colonnes de la feuille « IMF ».
-    # (colonne du nom, fonction, colonne email, colonne téléphone)
+    # (colonne du nom, fonction, colonne email, colonne téléphone, colonne adresse)
+    _F = Mandat.FonctionMandat
     DIRIGEANTS_ANNUAIRE = (
-        ("president_du_ca", Mandat.FonctionMandat.PCA, "e_mail_du_pca", "telephone_du_pca"),
-        ("president_du_cs", Mandat.FonctionMandat.PRESIDENT_CONSEIL_SURVEILLANCE,
-         "e_mail_du_president_du_cs", "telephone_du_president_du_cs"),
-        ("president_du_cc", Mandat.FonctionMandat.PRESIDENT_COMITE_CREDIT, "", "telephone_du_pcc"),
-        ("directeur_general_gerant", None, "e_mail_dg", "telephone_dg"),
+        ("president_du_ca", _F.PCA, "e_mail_du_pca", "telephone_du_pca", ""),
+        ("vice_president_du_ca", _F.VICE_PRESIDENT_CA, "", "", ""),
+        ("secretaire_general_du_ca", _F.SECRETAIRE_GENERAL_CA, "", "", ""),
+        ("president_du_cs", _F.PRESIDENT_CONSEIL_SURVEILLANCE,
+         "e_mail_du_president_du_cs", "telephone_du_president_du_cs", ""),
+        ("vice_president_du_cs", _F.VICE_PRESIDENT_CS, "", "", ""),
+        ("secretaire_general_du_cs", _F.SECRETAIRE_GENERAL_CS, "", "", ""),
+        ("president_du_cc", _F.PRESIDENT_COMITE_CREDIT, "", "telephone_du_pcc", "adresse_du_pcc"),
+        ("vice_president_du_cc", _F.VICE_PRESIDENT_CC, "", "", ""),
+        ("secretaire_general_du_cc", _F.SECRETAIRE_GENERAL_CC, "", "", ""),
+        ("directeur_general_gerant", None, "e_mail_dg", "telephone_dg", "adresse_dg"),
     )
 
     def adapter_lignes(self, entetes: list[str], lignes: list[LigneLue]) -> list[LigneLue]:
@@ -775,15 +912,16 @@ class ImportDirigeantProcessor(BaseImportProcessor):
         for ligne in lignes:
             source = ligne.valeurs
             societe_anonyme = cle(source.get("forme_juridique")) == "sa"
-            for colonne, fonction, col_email, col_telephone in self.DIRIGEANTS_ANNUAIRE:
+            for colonne, fonction, col_email, col_telephone, col_adresse in self.DIRIGEANTS_ANNUAIRE:
                 if not source.get(colonne):
                     continue
                 if fonction is None:
-                    fonction = Mandat.FonctionMandat.DG if societe_anonyme else Mandat.FonctionMandat.GERANT
+                    fonction = self._F.DG if societe_anonyme else self._F.GERANT
                 resultat.append(LigneLue(ligne.numero, {
                     "nom_complet": source[colonne],
                     "email": source.get(col_email, ""),
                     "telephone": source.get(col_telephone, ""),
+                    "adresse": source.get(col_adresse, ""),
                     "imf_agrement": source.get("numero_d_agrement", ""),
                     "imf_nom": source.get("nom_de_l_imf", ""),
                     "fonction_mandat": fonction,
@@ -797,7 +935,7 @@ class ImportDirigeantProcessor(BaseImportProcessor):
         donnees = super().preparer(valeurs)
         if donnees.get("nom_complet") and not (donnees.get("nom") and donnees.get("prenom")):
             donnees["nom"], donnees["prenom"] = scinder_nom_complet(donnees["nom_complet"])
-        donnees["telephone"] = _telephone(donnees.get("telephone", ""))
+        self.nettoyer_telephone(donnees)
         donnees["fonction_mandat"] = _choix(
             donnees.get("fonction_mandat", ""), Mandat.FonctionMandat.choices, {}, "fonction_mandat"
         )
@@ -820,11 +958,14 @@ class ImportDirigeantProcessor(BaseImportProcessor):
             "nom": donnees["nom"],
             "prenom": donnees["prenom"],
             "telephone": donnees.get("telephone", ""),
+            "adresse": donnees.get("adresse", ""),
             "email_professionnel": donnees.get("email", ""),
             "email_secondaire": donnees.get("email_secondaire", ""),
         })
         existant = self._trouver(personne, imf)
-        dirigeant = self._enregistrer(DirigeantDetailSerializer, existant, personne)
+        dirigeant = self._enregistrer(
+            DirigeantDetailSerializer, existant, personne, obligatoires=self.obligatoires
+        )
 
         if imf is not None:
             champs = {c: v for c, v in mandat.items() if not c.startswith("imf_")}
@@ -833,7 +974,7 @@ class ImportDirigeantProcessor(BaseImportProcessor):
                 dirigeant=dirigeant, imf=imf, is_active=True,
                 fonction_mandat=champs["fonction_mandat"], date_debut=champs["date_debut"],
             ).first()
-            self._enregistrer(MandatSerializer, mandat_existant, champs, dirigeant=dirigeant)
+            self._enregistrer(MandatSerializer, mandat_existant, champs, obligatoires=set(champs), dirigeant=dirigeant)
         return existant is None
 
     @staticmethod

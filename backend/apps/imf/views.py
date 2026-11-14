@@ -7,7 +7,8 @@ Vues DRF du module IMF :
 - BailleurListCreateView / BailleurDetailView : référentiel des bailleurs
 """
 
-from django.db.models import Count, OuterRef, Q, Subquery
+from django.db.models import Count, F, OuterRef, Q, Subquery
+from django.db.models.functions import Coalesce
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, generics
 from rest_framework.permissions import IsAuthenticated
@@ -41,7 +42,8 @@ class DroitsCasUtilisationMixin:
 def _imf_queryset():
     from apps.points_service.models import PointService
 
-    region_siege = PointService.objects.filter(
+    # Région du siège : celle de l'IMF, sinon celle de son point de service « Siège ».
+    region_point_siege = PointService.objects.filter(
         imf=OuterRef("pk"), type_point="SIEGE", is_active=True, region__isnull=False
     ).values("region__nom")[:1]
     return (
@@ -55,7 +57,7 @@ def _imf_queryset():
                 filter=Q(mandats__is_active=True, mandats__statut_mandat="EN_FONCTION"),
                 distinct=True,
             ),
-            region_siege=Subquery(region_siege),
+            region_siege=Coalesce(F("region__nom"), Subquery(region_point_siege)),
         )
         .prefetch_related("bailleurs")
         .order_by("nom")

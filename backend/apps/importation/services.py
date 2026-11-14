@@ -44,6 +44,10 @@ def _lat_lon(point):
     return ("", "") if not point else (point.y, point.x)
 
 
+def _texte(valeur):
+    return "" if valeur is None else valeur
+
+
 def _imf_ref(imf):
     return imf.sigle or imf.nom
 
@@ -51,10 +55,13 @@ def _imf_ref(imf):
 def lignes_export(type_import: str):
     """Génère les lignes d'export d'un référentiel, dans l'ordre de COLONNES[type_import]."""
     if type_import == ImportationFichier.TypeImport.IMF:
-        for imf in IMF.objects.filter(is_active=True).order_by("nom"):
+        for imf in IMF.objects.filter(is_active=True).select_related("region").order_by("nom"):
             lat, lon = _lat_lon(imf.localisation_siege)
-            yield [imf.nom, imf.sigle, imf.type_imf, imf.statut_reglementaire, imf.numero_agrement,
-                   imf.adresse_siege, lat, lon, imf.telephone, imf.email, imf.site_web]
+            calculees = {"latitude": lat, "longitude": lon, "region": imf.region.nom if imf.region else ""}
+            yield [
+                calculees[c] if c in calculees else _texte(getattr(imf, c))
+                for c in COLONNES[type_import]
+            ]
     elif type_import == ImportationFichier.TypeImport.POINTS_SERVICE:
         qs = PointService.objects.filter(is_active=True).select_related(
             "imf", "region", "departement", "commune"
@@ -66,7 +73,7 @@ def lignes_export(type_import: str):
                    ps.adresse, getattr(ps.region, "code", ""), getattr(ps.departement, "code", ""),
                    getattr(ps.commune, "code", ""), lat, lon, ps.date_ouverture or "",
                    ps.telephone, ps.email, ps.encours, ps.depots if ps.depots is not None else "",
-                   ps.nombre_membres if ps.nombre_membres is not None else ""]
+                   ps.nombre_membres if ps.nombre_membres is not None else "", ps.lieu_dit, ps.url_fiche]
     else:
         qs = Mandat.objects.filter(is_active=True, dirigeant__is_active=True).select_related(
             "dirigeant", "imf"
@@ -75,7 +82,7 @@ def lignes_export(type_import: str):
         for m in qs:
             d = m.dirigeant
             avec_mandat.add(d.pk)
-            yield [d.nom, d.prenom, d.telephone, d.email_professionnel, d.email_secondaire,
+            yield [d.nom, d.prenom, d.telephone, d.email_professionnel, d.email_secondaire, d.adresse,
                    _imf_ref(m.imf), m.imf.numero_agrement, m.fonction_mandat, m.date_debut, m.date_fin or "", m.statut_mandat]
         for d in Dirigeant.objects.filter(is_active=True).exclude(pk__in=avec_mandat).order_by("nom", "prenom"):
-            yield [d.nom, d.prenom, d.telephone, d.email_professionnel, d.email_secondaire, "", "", "", "", "", ""]
+            yield [d.nom, d.prenom, d.telephone, d.email_professionnel, d.email_secondaire, d.adresse, "", "", "", "", "", ""]

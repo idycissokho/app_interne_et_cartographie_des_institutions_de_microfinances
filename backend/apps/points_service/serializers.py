@@ -60,6 +60,7 @@ class PointServiceDetailSerializer(serializers.ModelSerializer):
             "type_point", "statut_point", "statut_reglementaire",
             "adresse", "region", "departement", "commune", "telephone", "email",
             "localisation", "date_ouverture", "encours", "depots", "nombre_membres",
+            "lieu_dit", "url_fiche",
             "is_active", "date_creation", "date_modification",
         ]
         read_only_fields = ["id", "date_creation", "date_modification"]

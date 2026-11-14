@@ -18,7 +18,7 @@ import { statsParRegion, type AgregatZone } from "../lib/stats";
 import { useDonnees } from "../lib/useDonnees";
 
 interface ImfLigne { id: string; nom: string; sigle: string; type_imf: string; statut_reglementaire: string; region_siege: string | null; nb_points_service: number }
-interface ImfFiche extends ImfLigne { adresse_siege: string; telephone: string; email: string; site_web: string; nb_regions_couvertes: number; nb_dirigeants_en_fonction: number; nb_membres_total: number | null; bailleurs_detail: { id: string; nom: string; sigle: string }[] }
+interface ImfFiche extends ImfLigne { adresse_siege: string; telephone: string; email: string; site_web: string; nb_regions_couvertes: number; nb_dirigeants_en_fonction: number; nb_membres_total: number | null; numero_agrement: string; type_sfd: string; affiliation: string; forme_juridique: string; annee_creation: number | null; ninea: string; capital: string | null; nb_beneficiaires: number | null; situation: string; nb_membres_ca: number | null; nb_membres_cs: number | null; nb_membres_cc: number | null; url_fiche: string; bailleurs_detail: { id: string; nom: string; sigle: string }[] }
 interface PointLigne { id: string; nom: string; type_point: string; statut_point: string; region_nom: string | null }
 interface MandatLigne { id: string; dirigeant_nom_complet: string; fonction_mandat: string; statut_mandat: string; date_debut: string; date_fin: string | null; fichier_justificatif: string | null; documents_justificatifs: string }
 
@@ -130,6 +130,22 @@ export function Consultation() {
                         <div style={ligne}><span style={{ color: "#6B7280" }}>Sigle</span><b>{cur.sigle || "—"}</b></div>
                         <div style={ligne}><span style={{ color: "#6B7280" }}>Téléphone</span><b>{cur.telephone || "—"}</b></div>
                         <div style={ligne}><span style={{ color: "#6B7280" }}>Email</span><b style={{ overflowWrap: "anywhere" }}>{cur.email || "—"}</b></div>
+                        {/* Informations de l'annuaire DRS-SFD : affichées seulement si elles sont renseignées. */}
+                        {([
+                          ["N° d'agrément", cur.numero_agrement],
+                          ["Type de SFD", cur.type_sfd],
+                          ["Affiliation", cur.affiliation],
+                          ["Forme juridique", cur.forme_juridique],
+                          ["Année de création", cur.annee_creation],
+                          ["NINEA", cur.ninea],
+                          ["Capital", cur.capital != null ? `${nombre(Number(cur.capital))} FCFA` : ""],
+                          ["Bénéficiaires", cur.nb_beneficiaires != null ? nombre(cur.nb_beneficiaires) : ""],
+                          ["Situation", cur.situation],
+                          ["Membres CA / CS / CC", [cur.nb_membres_ca, cur.nb_membres_cs, cur.nb_membres_cc].some((n) => n != null) ? [cur.nb_membres_ca, cur.nb_membres_cs, cur.nb_membres_cc].map((n) => n ?? "—").join(" / ") : ""],
+                        ] as [string, string | number | null][]).filter(([, v]) => v !== "" && v != null).map(([libelle, v]) => (
+                          <div key={libelle} style={ligne}><span style={{ color: "#6B7280" }}>{libelle}</span><b style={{ overflowWrap: "anywhere", textAlign: "right" }}>{v}</b></div>
+                        ))}
+                        {cur.url_fiche && <div style={ligne}><span style={{ color: "#6B7280" }}>Fiche annuaire</span><a href={cur.url_fiche} target="_blank" rel="noreferrer" style={{ fontWeight: 700 }}>Ouvrir</a></div>}
                         <div style={{ ...ligne, borderBottom: "none" }}><span style={{ color: "#6B7280" }}>Site web</span>{cur.site_web ? <a href={cur.site_web} target="_blank" rel="noreferrer" style={{ fontWeight: 700, overflowWrap: "anywhere" }}>{cur.site_web.replace(/^https?:\/\//, "")}</a> : <b>—</b>}</div>
                       </div>
                     </div>

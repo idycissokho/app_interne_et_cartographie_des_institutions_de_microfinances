@@ -40,6 +40,7 @@ class IMFListSerializer(_NbPointsServiceMixin, serializers.ModelSerializer):
         fields = [
             "id", "nom", "sigle", "numero_agrement", "type_imf", "statut_reglementaire", "nb_points_service",
             "email", "telephone", "adresse_siege", "a_gps", "bailleurs_noms",
+            "type_sfd", "affiliation", "annee_creation", "nb_beneficiaires", "capital", "situation",
             "nb_dirigeants_en_fonction", "region_siege", "date_creation",
         ]
 
@@ -65,6 +66,10 @@ class IMFDetailSerializer(_NbPointsServiceMixin, serializers.ModelSerializer):
         fields = [
             "id", "nom", "sigle", "numero_agrement", "type_imf", "statut_reglementaire",
             "adresse_siege", "localisation_siege", "telephone", "email", "site_web",
+            "reference_externe", "region", "lieu_dit", "type_sfd", "affiliation", "forme_juridique",
+            "type_union", "annee_creation", "ninea", "nb_unions_affiliees", "nb_institutions_base",
+            "nb_beneficiaires", "capital", "situation", "nb_membres_ca", "nb_membres_cs", "nb_membres_cc",
+            "url_fiche", "date_fiche",
             "bailleurs", "bailleurs_detail",
             "is_active", "nb_points_service", "statut_actif",
             "nb_dirigeants_en_fonction", "region_siege", "nb_regions_couvertes", "nb_membres_total",

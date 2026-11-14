@@ -21,7 +21,8 @@ class Dirigeant(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     nom = models.CharField(max_length=100)
     prenom = models.CharField(max_length=100)
-    telephone = models.CharField(max_length=20, blank=True)
+    telephone = models.CharField(max_length=100, blank=True)
+    adresse = models.CharField(max_length=500, blank=True)
     email_professionnel = models.EmailField(blank=True)
     email_secondaire = models.EmailField(blank=True)
     is_active = models.BooleanField(default=True)
@@ -50,6 +51,8 @@ class Mandat(models.Model):
 
     class FonctionMandat(models.TextChoices):
         PCA = "PCA", "Président du Conseil d'Administration"
+        VICE_PRESIDENT_CA = "VICE_PRESIDENT_CA", "Vice-président du Conseil d'Administration"
+        SECRETAIRE_GENERAL_CA = "SECRETAIRE_GENERAL_CA", "Secrétaire général du Conseil d'Administration"
         PRESIDENT_CONSEIL = "PRESIDENT_CONSEIL", "Président du Conseil"
         DG = "DG", "Directeur Général"
         DGA = "DGA", "Directeur Général Adjoint"
@@ -59,6 +62,10 @@ class Mandat(models.Model):
             "PRESIDENT_CONSEIL_SURVEILLANCE",
             "Président du Conseil de Surveillance",
         )
+        VICE_PRESIDENT_CS = "VICE_PRESIDENT_CS", "Vice-président du Conseil de Surveillance"
+        SECRETAIRE_GENERAL_CS = "SECRETAIRE_GENERAL_CS", "Secrétaire général du Conseil de Surveillance"
+        VICE_PRESIDENT_CC = "VICE_PRESIDENT_CC", "Vice-président de la Commission Crédit"
+        SECRETAIRE_GENERAL_CC = "SECRETAIRE_GENERAL_CC", "Secrétaire général de la Commission Crédit"
         RESPONSABLE_CONFORMITE = "RESPONSABLE_CONFORMITE", "Responsable Conformité / Contrôle interne"
         AUDITEUR_INTERNE = "AUDITEUR_INTERNE", "Auditeur interne"
         DAF = "DAF", "Directeur Administratif et Financier"

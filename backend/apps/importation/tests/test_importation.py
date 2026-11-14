@@ -200,7 +200,9 @@ def test_colonnes_du_cahier_des_charges_acceptees(client_admin):
 
     mdf = IMF.objects.get(sigle="MDF")
     assert (mdf.type_imf, mdf.statut_reglementaire) == ("MUTUELLE", "AGREE")
-    assert str(PointService.objects.get().encours) == "2500000.00"
+    assert str(PointService.objects.get(type_point="AGENCE").encours) == "2500000.00"
+    # L'IMF importée reçoit son point de service « Siège ».
+    assert PointService.objects.get(type_point="SIEGE").nom == "Siège — MDF"
     mandat = Mandat.objects.get()
     assert mandat.imf == mdf and mandat.date_debut.isoformat() == "2022-03-01"
     assert mandat.dirigeant.email_professionnel == "a.sy@mdf.sn"
@@ -262,7 +264,7 @@ def test_meme_sigle_agrements_differents_deux_imf(client_admin):
     resp = _importer(client_admin, "POINTS_SERVICE", _csv(points))
     assert resp.data["nb_lignes_importees"] == 1
     assert "ambiguë" in resp.data["rapport_erreurs"][0]["erreurs"]["imf_sigle"]
-    assert PointService.objects.get().imf.numero_agrement == "DK1-00-00187"
+    assert PointService.objects.get(nom="Guichet B").imf.numero_agrement == "DK1-00-00187"
 
 
 ENTETES_IMF_ANNUAIRE = [
@@ -307,7 +309,7 @@ def test_annuaire_drs_sfd_les_trois_imports_depuis_le_meme_classeur(client_admin
     resp = _importer(client_admin, "IMF", _xlsx(_annuaire()))
     assert resp.data["nb_lignes_importees"] == 2, resp.data["rapport_erreurs"]
     acep = IMF.objects.get(numero_agrement="DK1-93-00008")
-    assert (acep.type_imf, acep.statut_reglementaire, acep.telephone) == ("MUTUELLE", "AGREE", "33 869 69 65")
+    assert (acep.type_imf, acep.statut_reglementaire, acep.telephone) == ("MUTUELLE", "AGREE", "33 869 69 65 / 33 800 00 00")
     assert round(acep.localisation_siege.y, 3) == 14.683
     baobab = IMF.objects.get(sigle="BAOBAB")
     assert baobab.type_imf == "SA" and baobab.adresse_siege == "DAKAR"  # adresse absente : région
@@ -334,7 +336,7 @@ def test_annuaire_drs_sfd_les_trois_imports_depuis_le_meme_classeur(client_admin
     # Réimport complet : aucun doublon.
     for type_import in ("IMF", "POINTS_SERVICE", "DIRIGEANTS"):
         _importer(client_admin, type_import, _xlsx(_annuaire()))
-    assert (IMF.objects.count(), PointService.objects.count(), Dirigeant.objects.count(), Mandat.objects.count()) == (2, 3, 5, 5)
+    assert (IMF.objects.count(), PointService.objects.count(), Dirigeant.objects.count(), Mandat.objects.count()) == (2, 5, 5, 5)
 
 
 @pytest.mark.parametrize(
@@ -361,3 +363,75 @@ def test_dirigeant_sans_prenom_identifiable_est_rejete(client_admin):
     resp = _importer(client_admin, "DIRIGEANTS", _xlsx(feuilles))
     assert resp.data["statut"] == "ECHEC"
     assert "Gueye" in resp.data["rapport_erreurs"][0]["erreurs"]["nom"]
+
+
+def _region(code, nom, ouest, est):
+    return ZoneGeographique.objects.create(
+        code=code, nom=nom, type_zone="REGION",
+        geometrie=MultiPolygon(Polygon(((ouest, 12.5), (est, 12.5), (est, 16.5), (ouest, 16.5), (ouest, 12.5))), srid=4326),
+    )
+
+
+def test_valeurs_facultatives_incoherentes_ecartees_sans_rejeter_la_ligne(client_admin):
+    """Email mal formé, téléphone qui n'en est pas un, GPS hors du Sénégal : la ligne est
+    importée sans ces valeurs, qui sont signalées dans le rapport."""
+    contenu = (
+        "nom;sigle;type_imf;adresse_siege;telephone;email;latitude;longitude;annee_creation\n"
+        "Mutuelle A;MA;MUTUELLE;Dakar;RUE THIONG;contact@;48,85;2,35;deux mille\n"
+    )
+    resp = _importer(client_admin, "IMF", _csv(contenu))
+    assert (resp.data["statut"], resp.data["nb_lignes_importees"], resp.data["nb_lignes_erreur"]) == ("TERMINE", 1, 0)
+    imf = IMF.objects.get()
+    assert (imf.telephone, imf.email, imf.localisation_siege, imf.annee_creation) == ("", "", None, None)
+    avertissement = resp.data["rapport_erreurs"][0]
+    assert avertissement["avertissement"] is True and avertissement["ligne"] == 2
+    assert set(avertissement["erreurs"]) == {"telephone", "email", "latitude", "annee_creation"}
+
+
+def test_attributs_annuaire_et_regions(client_admin):
+    """Les colonnes propres à l'annuaire sont enregistrées ; la région vient du fichier,
+    du GPS, de l'intitulé du point ou, pour une caisse de base, de son IMF."""
+    dakar, thies = _region("SN-DK", "Dakar", -17.6, -17.1), _region("SN-TH", "Thiès", -17.1, -16.2)
+    entetes = ENTETES_IMF_ANNUAIRE + ["Affiliation", "Année de création", "NINEA", "Capital",
+                                      "Nombre de bénéficiaires", "Situation", "Nombre de membres du CA",
+                                      "Vice-président du CA", "Adresse DG", "URL de la fiche"]
+    imf_ligne = _annuaire()["IMF"][1] + ["UM-ACEP", 1993, "0012345", 54959000, 22849, "ATTENDU", 6,
+                                         "Modou Matar MBAYE", "Khar Yalla", "https://drs-sfd.gouv.sn/annuaire/acep/"]
+    reseau = [300, "Réseau National SA", "RNSA", "DK1-20-00700", "DAKAR", "Société Commerciale", "r@rn.sn",
+              None, "Dakar", None, None, None, None, None, None, None, "SA", None, None, None, "2021-01-01"]
+    points = [
+        ENTETES_POINTS_ANNUAIRE + ["Localisation (carte)"],
+        [1, "Guichet Thiès Nord", "Guichet Thiès Nord", "Guichet", None, "DK1-93-00008", None, "14.79", "-16.93", None],
+        [2, "Agence de Thies", "Agence de Thies", "Agence", None, "DK1-20-00700", None, None, None, None],
+        [3, "Guichet Marché", "Guichet Marché", "Guichet", None, "DK1-93-00008", None, None, None, "HLM"],
+        [4, "Agence Centrale", "Agence Centrale", "Agence", None, "DK1-20-00700", None, None, None, None],
+    ]
+    classeur = {"IMF": [entetes, imf_ligne, reseau], "Points de service": points}
+    for type_import in ("IMF", "POINTS_SERVICE", "DIRIGEANTS"):
+        resp = _importer(client_admin, type_import, _xlsx(classeur))
+        assert resp.data["nb_lignes_erreur"] == 0, resp.data["rapport_erreurs"]
+
+    acep = IMF.objects.get(numero_agrement="DK1-93-00008")
+    assert (acep.region, acep.reference_externe, acep.type_sfd, acep.affiliation) == (dakar, "217", "Affilié", "UM-ACEP")
+    assert (acep.annee_creation, acep.ninea, acep.nb_beneficiaires, acep.nb_membres_ca) == (1993, "0012345", 22849, 6)
+    assert (str(acep.capital), acep.situation, acep.lieu_dit) == ("54959000.00", "ATTENDU", "Amitié 1")
+    assert acep.date_fiche.isoformat() == "2019-07-11" and acep.url_fiche.endswith("/acep/")
+    siege = PointService.objects.get(imf=acep, type_point="SIEGE")
+    assert (siege.region, siege.nombre_membres, siege.localisation is not None) == (dakar, 22849, True)
+
+    # Réseau : ses bénéficiaires ne sont pas recomptés sur son siège.
+    acep.type_sfd, acep.nb_beneficiaires = "Réseau", 500
+    acep.save()
+    ImportIMFProcessor._synchroniser_siege(acep)
+    siege.refresh_from_db()
+    assert siege.nombre_membres is None
+
+    region_de = lambda reference: PointService.objects.get(reference_externe=reference).region  # noqa: E731
+    assert region_de("1") == thies   # GPS
+    assert region_de("2") == thies   # nom de région dans l'intitulé
+    assert region_de("3") == dakar   # caisse de base : région de l'IMF
+    assert region_de("4") is None    # société nationale : pas de supposition
+    assert PointService.objects.get(reference_externe="3").lieu_dit == "HLM"
+
+    assert Mandat.objects.filter(imf=acep, fonction_mandat="VICE_PRESIDENT_CA", dirigeant__nom="MBAYE").exists()
+    assert Mandat.objects.get(imf=acep, fonction_mandat="GERANT").dirigeant.adresse == "Khar Yalla"

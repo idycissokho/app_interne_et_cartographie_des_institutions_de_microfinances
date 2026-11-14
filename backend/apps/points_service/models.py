@@ -74,7 +74,9 @@ class PointService(models.Model):
         limit_choices_to={"type_zone": "COMMUNE"},
     )
     date_ouverture = models.DateField(null=True, blank=True)
-    telephone = models.CharField(max_length=20, blank=True)
+    telephone = models.CharField(max_length=100, blank=True)
+    lieu_dit = models.CharField(max_length=255, blank=True, verbose_name="Localité")
+    url_fiche = models.URLField(max_length=500, blank=True, verbose_name="Fiche dans l'annuaire")
     email = models.EmailField(blank=True)
     localisation = gis_models.PointField(geography=True, null=True, blank=True)
     encours = models.DecimalField(max_digits=15, decimal_places=2, default=0)

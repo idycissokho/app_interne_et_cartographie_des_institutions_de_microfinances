@@ -11,12 +11,18 @@ export const STATUT_MANDAT: Record<string, string> = { EN_FONCTION: "En fonction
 
 export const FONCTIONS: [string, string][] = [
   ["PCA", "Président du Conseil d'Administration"],
+  ["VICE_PRESIDENT_CA", "Vice-président du Conseil d'Administration"],
+  ["SECRETAIRE_GENERAL_CA", "Secrétaire général du Conseil d'Administration"],
   ["PRESIDENT_CONSEIL", "Président du Conseil"],
   ["DG", "Directeur Général"],
   ["DGA", "Directeur Général Adjoint"],
   ["GERANT", "Gérant"],
   ["PRESIDENT_COMITE_CREDIT", "Président de la Commission Crédit"],
   ["PRESIDENT_CONSEIL_SURVEILLANCE", "Président du Conseil de Surveillance"],
+  ["VICE_PRESIDENT_CS", "Vice-président du Conseil de Surveillance"],
+  ["SECRETAIRE_GENERAL_CS", "Secrétaire général du Conseil de Surveillance"],
+  ["VICE_PRESIDENT_CC", "Vice-président de la Commission Crédit"],
+  ["SECRETAIRE_GENERAL_CC", "Secrétaire général de la Commission Crédit"],
   ["RESPONSABLE_CONFORMITE", "Responsable Conformité / Contrôle interne"],
   ["AUDITEUR_INTERNE", "Auditeur interne"],
   ["DAF", "Directeur Administratif et Financier"],
@@ -28,8 +34,9 @@ export const LIBELLE_FONCTION = Object.fromEntries(FONCTIONS);
 /** Familles de fonctions (filtres « Conseils / Gouvernance, Direction, Comités, Contrôle »). */
 export const FAMILLE_FONCTION: Record<string, "Gouvernance" | "Direction" | "Comités" | "Contrôle"> = {
   PCA: "Gouvernance", PRESIDENT_CONSEIL: "Gouvernance", PRESIDENT_CONSEIL_SURVEILLANCE: "Gouvernance",
+  VICE_PRESIDENT_CA: "Gouvernance", SECRETAIRE_GENERAL_CA: "Gouvernance", VICE_PRESIDENT_CS: "Gouvernance", SECRETAIRE_GENERAL_CS: "Gouvernance",
   DG: "Direction", DGA: "Direction", GERANT: "Direction", DAF: "Direction", RESPONSABLE_SI: "Direction", RESPONSABLE_OPERATIONS: "Direction",
-  PRESIDENT_COMITE_CREDIT: "Comités",
+  PRESIDENT_COMITE_CREDIT: "Comités", VICE_PRESIDENT_CC: "Comités", SECRETAIRE_GENERAL_CC: "Comités",
   RESPONSABLE_CONFORMITE: "Contrôle", AUDITEUR_INTERNE: "Contrôle",
 };
 
