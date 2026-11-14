@@ -41,6 +41,7 @@ def demarrer_apm() -> bool:
         )
         return False
 
+    os.environ.setdefault("NEW_RELIC_APP_NAME", "Cartographie IMF (dev)")
     # Sans fichier newrelic.ini : l'agent lit les variables NEW_RELIC_*.
     newrelic.agent.initialize()
     return True

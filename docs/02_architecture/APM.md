@@ -25,7 +25,7 @@ ne propose qu'un essai de 14 jours.
 | `backend/config/apm.py` | Démarre l'agent New Relic si une clé est définie |
 | `backend/manage.py`, `backend/config/wsgi.py` | Appellent `demarrer_apm()` avant de charger Django |
 | `backend/requirements/base.txt` | Ajoute le paquet `newrelic` |
-| `docker-compose.yml` | Variables `NEW_RELIC_*` du backend + service `newrelic-infra` (profil `apm`) |
+| `infra/docker-compose.yml` | Variables `NEW_RELIC_*` du backend + service `newrelic-infra` (profil `apm`) |
 | `backend/scripts/generer_trafic.py` | Génère du trafic pour remplir les tableaux de bord |
 
 Sans clé, l'agent n'est pas chargé : l'application fonctionne comme avant.
@@ -37,11 +37,11 @@ L'agent est aussi désactivé pendant les tests.
 2. Dans New Relic : menu du profil (en bas à gauche) → **API keys**.
 3. Copier la clé de type **INGEST - LICENSE**.
 
-Cette clé est un secret : elle va uniquement dans `.env`, qui n'est pas versionné.
+Cette clé est un secret : elle va uniquement dans `config/.env`, qui n'est pas versionné.
 
 ## 2. Activer l'APM
 
-Ajouter à la fin du fichier `.env` **à la racine du projet** (celui que lit Docker Compose) :
+Ajouter à la fin du fichier `config/.env` (celui que chargent les services Docker) :
 
 ```
 NEW_RELIC_LICENSE_KEY=coller-la-cle-ici
@@ -52,21 +52,21 @@ Puis reconstruire le backend (nécessaire une fois, pour installer le paquet `ne
 et démarrer l'agent d'infrastructure :
 
 ```
-docker compose up -d --build backend
-docker compose --profile apm up -d
+docker compose -f infra/docker-compose.yml up -d --build backend
+docker compose --env-file config/.env -f infra/docker-compose.yml --profile apm up -d
 ```
 
 Vérifier que l'agent est connecté :
 
 ```
-docker compose logs backend | grep -i "reporting to"
+docker compose -f infra/docker-compose.yml logs backend | grep -i "reporting to"
 ```
 
 Une ligne `Reporting to: https://rpm.newrelic.com/...` (ou `rpm.eu.newrelic.com`)
 doit apparaître après la première requête reçue par l'API. Le lien ouvre
 directement l'application dans New Relic.
 
-Pour désactiver : vider `NEW_RELIC_LICENSE_KEY` puis `docker compose up -d backend`.
+Pour désactiver : vider `NEW_RELIC_LICENSE_KEY` puis `docker compose -f infra/docker-compose.yml up -d backend`.
 
 ## 3. Générer du trafic
 
@@ -75,7 +75,7 @@ Utiliser l'interface (<http://localhost:5173>) ou le script fourni, qui simule
 plusieurs utilisateurs en lecture seule, avec quelques erreurs 404 et 401 volontaires :
 
 ```
-docker compose exec backend python scripts/generer_trafic.py \
+docker compose -f infra/docker-compose.yml exec backend python scripts/generer_trafic.py \
     --email VOTRE_EMAIL --duree 120 --utilisateurs 5
 ```
 
@@ -160,7 +160,7 @@ pour la latence) et relancer le script de trafic.
 
 | Symptôme | Cause probable |
 |---|---|
-| Aucune ligne `Reporting to` dans les logs | Clé absente du `.env` racine, ou backend non recréé (`docker compose up -d backend`) |
-| `No module named 'newrelic'` | Image non reconstruite : `docker compose up -d --build backend` |
+| Aucune ligne `Reporting to` dans les logs | Clé absente de `config/.env`, ou backend non recréé (`docker compose -f infra/docker-compose.yml up -d backend`) |
+| `No module named 'newrelic'` | Image non reconstruite : `docker compose -f infra/docker-compose.yml up -d --build backend` |
 | Application absente de New Relic | Aucune requête reçue depuis le démarrage : générer du trafic et attendre 2 minutes |
-| Conteneur `newrelic-infra` qui redémarre en boucle | Clé vide ou invalide : `docker compose logs newrelic-infra` |
+| Conteneur `newrelic-infra` qui redémarre en boucle | Clé vide ou invalide : `docker compose -f infra/docker-compose.yml logs newrelic-infra` |

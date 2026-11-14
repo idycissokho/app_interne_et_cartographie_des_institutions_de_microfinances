@@ -9,12 +9,20 @@
 #   - frontend : React + Vite (http://localhost:5173)
 #   - newrelic-infra : agent d'infrastructure New Relic (optionnel, profil « apm »)
 #
-# Usage :
-#   docker compose up --build       # Premier démarrage
-#   docker compose up -d            # Démarrage en arrière-plan
-#   docker compose down             # Arrêt et suppression des conteneurs
-#   docker compose logs -f backend  # Suivi des logs du backend
+# Usage (depuis la racine du projet) :
+#   docker compose -f infra/docker-compose.yml up --build       # Premier démarrage
+#   docker compose -f infra/docker-compose.yml up -d            # Démarrage en arrière-plan
+#   docker compose -f infra/docker-compose.yml down             # Arrêt et suppression des conteneurs
+#   docker compose -f infra/docker-compose.yml logs -f backend  # Suivi des logs du backend
 # =============================================================================
+
+# Nom de projet fixe : sans lui, Compose prendrait le nom du dossier (« infra ») et
+# créerait de nouveaux volumes vides au lieu de réutiliser la base existante.
+name: app_interne_et_cartographie_des_institutions_de_microfinances
+
+# Les variables viennent de config/.env, chargé par « env_file » dans chaque service.
+# Ce fichier n'utilise donc pas ${VAR} pour elles : Compose ne résout ${VAR} qu'à
+# partir d'un .env placé à côté de ce fichier, pas depuis config/.env.
 
 services:
 
@@ -27,18 +35,21 @@ services:
     image: postgis/postgis:16-3.4
     container_name: cartographie_imf_db
 
-    environment:
-      # Identifiants lus depuis le fichier .env à la racine du projet.
-      # Ne jamais coder ces valeurs en dur ici.
-      - POSTGRES_DB=${DB_NAME}
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    env_file:
+      - ../config/.env
+
+    # L'image attend POSTGRES_DB / POSTGRES_USER / POSTGRES_PASSWORD : on les déduit
+    # des variables DB_* de config/.env avant de lancer l'entrée normale de l'image.
+    # ($$ = variable lue dans le conteneur, et non par Compose.)
+    entrypoint:
+      - sh
+      - -c
+      - >-
+        export POSTGRES_DB="$$DB_NAME" POSTGRES_USER="$$DB_USER" POSTGRES_PASSWORD="$$DB_PASSWORD";
+        exec docker-entrypoint.sh postgres
 
     volumes:
-      # Volume nommé pour la persistance des données entre les redémarrages.
       - postgres_data:/var/lib/postgresql/data
-      # Script d'initialisation exécuté une seule fois à la création du volume.
-      # Active l'extension PostGIS sur la base de données du projet.
       - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
 
     ports:
@@ -48,7 +59,7 @@ services:
 
     healthcheck:
       # Vérifie que PostgreSQL accepte les connexions avant de démarrer le backend.
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      test: ["CMD-SHELL", "pg_isready -U $$DB_USER -d $$DB_NAME"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -66,27 +77,22 @@ services:
   # ---------------------------------------------------------------------------
   backend:
     build:
-      context: ./backend
+      context: ../backend
       dockerfile: Dockerfile
     container_name: cartographie_imf_backend
 
-    # Variables d'environnement transmises au conteneur Django.
-    # Toutes les valeurs sensibles proviennent du fichier .env.
+    env_file:
+      - ../config/.env
+
     environment:
+      # Ces valeurs complètent ou remplacent celles de config/.env (secrets, base, etc.).
       DJANGO_SETTINGS_MODULE: config.settings.development
-      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
-      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS}
-      DJANGO_CSRF_TRUSTED_ORIGINS: ${DJANGO_CSRF_TRUSTED_ORIGINS}
-      DB_NAME: ${DB_NAME}
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
       # À l'intérieur du réseau Docker, le service db est accessible par son nom.
       DB_HOST: db
       DB_PORT: 5432
       # --- APM New Relic (voir docs/APM.md) ---
-      # Clé vide = agent désactivé, l'application tourne normalement.
-      NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY:-}
-      NEW_RELIC_APP_NAME: ${NEW_RELIC_APP_NAME:-Cartographie IMF (dev)}
+      # NEW_RELIC_LICENSE_KEY (et NEW_RELIC_APP_NAME) se renseignent dans config/.env.
+      # Sans clé, l'agent est désactivé et l'application tourne normalement.
       NEW_RELIC_ENVIRONMENT: development
       # Traçage distribué : suit une requête de bout en bout (vue -> SQL -> appels externes).
       NEW_RELIC_DISTRIBUTED_TRACING_ENABLED: "true"
@@ -95,9 +101,7 @@ services:
       NEW_RELIC_LOG_LEVEL: info
 
     volumes:
-      # Monte le code source en temps réel pour le rechargement automatique.
-      - ./backend:/app
-      # Volume séparé pour les fichiers médias uploadés (justificatifs, etc.).
+      - ../backend:/app
       - media_files:/app/mediafiles
 
     ports:
@@ -124,11 +128,8 @@ services:
     container_name: cartographie_imf_nginx
 
     volumes:
-      # Configuration Nginx personnalisée pour le projet.
       - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      # Fichiers statiques collectés par Django (collectstatic).
-      - ./backend/staticfiles:/var/www/static:ro
-      # Fichiers médias uploadés.
+      - ../backend/staticfiles:/var/www/static:ro
       - media_files:/var/www/media:ro
 
     ports:
@@ -148,13 +149,12 @@ services:
   # ---------------------------------------------------------------------------
   frontend:
     build:
-      context: ./frontend
+      context: ../frontend
     container_name: cartographie_imf_frontend
     environment:
       VITE_API_PROXY: http://backend:8000
     volumes:
-      - ./frontend:/app
-      # node_modules du conteneur (Linux), distinct de celui de l'hôte.
+      - ../frontend:/app
       - frontend_node_modules:/app/node_modules
     # Le volume node_modules n'est rempli qu'à sa création : on resynchronise avec
     # package.json à chaque démarrage (sinon « Failed to resolve import » après l'ajout
@@ -172,13 +172,14 @@ services:
   # Agent d'infrastructure New Relic — CPU, mémoire, disque, réseau de la machine
   # et de chaque conteneur (db, backend, nginx, frontend).
   # Optionnel : ne démarre qu'avec le profil « apm » et une clé renseignée :
-  #   docker compose --profile apm up -d
-  # ---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
   newrelic-infra:
     image: newrelic/infrastructure:latest
     container_name: cartographie_imf_newrelic_infra
     profiles: ["apm"]
     environment:
+      # Seul service qui utilise ${VAR} : le lancer en indiquant le fichier .env :
+      #   docker compose --env-file config/.env -f infra/docker-compose.yml --profile apm up -d
       NRIA_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY:-}
       NRIA_DISPLAY_NAME: cartographie-imf-dev
     # Accès en lecture à l'hôte et au démon Docker pour relever les métriques.
