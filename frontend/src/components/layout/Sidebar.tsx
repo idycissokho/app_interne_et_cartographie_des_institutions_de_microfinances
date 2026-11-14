@@ -5,8 +5,6 @@
 import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 
-import { BADGE_SUPERVISION } from "../../data/mocks";
-
 export type CleMenu =
   | "dashboard" | "micro" | "macro" | "imf" | "points" | "dirigeants"
   | "supervision" | "consultation" | "import" | "audit";
@@ -52,7 +50,7 @@ export function Sidebar({ active, role, nomComplet, onDeconnexion }: Props) {
         mk("dashboard", "Tableau de bord", "/"),
         ...(role === "consultant"
           ? [mk("consultation", "Espace consultation", "/consultation")]
-          : [mk("supervision", "Espace supervision", "/supervision", BADGE_SUPERVISION)]),
+          : [mk("supervision", "Espace supervision", "/supervision")]),
         // L'administrateur peut tout ce que peuvent les autres rôles, consultation comprise.
         ...(role === "admin" ? [mk("consultation", "Espace consultation", "/consultation")] : []),
         mk("micro", "Carte micro", "/carte/micro"),

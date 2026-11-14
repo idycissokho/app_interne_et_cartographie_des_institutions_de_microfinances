@@ -18,7 +18,7 @@ interface Ligne {
 }
 
 const TABMAP: [string, string][] = [["Toutes", ""], ["Agréées", "AGREE"], ["En cours", "EN_COURS"], ["Radiées", "RADIEE"]];
-const TYPES: [string, string][] = [["Tous", ""], ["Mutuelle", "MUTUELLE"], ["Coopérative", "COOPERATIVE"], ["Société Anonyme", "SA"]];
+const TYPES: [string, string][] = [["Tous", ""], ["Mutuelle", "MUTUELLE"], ["Coopérative", "COOPERATIVE"], ["Société Anonyme", "SA"], ["Association", "ASSOCIATION"]];
 const TAILLE = 20;
 const chip = (on: boolean): CSSProperties => ({ height: 44, font: "inherit", fontSize: 13, fontWeight: 700, padding: "0 14px", borderRadius: 12, cursor: "pointer", ...(on ? { background: "#0B1424", color: "#F3D98C", border: "1px solid #0B1424" } : { background: "#FFFFFF", color: "#4A5568", border: "1px solid #ECE5D5" }) });
 const barreBtn: CSSProperties = { height: 32, padding: "0 12px", borderRadius: 9, border: "1px solid rgba(255,255,255,.18)", background: "transparent", color: "#F4EFE3", font: "inherit", fontSize: 12, fontWeight: 700, cursor: "pointer" };

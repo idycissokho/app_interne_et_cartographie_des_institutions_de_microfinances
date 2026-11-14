@@ -17,6 +17,7 @@ const TY = [
   { value: "MUTUELLE", label: "Mutuelle", desc: "Mutuelle d'épargne et de crédit", icon: "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 3a4 4 0 1 0 0 8 4 4 0 1 0 0-8M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8" },
   { value: "COOPERATIVE", label: "Coopérative", desc: "Coopérative financière", icon: "M12 2l9 5-9 5-9-5 9-5zM3 12l9 5 9-5M3 17l9 5 9-5" },
   { value: "SA", label: "Société Anonyme", desc: "Société de capitaux", icon: "M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6" },
+  { value: "ASSOCIATION", label: "Association", desc: "Association de microfinance", icon: "M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10z" },
 ];
 const ST = [{ value: "AGREE", label: "Agréée", color: "#15803D" }, { value: "EN_COURS", label: "En cours d'agrément", color: "#D97706" }, { value: "RADIEE", label: "Radiée", color: "#B91C1C" }];
 const SECT: [string, string][] = [["identite", "Identité"], ["statut", "Statut"], ["siege", "Siège & GPS"], ["contacts", "Contacts"], ["bailleurs", "Bailleurs"]];

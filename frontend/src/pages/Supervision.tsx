@@ -1,15 +1,15 @@
 /**
  * Écran 05 — Espace supervision (maquette-carto-imf/ecrans/05-espace-supervision.dc.html).
- * Alertes, zones sous-desservies et qualité : API. Missions et file de validation : données fictives
- * (aucun modèle backend), signalées comme telles.
+ * Alertes, zones sous-desservies et qualité des référentiels : toutes les données viennent de l'API.
+ * Les blocs « Missions » et « File de validation » de la maquette n'ont pas de modèle backend :
+ * ils ne sont pas affichés (aucune donnée fictive).
  */
-import { useState, type CSSProperties } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 
 import type { Page } from "../api/types";
 import { SenegalMap } from "../components/carto/SenegalMap";
 import { AppLayout } from "../components/layout/AppLayout";
-import { FILE_VALIDATION, MISSIONS } from "../data/mocks";
 import { SENEGAL_REGIONS, cleRegion } from "../data/senegalRegions";
 import { isoJour, nombre } from "../lib/format";
 import { statsParRegion, type AgregatZone } from "../lib/stats";
@@ -17,15 +17,10 @@ import { useDonnees, type Compte } from "../lib/useDonnees";
 
 interface ImfLigne { telephone: string; email: string; a_gps: boolean; bailleurs_noms: string[] }
 
-const seg = { border: "none", font: "inherit", fontSize: 12, fontWeight: 700, padding: "8px 12px", borderRadius: 10, cursor: "pointer" } as const;
-const KB: Record<string, [string, string]> = { "Sur place": ["#E0ECF7", "#1F4E79"], Gouvernance: ["#F3ECDC", "#6E5416"], Documentaire: ["#E7F3EE", "#1F5E4F"], Terrain: ["#F6E9DD", "#7A4E2D"] };
-const grille: CSSProperties = { display: "grid", gridTemplateColumns: "1.3fr 1fr 1fr 0.8fr 1.2fr", gap: 12 };
 const pct = (a: number, b: number) => (b ? Math.round((100 * a) / b) : 0);
 
 export function Supervision() {
   const [zone, setZone] = useState("Kédougou");
-  const [tab, setTab] = useState<keyof typeof MISSIONS>("À venir");
-  const [decisions, setDecisions] = useState<Record<number, "ok" | "ko">>({});
   const dans30 = isoJour(new Date(Date.now() + 30 * 86400000));
 
   const { donnees: d } = useDonnees<{
@@ -61,8 +56,6 @@ export function Supervision() {
     { label: "Dirigeants", v: pct(n(d.mandats) - n(d.sansJustif), n(d.mandats)), color: "#B45309", hint: `Justificatifs manquants pour ${nombre(n(d.sansJustif))} mandats` },
     { label: "Bailleurs associés", v: pct(avecBailleur, imfs.length), color: "#B91C1C", hint: "Champ optionnel peu renseigné" },
   ];
-  const pending = FILE_VALIDATION.filter((q) => !decisions[q.id]).length;
-  const decide = (id: number, v: "ok" | "ko") => () => setDecisions({ ...decisions, [id]: v });
 
   return (
     <AppLayout active="supervision" minHeight={1300}>
@@ -71,7 +64,7 @@ export function Supervision() {
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "#8A6A1F" }}>Division Supervision · ROLE_SUPERVISOR</span>
             <h1 style={{ margin: 0, fontSize: 34, fontWeight: 800, letterSpacing: "-0.03em" }}>Espace supervision</h1>
-            <p style={{ margin: 0, fontSize: 14, color: "#4A5568" }}>Ce qui demande votre attention aujourd'hui. <span style={{ fontWeight: 700, color: "#8A6A1F" }}>Données fictives : missions et validations.</span></p>
+            <p style={{ margin: 0, fontSize: 14, color: "#4A5568" }}>Ce qui demande votre attention aujourd'hui.</p>
           </div>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <button type="button" disabled title="Disponible prochainement" style={{ height: 46, padding: "0 18px", borderRadius: 14, border: "1px solid #ECE5D5", background: "#FFFFFF", font: "inherit", fontSize: 14, fontWeight: 700, color: "#0B1424", display: "flex", alignItems: "center", gap: 8, cursor: "not-allowed" }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6z" /><path d="M14 3v6h6M8 13h8M8 17h5" /></svg>Fiche mission PDF</button>
@@ -116,57 +109,7 @@ export function Supervision() {
             </div>
           </article>
 
-          <article className="su-in d3" style={{ flex: "1 1 360px", minWidth: 0, background: "#FFFFFF", border: "1px solid #ECE5D5", borderRadius: 26, padding: 22, display: "flex", flexDirection: "column", gap: 14 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-              <h2 style={{ margin: 0, fontSize: 19, fontWeight: 800 }}>Missions de supervision</h2>
-              <div role="tablist" aria-label="Statut des missions" style={{ display: "flex", padding: 4, borderRadius: 12, background: "#F6F1E4" }}>
-                {(Object.keys(MISSIONS) as (keyof typeof MISSIONS)[]).map((t) => (
-                  <button key={t} type="button" role="tab" aria-selected={t === tab} onClick={() => setTab(t)} style={{ ...seg, ...(t === tab ? { background: "#FFFFFF", color: "#0B1424", boxShadow: "0 2px 8px rgba(11,20,36,.08)" } : { background: "transparent", color: "#6B7280" }) }}>{t}</button>
-                ))}
-              </div>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {MISSIONS[tab].map((m) => (
-                <div key={m.title} style={{ display: "flex", gap: 14, padding: 14, borderRadius: 18, background: "#FAF7F0", border: "1px solid #F1ECE0" }}>
-                  <div style={{ width: 52, flex: "none", borderRadius: 14, background: "#0B1424", color: "#F3D98C", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "8px 0" }}><span style={{ fontSize: 20, fontWeight: 800, lineHeight: 1 }}>{m.day}</span><span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase" }}>{m.month}</span></div>
-                  <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 6 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}><b style={{ fontSize: 14 }}>{m.title}</b><span style={{ fontSize: 11, fontWeight: 800, padding: "3px 9px", borderRadius: 999, whiteSpace: "nowrap", background: KB[m.kind][0], color: KB[m.kind][1], alignSelf: "flex-start" }}>{m.kind}</span></div>
-                    <div style={{ fontSize: 12, color: "#6B7280" }}>{m.where} · Équipe : {m.team}</div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}><div style={{ flex: 1, height: 6, borderRadius: 99, background: "#ECE5D5", overflow: "hidden" }}><div className="su-bar" style={{ height: "100%", borderRadius: 99, background: "#C9A44C", width: m.prog }} /></div><span style={{ fontSize: 12, fontWeight: 700, color: "#4A5568" }}>{m.prog}</span></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </article>
-        </section>
-
-        <section style={{ display: "flex", flexWrap: "wrap", gap: 18, alignItems: "stretch" }}>
-          <article className="su-in d3" style={{ flex: "2 1 520px", minWidth: 0, background: "#FFFFFF", border: "1px solid #ECE5D5", borderRadius: 26, padding: 22, display: "flex", flexDirection: "column", gap: 14 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}><h2 style={{ margin: 0, fontSize: 19, fontWeight: 800 }}>File de validation</h2><span style={{ fontSize: 12, fontWeight: 800, color: "#0B1424", background: "#F3D98C", padding: "5px 10px", borderRadius: 999 }}>{pending} en attente</span></div>
-            <div style={{ overflowX: "auto" }}>
-              <div style={{ minWidth: 560, display: "flex", flexDirection: "column" }}>
-                <div style={{ ...grille, padding: "0 10px 10px 10px", fontSize: 11, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "#6B7280", borderBottom: "1px solid #F1ECE0" }}><span>Modification</span><span>IMF</span><span>Soumis par</span><span>Date</span><span style={{ textAlign: "right" }}>Décision</span></div>
-                {FILE_VALIDATION.map((q) => {
-                  const dd = decisions[q.id];
-                  return (
-                    <div key={q.id} style={{ ...grille, alignItems: "center", padding: "12px 10px", borderBottom: "1px solid #F6F1E4", fontSize: 13 }}>
-                      <span style={{ display: "flex", alignItems: "center", gap: 8, fontWeight: 700 }}><span style={{ width: 8, height: 8, borderRadius: "50%", background: q.dot, flex: "none" }} />{q.what}</span>
-                      <span>{q.imf}</span><span style={{ color: "#4A5568" }}>{q.who}</span><span style={{ color: "#6B7280" }}>{q.when}</span>
-                      <span style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
-                        {!dd && (<>
-                          <button type="button" onClick={decide(q.id, "ko")} style={{ height: 34, padding: "0 12px", borderRadius: 10, border: "1px solid #ECE5D5", background: "#FFFFFF", font: "inherit", fontSize: 12, fontWeight: 700, color: "#B91C1C", cursor: "pointer" }}>Rejeter</button>
-                          <button type="button" onClick={decide(q.id, "ok")} style={{ height: 34, padding: "0 12px", borderRadius: 10, border: "none", background: "#0B1424", font: "inherit", fontSize: 12, fontWeight: 700, color: "#F3D98C", cursor: "pointer" }}>Valider</button>
-                        </>)}
-                        {dd && <span style={{ fontSize: 12, fontWeight: 800, padding: "6px 12px", borderRadius: 999, ...(dd === "ok" ? { background: "#DCFCE7", color: "#166534" } : { background: "#FDECEC", color: "#991B1B" }) }}>{dd === "ok" ? "Validé" : "Rejeté"}</span>}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </article>
-
-          <article className="su-in d4" style={{ flex: "1 1 300px", minWidth: 0, background: "#FFFFFF", border: "1px solid #ECE5D5", borderRadius: 26, padding: 22, display: "flex", flexDirection: "column", gap: 16 }}>
+          <article className="su-in d3" style={{ flex: "1 1 360px", minWidth: 0, background: "#FFFFFF", border: "1px solid #ECE5D5", borderRadius: 26, padding: 22, display: "flex", flexDirection: "column", gap: 16 }}>
             <h2 style={{ margin: 0, fontSize: 19, fontWeight: 800 }}>Qualité des référentiels</h2>
             {quality.map((k) => (
               <div key={k.label}>

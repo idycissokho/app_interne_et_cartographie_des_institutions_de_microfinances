@@ -2,7 +2,8 @@
 importation/views.py
 ====================
 Vues DRF du module importation :
-- ImportationListCreateView : liste des imports + upload et traitement d'un fichier
+- ImportationListCreateView : liste des imports + upload d'un fichier, traité par son processor
+  (voir processors.py : aucune règle d'import n'est codée ici)
 - ImportationDetailView     : détail et rapport d'erreurs d'un import
 - ModeleImportView          : canevas CSV vide (en-têtes attendus) par type
 - ExportView                : export CSV d'un référentiel (même format que l'import)
@@ -22,8 +23,9 @@ from apps.audit.models import JournalAudit
 from apps.authentication.permissions import IsAdmin
 
 from .models import ImportationFichier
+from .processors import lancer_importation
 from .serializers import ImportationFichierSerializer
-from .services import COLONNES, lignes_export, traiter_importation
+from .services import COLONNES, lignes_export
 
 
 class ImportationListCreateView(AuditMixin, generics.ListCreateAPIView):
@@ -47,15 +49,16 @@ class ImportationListCreateView(AuditMixin, generics.ListCreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         importation = serializer.save(utilisateur=request.user)
-        traiter_importation(importation)
+        # Tout le traitement est délégué au processor du type d'import choisi.
+        bilan = lancer_importation(importation)
         self._journaliser(
             JournalAudit.Action.IMPORTATION,
             importation,
             {
                 "type_import": importation.type_import,
                 "statut": importation.statut,
-                "lignes_creees": getattr(importation, "lignes_creees", 0),
-                "lignes_mises_a_jour": getattr(importation, "lignes_mises_a_jour", 0),
+                "lignes_creees": bilan.lignes_creees,
+                "lignes_mises_a_jour": bilan.lignes_mises_a_jour,
                 "lignes_erreur": importation.nb_lignes_erreur,
             },
         )

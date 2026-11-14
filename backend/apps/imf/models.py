@@ -40,6 +40,7 @@ class IMF(models.Model):
         MUTUELLE = "MUTUELLE", "Mutuelle"
         COOPERATIVE = "COOPERATIVE", "Coopérative"
         SA = "SA", "Société Anonyme"
+        ASSOCIATION = "ASSOCIATION", "Association"
 
     class StatutReglementaire(models.TextChoices):
         """Statut réglementaire de l'IMF vis-à-vis de la DRS-SFD."""
@@ -51,6 +52,11 @@ class IMF(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     nom = models.CharField(max_length=255, verbose_name="Dénomination sociale")
     sigle = models.CharField(max_length=50, blank=True, verbose_name="Sigle")
+    # Identifiant réglementaire délivré par la DRS-SFD (ex. « DK1-93-00008 »).
+    # Sert de clé de rapprochement à l'import : deux IMF peuvent partager un même sigle.
+    numero_agrement = models.CharField(
+        max_length=50, blank=True, db_index=True, verbose_name="Numéro d'agrément"
+    )
     type_imf = models.CharField(max_length=20, choices=TypeIMF.choices, verbose_name="Type d'IMF")
     statut_reglementaire = models.CharField(
         max_length=20,

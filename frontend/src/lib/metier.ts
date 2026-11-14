@@ -1,8 +1,8 @@
 /** Correspondances métier partagées par les écrans (libellés de la maquette ↔ valeurs du backend). */
 import { SENEGAL_REGIONS, cleRegion } from "../data/senegalRegions";
 
-export const TYPE_IMF_COURT: Record<string, string> = { MUTUELLE: "Mutuelle", COOPERATIVE: "Coopérative", SA: "SA" };
-export const TYPE_IMF_LONG: Record<string, string> = { MUTUELLE: "Mutuelle", COOPERATIVE: "Coopérative", SA: "Société Anonyme" };
+export const TYPE_IMF_COURT: Record<string, string> = { MUTUELLE: "Mutuelle", COOPERATIVE: "Coopérative", SA: "SA", ASSOCIATION: "Association" };
+export const TYPE_IMF_LONG: Record<string, string> = { MUTUELLE: "Mutuelle", COOPERATIVE: "Coopérative", SA: "Société Anonyme", ASSOCIATION: "Association" };
 export const STATUT_IMF_COURT: Record<string, string> = { AGREE: "Agréée", EN_COURS: "En cours", RADIEE: "Radiée" };
 export const STATUT_IMF_LONG: Record<string, string> = { AGREE: "Agréée", EN_COURS: "En cours d'agrément", RADIEE: "Radiée" };
 export const TYPE_POINT: Record<string, string> = { SIEGE: "Siège social", AGENCE: "Agence", GUICHET: "Guichet", BUREAU: "Bureau de représentation" };

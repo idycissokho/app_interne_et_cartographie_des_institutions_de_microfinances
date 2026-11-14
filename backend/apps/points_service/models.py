@@ -36,6 +36,11 @@ class PointService(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     imf = models.ForeignKey(IMF, on_delete=models.PROTECT, related_name="points_service")
     nom = models.CharField(max_length=255)
+    # Identifiant du point dans le fichier d'origine (ex. annuaire DRS-SFD). Clé de
+    # rapprochement à l'import : une IMF peut avoir plusieurs points de même nom.
+    reference_externe = models.CharField(
+        max_length=50, blank=True, db_index=True, verbose_name="Référence dans le fichier source"
+    )
     type_point = models.CharField(max_length=20, choices=TypePoint.choices, default=TypePoint.AGENCE)
     statut_point = models.CharField(max_length=20, choices=StatutPoint.choices, default=StatutPoint.OUVERT)
     statut_reglementaire = models.CharField(

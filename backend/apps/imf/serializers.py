@@ -38,7 +38,7 @@ class IMFListSerializer(_NbPointsServiceMixin, serializers.ModelSerializer):
     class Meta:
         model = IMF
         fields = [
-            "id", "nom", "sigle", "type_imf", "statut_reglementaire", "nb_points_service",
+            "id", "nom", "sigle", "numero_agrement", "type_imf", "statut_reglementaire", "nb_points_service",
             "email", "telephone", "adresse_siege", "a_gps", "bailleurs_noms",
             "nb_dirigeants_en_fonction", "region_siege", "date_creation",
         ]
@@ -63,7 +63,7 @@ class IMFDetailSerializer(_NbPointsServiceMixin, serializers.ModelSerializer):
     class Meta:
         model = IMF
         fields = [
-            "id", "nom", "sigle", "type_imf", "statut_reglementaire",
+            "id", "nom", "sigle", "numero_agrement", "type_imf", "statut_reglementaire",
             "adresse_siege", "localisation_siege", "telephone", "email", "site_web",
             "bailleurs", "bailleurs_detail",
             "is_active", "nb_points_service", "statut_actif",

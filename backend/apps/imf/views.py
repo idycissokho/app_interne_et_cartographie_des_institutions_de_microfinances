@@ -76,7 +76,7 @@ class IMFListCreateView(
         "bailleurs": ["exact"],
         "date_creation": ["gte", "lte"],
     }
-    search_fields = ["nom", "sigle"]
+    search_fields = ["nom", "sigle", "numero_agrement"]
     ordering_fields = ["nom", "date_creation"]
 
     def get_queryset(self):

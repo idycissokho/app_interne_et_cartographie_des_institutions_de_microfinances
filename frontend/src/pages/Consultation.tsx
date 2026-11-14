@@ -27,7 +27,7 @@ const chip = (on: boolean): CSSProperties => ({ font: "inherit", fontSize: 13, f
 const kpi: CSSProperties = { padding: 16, borderRadius: 16, background: "#FAF7F0" };
 const ligne: CSSProperties = { display: "flex", justifyContent: "space-between", gap: 12, padding: "10px 0", borderBottom: "1px solid #F1ECE0" };
 const TABS = [{ k: "apercu", label: "Aperçu" }, { k: "pts", label: "Points de service" }, { k: "dir", label: "Dirigeants" }, { k: "bail", label: "Bailleurs" }] as const;
-const CHIPS: [string, string][] = [["", "Toutes"], ["MUTUELLE", "Mutuelle"], ["COOPERATIVE", "Coopérative"], ["SA", "SA"]];
+const CHIPS: [string, string][] = [["", "Toutes"], ["MUTUELLE", "Mutuelle"], ["COOPERATIVE", "Coopérative"], ["SA", "SA"], ["ASSOCIATION", "Association"]];
 const DCHIPS = ["Tous", "Gouvernance", "Direction", "Comités", "Contrôle"];
 
 export function Consultation() {

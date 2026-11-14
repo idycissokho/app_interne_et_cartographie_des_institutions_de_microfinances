@@ -56,7 +56,8 @@ class PointServiceDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = PointService
         fields = [
-            "id", "imf", "imf_nom", "nom", "type_point", "statut_point", "statut_reglementaire",
+            "id", "imf", "imf_nom", "nom", "reference_externe",
+            "type_point", "statut_point", "statut_reglementaire",
             "adresse", "region", "departement", "commune", "telephone", "email",
             "localisation", "date_ouverture", "encours", "depots", "nombre_membres",
             "is_active", "date_creation", "date_modification",
