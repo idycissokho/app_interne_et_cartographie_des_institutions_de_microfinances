@@ -32,6 +32,10 @@ drf-spectacular==0.27.2
 # Lecture des fichiers Excel (.xlsx) pour le module importation
 openpyxl==3.1.5
 
+# Supervision applicative (APM) : latence, erreurs, CPU, traçage distribué.
+# Inactif tant que NEW_RELIC_LICENSE_KEY n'est pas définie (voir config/apm.py).
+newrelic==14.3.0
+
 # Gestion des fichiers médias et uploads
 Pillow==10.4.0
 django-debug-toolbar==4.4.6

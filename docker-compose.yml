@@ -7,6 +7,7 @@
 #   - backend  : Django 5.2 via Gunicorn (API REST)
 #   - nginx    : Reverse proxy HTTP (développement)
 #   - frontend : React + Vite (http://localhost:5173)
+#   - newrelic-infra : agent d'infrastructure New Relic (optionnel, profil « apm »)
 #
 # Usage :
 #   docker compose up --build       # Premier démarrage
@@ -82,6 +83,16 @@ services:
       # À l'intérieur du réseau Docker, le service db est accessible par son nom.
       DB_HOST: db
       DB_PORT: 5432
+      # --- APM New Relic (voir docs/APM.md) ---
+      # Clé vide = agent désactivé, l'application tourne normalement.
+      NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY:-}
+      NEW_RELIC_APP_NAME: ${NEW_RELIC_APP_NAME:-Cartographie IMF (dev)}
+      NEW_RELIC_ENVIRONMENT: development
+      # Traçage distribué : suit une requête de bout en bout (vue -> SQL -> appels externes).
+      NEW_RELIC_DISTRIBUTED_TRACING_ENABLED: "true"
+      # Journal de l'agent dans les logs du conteneur (docker compose logs backend).
+      NEW_RELIC_LOG: stdout
+      NEW_RELIC_LOG_LEVEL: info
 
     volumes:
       # Monte le code source en temps réel pour le rechargement automatique.
@@ -156,6 +167,30 @@ services:
     restart: unless-stopped
     networks:
       - imf_network
+
+  # ---------------------------------------------------------------------------
+  # Agent d'infrastructure New Relic — CPU, mémoire, disque, réseau de la machine
+  # et de chaque conteneur (db, backend, nginx, frontend).
+  # Optionnel : ne démarre qu'avec le profil « apm » et une clé renseignée :
+  #   docker compose --profile apm up -d
+  # ---------------------------------------------------------------------------
+  newrelic-infra:
+    image: newrelic/infrastructure:latest
+    container_name: cartographie_imf_newrelic_infra
+    profiles: ["apm"]
+    environment:
+      NRIA_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY:-}
+      NRIA_DISPLAY_NAME: cartographie-imf-dev
+    # Accès en lecture à l'hôte et au démon Docker pour relever les métriques.
+    cap_add:
+      - SYS_PTRACE
+    network_mode: host
+    pid: host
+    privileged: true
+    volumes:
+      - /:/host:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
 
 # =============================================================================
 # Volumes nommés — persistance des données entre les redémarrages

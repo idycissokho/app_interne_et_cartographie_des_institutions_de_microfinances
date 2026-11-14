@@ -44,3 +44,8 @@ if settings.DEBUG:
         path(f"{API_V1}docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
         path(f"{API_V1}redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
     ]
+
+# Routes de la barre de débogage : sans elles, toute requête venant de 127.0.0.1
+# (INTERNAL_IPS) échoue en 500 « 'djdt' is not a registered namespace ».
+if "debug_toolbar" in settings.INSTALLED_APPS:
+    urlpatterns += [path("__debug__/", include("debug_toolbar.urls"))]
