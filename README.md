@@ -2,7 +2,7 @@
 Cartographie des Institutions de Microfinance du Sénégal
 Application web institutionnelle de cartographie et de gouvernance des IMF, développée pour la Direction de la Réglementation et de la Supervision des Systèmes Financiers Décentralisés (DRS-SFD) — Ministère des Finances et du Budget.
 
-🌍 Présentation du Projet
+Présentation du Projet
 Cette application est un outil stratégique permettant à la DRS-SFD de centraliser, visualiser et superviser l'ensemble des Institutions de Microfinance (IMF) opérant sur le territoire sénégalais.
 
 Fonctionnalités clés :
