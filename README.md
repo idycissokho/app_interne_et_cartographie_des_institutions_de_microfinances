@@ -1,74 +1,176 @@
+# Cartographie des IMF — DRS-SFD
 
-Cartographie des Institutions de Microfinance du Sénégal
-Application web institutionnelle de cartographie et de gouvernance des IMF, développée pour la Direction de la Réglementation et de la Supervision des Systèmes Financiers Décentralisés (DRS-SFD) — Ministère des Finances et du Budget.
+Application web institutionnelle de cartographie et de gouvernance des Institutions de Microfinance (IMF), développée pour la **Direction de la Réglementation et de la Supervision des Systèmes Financiers Décentralisés (DRS-SFD)** — Ministère des Finances et du Budget du Sénégal.
 
-🌍 Présentation du Projet
-Cette application est un outil stratégique permettant à la DRS-SFD de centraliser, visualiser et superviser l'ensemble des Institutions de Microfinance (IMF) opérant sur le territoire sénégalais.
+---
 
-Fonctionnalités clés :
+## Table des matières
 
-Cartographie interactive : Visualisation géographique des IMF et de leurs points de service.
-Gouvernance : Gestion des dirigeants, des mandats et des structures administratives.
-Supervision : Suivi et audit des données institutionnelles.
-Importation de données : Outils de chargement massif pour l'initialisation du système.
-🛠 Architecture Technique
-Couche	Technologie
-Frontend	React 18, TypeScript, Vite
-Backend	Python 3.11, Django 5.2 LTS, DRF
-Base de données	PostgreSQL 16, PostGIS (Extension Spatiale)
-Serveur	Nginx (reverse proxy), Gunicorn (WSGI)
-Déploiement	Docker & Docker Compose
-🚀 Installation et Démarrage avec Docker
-Le projet est entièrement conteneurisé. L'utilisation de Docker est la méthode recommandée pour garantir un environnement identique pour tous les développeurs.
+- [Présentation](#présentation)
+- [Stack technique](#stack-technique)
+- [Structure du projet](#structure-du-projet)
+- [Démarrage rapide](#démarrage-rapide)
+- [Variables d'environnement](#variables-denvironnement)
+- [Commandes utiles](#commandes-utiles)
+- [Accès à l'application](#accès-à-lapplication)
+- [Documentation](#documentation)
+- [Statut du projet](#statut-du-projet)
 
-1. Prérequis
-Docker et Docker Compose installés.
-2. Configuration des variables d'environnement
-Avant de lancer le projet, configurez vos secrets :
+---
 
-Run
-cd backend
-cp .env.example .env
-(Modifiez le fichier .env avec votre SECRET_KEY et vos identifiants POSTGRES).
+## Présentation
 
-3. Lancement du projet
-Depuis la racine du projet :
+La plateforme permet à la DRS-SFD de :
 
-Run
-docker-compose up --build
-4. Initialisation de la base de données
-Run
-# Appliquer les migrations
-docker-compose exec backend python manage.py migrate
+- **Cartographier** les IMF et leurs points de service sur le territoire sénégalais
+- **Superviser** les données institutionnelles et réglementaires
+- **Gérer** les dirigeants, mandats et structures administratives
+- **Importer** des données massives depuis des fichiers Excel/CSV
+- **Auditer** toutes les actions effectuées sur la plateforme
 
-# Créer l'administrateur
-docker-compose exec backend python manage.py createsuperuser
-L'API est accessible sur http://localhost:8000/api/v1/ et l'interface sur **http://localhost:5173**.
+Trois niveaux d'accès : `ADMIN`, `SUPERVISEUR`, `CONSULTANT`.
 
-5. Frontend hors Docker (optionnel)
-cd frontend
-npm install
-npm run dev        # http://localhost:5173 (relaie /api vers http://localhost:8000)
-npm run build      # vérification TypeScript + build de production
+---
 
-Écrans : carte des points de service (filtres IMF, région, type, statut, bailleur), carte macro par zone,
-fiches IMF (onglets points de service et dirigeants), dirigeants et mandats, import/export CSV-Excel,
-journal d'audit (administrateurs). Les actions d'écriture n'apparaissent que pour SUPERVISEUR et ADMIN.
+## Stack technique
 
-📂 Organisation du dépôt
+| Couche | Technologie |
+|---|---|
+| Frontend | React 18, TypeScript, Vite |
+| Backend | Python 3.11, Django 5.2 LTS, Django REST Framework |
+| Base de données | PostgreSQL 16 + PostGIS |
+| Serveur | Nginx (reverse proxy), Gunicorn (WSGI) |
+| Déploiement | Docker & Docker Compose |
 
-Apply
+---
+
+## Structure du projet
+
+```
 /
-├── backend/        # API Django REST Framework (Conteneurisé)
-├── frontend/       # Application React TypeScript (Conteneurisé)
-├── docs/           # Documentation technique du projet
-└── docker-compose.yml # Orchestration des services
-📖 Documentation
-La documentation technique complète est disponible dans le dossier docs/.
+├── backend/          # API Django REST Framework
+├── frontend/         # Application React TypeScript
+├── infra/            # Docker, Nginx, PostgreSQL, docker-compose.yml
+├── config/           # Variables d'environnement (.env, .gitignore)
+├── docs/
+│   ├── 01_conception/    # Cahier des charges, diagrammes
+│   ├── 02_architecture/  # Décisions techniques, schémas
+│   ├── 03_api/           # Documentation des endpoints
+│   └── 04_infra/         # Guides déploiement et infrastructure
+└── README.md
+```
 
-docs/architecture.md — Décisions architecturales
-docs/conventions.md — Conventions de code
-docs/api.md — Documentation de l'API
-📈 Statut du projet
-Version : V1 — En cours de développement initial Dernière mise à jour : Janvier 2026
+---
 
+## Démarrage rapide
+
+### Prérequis
+
+- [Docker](https://www.docker.com/) >= 24
+- [Docker Compose](https://docs.docker.com/compose/) >= 2
+
+### 1. Cloner le projet
+
+```bash
+git clone <url-du-repo>
+cd app_interne_et_cartographie_des_institutions_de_microfinances
+```
+
+### 2. Configurer les variables d'environnement
+
+```bash
+cp backend/.env.example config/.env
+```
+
+Éditer `config/.env` avec vos valeurs (voir section [Variables d'environnement](#variables-denvironnement)).
+
+### 3. Lancer les conteneurs
+
+```bash
+docker compose -f infra/docker-compose.yml up --build
+```
+
+### 4. Initialiser la base de données
+
+```bash
+# Générer les migrations
+docker compose -f infra/docker-compose.yml exec backend python manage.py makemigrations
+
+# Appliquer les migrations
+docker compose -f infra/docker-compose.yml exec backend python manage.py migrate
+
+# Créer le compte administrateur
+docker compose -f infra/docker-compose.yml exec backend python manage.py createsuperuser
+```
+
+---
+
+## Variables d'environnement
+
+Fichier : `config/.env`
+
+```env
+# Django
+DJANGO_SECRET_KEY=votre-cle-secrete
+DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
+DJANGO_CSRF_TRUSTED_ORIGINS=http://localhost:5173
+
+# Base de données
+DB_NAME=cartographie_imf
+DB_USER=postgres
+DB_PASSWORD=votre-mot-de-passe
+DB_HOST=db
+DB_PORT=5432
+```
+
+---
+
+## Commandes utiles
+
+```bash
+# Démarrer en arrière-plan
+docker compose -f infra/docker-compose.yml up -d
+
+# Arrêter les conteneurs
+docker compose -f infra/docker-compose.yml down
+
+# Voir les logs du backend
+docker compose -f infra/docker-compose.yml logs -f backend
+
+# Ouvrir un shell Django
+docker compose -f infra/docker-compose.yml exec backend python manage.py shell
+
+# Lancer le frontend hors Docker
+cd frontend && npm install && npm run dev
+```
+
+---
+
+## Accès à l'application
+
+| Service | URL |
+|---|---|
+| Interface frontend | http://localhost:5173 |
+| API REST | http://localhost:8000/api/v1/ |
+| Administration Django | http://localhost:8000/admin/ |
+| Documentation Swagger | http://localhost:8000/api/v1/docs/ |
+| Documentation ReDoc | http://localhost:8000/api/v1/redoc/ |
+
+---
+
+## Documentation
+
+| Document | Emplacement |
+|---|---|
+| Cahier des charges | `docs/01_conception/` |
+| Diagrammes (classes, contexte, cas d'utilisation) | `docs/01_conception/` |
+| Architecture technique | `docs/02_architecture/` |
+| Documentation API | `docs/03_api/` |
+| Guide infrastructure | `docs/04_infra/` |
+
+---
+
+## Statut du projet
+
+**Version** : V1 — En cours de développement
+**Dernière mise à jour** : Novembre 2026
