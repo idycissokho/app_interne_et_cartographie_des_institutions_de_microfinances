@@ -3,18 +3,22 @@ imf/views.py
 ============
 Vues DRF du module IMF :
 - IMFListCreateView     : liste paginée + filtres + création (ADMIN)
+- IMFOptionsView        : toutes les IMF en version courte (listes déroulantes, annuaire)
 - IMFDetailView         : détail, modification et suppression logique (soft delete)
 - BailleurListCreateView / BailleurDetailView : référentiel des bailleurs
 """
 
-from django.db.models import Count, F, OuterRef, Q, Subquery
+from django.db.models import Count, F, IntegerField, OuterRef, Subquery
 from django.db.models.functions import Coalesce
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, generics
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from apps.audit.mixins import AuditMixin
 from apps.authentication.permissions import IsAdmin, IsSuperviseurOrAdmin
+from config.cache_donnees import en_cache
 
 from .models import IMF, Bailleur
 from .serializers import BailleurSerializer, IMFDetailSerializer, IMFListSerializer
@@ -39,7 +43,19 @@ class DroitsCasUtilisationMixin:
         return [IsAuthenticated()]
 
 
+def _compte(lignes):
+    """Nombre de lignes liées à l'IMF courante, calculé par sous-requête.
+
+    Une sous-requête (plutôt qu'une jointure + GROUP BY) évite de multiplier les
+    lignes entre points de service et mandats, et permet à Django de l'ignorer
+    quand il ne fait que compter les IMF (pagination).
+    """
+    par_imf = lignes.order_by().values("imf").annotate(n=Count("pk")).values("n")
+    return Coalesce(Subquery(par_imf, output_field=IntegerField()), 0)
+
+
 def _imf_queryset():
+    from apps.dirigeants.models import Mandat
     from apps.points_service.models import PointService
 
     # Région du siège : celle de l'IMF, sinon celle de son point de service « Siège ».
@@ -49,19 +65,32 @@ def _imf_queryset():
     return (
         IMF.objects.filter(is_active=True)
         .annotate(
-            nb_points_service_actifs=Count(
-                "points_service", filter=Q(points_service__is_active=True), distinct=True
-            ),
-            nb_dirigeants_en_fonction=Count(
-                "mandats",
-                filter=Q(mandats__is_active=True, mandats__statut_mandat="EN_FONCTION"),
-                distinct=True,
+            nb_points_service_actifs=_compte(PointService.objects.filter(imf=OuterRef("pk"), is_active=True)),
+            nb_dirigeants_en_fonction=_compte(
+                Mandat.objects.filter(imf=OuterRef("pk"), is_active=True, statut_mandat="EN_FONCTION")
             ),
             region_siege=Coalesce(F("region__nom"), Subquery(region_point_siege)),
         )
         .prefetch_related("bailleurs")
         .order_by("nom")
     )
+
+
+class IMFOptionsView(APIView):
+    """GET /api/v1/imf/options/ — Toutes les IMF actives, en version courte.
+
+    Sert aux listes déroulantes, aux filtres des cartes et à l'annuaire : huit
+    champs par IMF, une seule requête SQL, sans pagination, réponse mise en cache.
+    """
+
+    permission_classes = [IsAuthenticated]
+    CHAMPS = ("id", "nom", "sigle", "type_imf", "statut_reglementaire", "numero_agrement", "region_siege")
+
+    def get(self, request):
+        return Response(en_cache("imf_options", self._options))
+
+    def _options(self) -> list:
+        return list(_imf_queryset().values(*self.CHAMPS, nb_points_service=F("nb_points_service_actifs")))
 
 
 class IMFListCreateView(

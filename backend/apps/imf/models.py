@@ -115,6 +115,12 @@ class IMF(models.Model):
         verbose_name = "Institution de Microfinance"
         verbose_name_plural = "Institutions de Microfinance"
         ordering = ["nom"]
+        # Champs filtrés et triés par les listes et les statistiques.
+        indexes = [
+            models.Index(fields=["is_active", "nom"], name="imf_active_nom_idx"),
+            models.Index(fields=["is_active", "statut_reglementaire"], name="imf_active_statut_idx"),
+            models.Index(fields=["is_active", "type_imf"], name="imf_active_type_idx"),
+        ]
 
     def __str__(self):
         return self.sigle or self.nom

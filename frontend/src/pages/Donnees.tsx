@@ -11,7 +11,8 @@ import { Erreur, Etapes, erreursChamps } from "../components/form";
 import { AppLayout } from "../components/layout/AppLayout";
 import { telechargerCsv } from "../lib/csv";
 import { ilYa, nombre, pourcent } from "../lib/format";
-import { useDonnees, type Compte } from "../lib/useDonnees";
+import { URL_STATISTIQUES, type Statistiques } from "../lib/stats";
+import { useDonnees } from "../lib/useDonnees";
 
 type TypeImport = "IMF" | "POINTS_SERVICE" | "DIRIGEANTS";
 interface Rapport { ligne: number | null; erreurs: Record<string, string>; valeurs?: Record<string, string> }
@@ -41,8 +42,8 @@ export function Donnees() {
   const [res, setRes] = useState<Importation | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
   const [version, setVersion] = useState(0);
-  const { donnees: d } = useDonnees<{ hist: Page<Importation>; imf: Compte; pts: Compte; mandats: Compte }>({
-    hist: "/importation/?page_size=5&ordering=-date_creation", imf: "/imf/?page_size=1", pts: "/points-service/?page_size=1", mandats: "/dirigeants/mandats/?page_size=1",
+  const { donnees: d } = useDonnees<{ hist: Page<Importation>; stats: Statistiques }>({
+    hist: "/importation/?page_size=5&ordering=-date_creation", stats: URL_STATISTIQUES,
   }, [version]);
 
   function choisir(f: File | null) {
@@ -66,9 +67,9 @@ export function Donnees() {
   const lignesErreur = (res?.rapport_erreurs ?? []).flatMap((r) => Object.entries(r.erreurs).map(([c, m]) => ({ l: r.ligne, c, v: r.valeurs?.[c] ?? "", m: typeof m === "string" ? m : JSON.stringify(m) })));
   const taux = res ? (res.nb_lignes_total ? (100 * res.nb_lignes_importees) / res.nb_lignes_total : 0) : 0;
   const exports: { id: string; t: TypeImport; label: string; count: string }[] = [
-    { id: "ex-imf", t: "IMF", label: "Institutions", count: `${nombre(d.imf?.count ?? 0)} IMF` },
-    { id: "ex-pts", t: "POINTS_SERVICE", label: "Points de service", count: `${nombre(d.pts?.count ?? 0)} points` },
-    { id: "ex-dir", t: "DIRIGEANTS", label: "Dirigeants et mandats", count: `${nombre(d.mandats?.count ?? 0)} mandats` },
+    { id: "ex-imf", t: "IMF", label: "Institutions", count: `${nombre(d.stats?.imf.total ?? 0)} IMF` },
+    { id: "ex-pts", t: "POINTS_SERVICE", label: "Points de service", count: `${nombre(d.stats?.points.total ?? 0)} points` },
+    { id: "ex-dir", t: "DIRIGEANTS", label: "Dirigeants et mandats", count: `${nombre(d.stats?.mandats.total ?? 0)} mandats` },
   ];
 
   return (

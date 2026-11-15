@@ -5,6 +5,8 @@
 import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 
+import { prechargerPage } from "../../lib/pages";
+
 export type CleMenu =
   | "dashboard" | "micro" | "macro" | "imf" | "points" | "dirigeants"
   | "supervision" | "consultation" | "import" | "audit";
@@ -84,7 +86,7 @@ export function Sidebar({ active, role, nomComplet, onDeconnexion }: Props) {
         <div key={g.title} style={{ display: "contents" }}>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "#6F7C91", padding: "14px 12px 6px 12px" }}>{g.title}</div>
           {g.items.map((it) => (
-            <Link key={it.k} to={it.href} style={it.style} aria-current={it.on ? "page" : undefined}>
+            <Link key={it.k} to={it.href} style={it.style} aria-current={it.on ? "page" : undefined} onMouseEnter={() => prechargerPage(it.href)} onFocus={() => prechargerPage(it.href)}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={it.icon} /></svg>
               <span style={{ flex: 1 }}>{it.label}</span>
               {it.badge && <span style={{ fontSize: 11, fontWeight: 800, color: "#0B1424", background: "#F3D98C", borderRadius: 999, padding: "2px 8px" }}>{it.badge}</span>}

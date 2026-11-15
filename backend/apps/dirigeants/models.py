@@ -33,6 +33,7 @@ class Dirigeant(models.Model):
         verbose_name = "Dirigeant"
         verbose_name_plural = "Dirigeants"
         ordering = ["nom", "prenom"]
+        indexes = [models.Index(fields=["is_active", "nom", "prenom"], name="dirigeant_active_nom_idx")]
 
     def __str__(self):
         return self.get_nom_complet()
@@ -103,6 +104,12 @@ class Mandat(models.Model):
         verbose_name = "Mandat"
         verbose_name_plural = "Mandats"
         ordering = ["-date_debut"]
+        # Champs filtrés et triés par la liste des mandats et les échéances.
+        indexes = [
+            models.Index(fields=["is_active", "statut_mandat"], name="mandat_active_statut_idx"),
+            models.Index(fields=["is_active", "fonction_mandat"], name="mandat_active_fonction_idx"),
+            models.Index(fields=["is_active", "date_fin"], name="mandat_active_fin_idx"),
+        ]
 
     def __str__(self):
         return f"{self.dirigeant} — {self.get_fonction_mandat_display()} ({self.imf})"

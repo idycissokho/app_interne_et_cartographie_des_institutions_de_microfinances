@@ -80,6 +80,8 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    # Compresse les réponses JSON / GeoJSON (le GeoJSON des points passe de 290 à 47 Ko).
+    "django.middleware.gzip.GZipMiddleware",
     "corsheaders.middleware.CorsMiddleware",  # Avant CommonMiddleware
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -275,4 +277,18 @@ LOGGING = {
         # Logger dédié aux opérations d'audit métier
         "audit": {"handlers": ["console"], "level": "INFO", "propagate": False},
     },
+}
+
+
+# ---------------------------------------------------------------------------
+# Cache — statistiques, indicateurs par zone, contours, points de la carte
+# (voir config/cache_donnees.py). Mémoire locale par défaut : avec plusieurs
+# processus (Gunicorn), préférer un cache partagé (Redis, Memcached).
+# ---------------------------------------------------------------------------
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "cartographie-imf",
+    }
 }

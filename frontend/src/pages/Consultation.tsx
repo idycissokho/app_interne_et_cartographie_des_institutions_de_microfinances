@@ -14,10 +14,11 @@ import {
   FAMILLE_FONCTION, LIBELLE_FONCTION, SB, STATUT_IMF_COURT, STATUT_MANDAT, STATUT_POINT, TYPE_IMF_COURT, TYPE_POINT,
   avancementMandat, initiales, regionAffichee, tonIMF,
 } from "../lib/metier";
-import { statsParRegion, type AgregatZone } from "../lib/stats";
+import { statsParRegion, type AgregatZone, URL_IMF_OPTIONS, URL_REGIONS } from "../lib/stats";
 import { useDonnees } from "../lib/useDonnees";
 
 interface ImfLigne { id: string; nom: string; sigle: string; type_imf: string; statut_reglementaire: string; region_siege: string | null; nb_points_service: number }
+const VIDE: ImfLigne[] = [];
 interface ImfFiche extends ImfLigne { adresse_siege: string; telephone: string; email: string; site_web: string; nb_regions_couvertes: number; nb_dirigeants_en_fonction: number; nb_membres_total: number | null; numero_agrement: string; type_sfd: string; affiliation: string; forme_juridique: string; annee_creation: number | null; ninea: string; capital: string | null; nb_beneficiaires: number | null; situation: string; nb_membres_ca: number | null; nb_membres_cs: number | null; nb_membres_cc: number | null; url_fiche: string; bailleurs_detail: { id: string; nom: string; sigle: string }[] }
 interface PointLigne { id: string; nom: string; type_point: string; statut_point: string; region_nom: string | null }
 interface MandatLigne { id: string; dirigeant_nom_complet: string; fonction_mandat: string; statut_mandat: string; date_debut: string; date_fin: string | null; fichier_justificatif: string | null; documents_justificatifs: string }
@@ -39,8 +40,8 @@ export function Consultation() {
   const [tab, setTab] = useState<(typeof TABS)[number]["k"]>("apercu");
   const [dchip, setDchip] = useState("Tous");
 
-  const { donnees: l } = useDonnees<{ imfs: Page<ImfLigne>; zones: AgregatZone[] }>({ imfs: "/imf/?page_size=1000", zones: "/cartographie/zones/agregats/?type_zone=REGION" });
-  const imfs = l.imfs?.results ?? [];
+  const { donnees: l } = useDonnees<{ imfs: ImfLigne[]; zones: AgregatZone[] }>({ imfs: URL_IMF_OPTIONS, zones: URL_REGIONS });
+  const imfs = l.imfs ?? VIDE;
   useEffect(() => { if (!sel && imfs.length) setSel(imfs[0].id); }, [imfs, sel]);
 
   const { donnees: f } = useDonnees<{ fiche: ImfFiche; pts: Page<PointLigne>; dirs: Page<MandatLigne> }>({

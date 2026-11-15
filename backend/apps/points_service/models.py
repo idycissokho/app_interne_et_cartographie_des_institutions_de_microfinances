@@ -90,6 +90,14 @@ class PointService(models.Model):
         verbose_name = "Point de service"
         verbose_name_plural = "Points de service"
         ordering = ["imf", "nom"]
+        # Champs filtrés et triés par les listes, la carte et les statistiques.
+        # (imf, region, departement, commune : déjà indexés comme clés étrangères ;
+        #  localisation : index spatial GiST créé par PostGIS.)
+        indexes = [
+            models.Index(fields=["is_active", "type_point"], name="ps_active_type_idx"),
+            models.Index(fields=["is_active", "statut_point"], name="ps_active_statut_idx"),
+            models.Index(fields=["is_active", "nom"], name="ps_active_nom_idx"),
+        ]
 
     def __str__(self):
         return f"{self.nom} ({self.imf})"

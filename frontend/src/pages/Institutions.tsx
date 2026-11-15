@@ -10,6 +10,7 @@ import { useAuth } from "../auth/AuthContext";
 import { AppLayout } from "../components/layout/AppLayout";
 import { telechargerCsv } from "../lib/csv";
 import { SB, STATUT_IMF_LONG, TYPE_IMF_LONG, initiales, regionAffichee, tonIMF } from "../lib/metier";
+import { LignesSquelette } from "../components/Squelette";
 import { useDonnees, type Compte } from "../lib/useDonnees";
 
 interface Ligne {
@@ -131,6 +132,7 @@ export function Institutions() {
                 </tr>
               </thead>
               <tbody>
+                {!d.rows && <LignesSquelette colonnes={10} />}
                 {rows.map((r) => {
                   const c = SB[r.statut_reglementaire];
                   return (

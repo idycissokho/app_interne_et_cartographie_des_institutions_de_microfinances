@@ -10,17 +10,15 @@ Vues DRF du module points de service :
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, generics
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from apps.audit.mixins import AuditMixin
 from apps.imf.views import DroitsCasUtilisationMixin
+from config.cache_donnees import en_cache
 
 from .filters import PointServiceFilter
 from .models import PointService
-from .serializers import (
-    PointServiceDetailSerializer,
-    PointServiceGeoSerializer,
-    PointServiceListSerializer,
-)
+from .serializers import PointServiceDetailSerializer, PointServiceListSerializer
 
 RELATIONS = ("imf", "region", "departement", "commune")
 
@@ -49,17 +47,48 @@ class PointServiceDetailView(
         instance.save(update_fields=["is_active"])
 
 
-class PointServiceGeoView(generics.ListAPIView):
-    """GET /api/v1/points-service/geojson/ — Export GeoJSON pour la carte (non paginé)."""
+class PointServiceGeoView(generics.GenericAPIView):
+    """GET /api/v1/points-service/geojson/ — Points géolocalisés pour la carte micro (non paginé).
 
-    serializer_class = PointServiceGeoSerializer
+    Même format que PointServiceGeoSerializer (FeatureCollection GeoJSON), mais
+    construit directement à partir d'une requête `values()` : une seule requête SQL,
+    aucun objet modèle ni sérialiseur par point, coordonnées arrondies à 5 décimales
+    (≈ 1 m). La réponse est mise en cache par jeu de filtres.
+    """
+
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend]
     filterset_class = PointServiceFilter
     # La carte doit recevoir tous les points : une FeatureCollection paginée serait incomplète.
     pagination_class = None
+    PROPRIETES = {
+        "nom": "nom", "imf": "imf_id", "imf_nom": "imf__nom",
+        "type_point": "type_point", "statut_point": "statut_point",
+        "region_nom": "region__nom", "departement_nom": "departement__nom", "commune_nom": "commune__nom",
+        "telephone": "telephone", "email": "email",
+    }
 
     def get_queryset(self):
-        return PointService.objects.filter(
-            is_active=True, localisation__isnull=False
-        ).select_related(*RELATIONS)
+        return PointService.objects.filter(is_active=True, localisation__isnull=False)
+
+    def get(self, request):
+        filtres = sorted(request.query_params.items())
+        return Response(en_cache("points_geojson", self._collection, filtres))
+
+    def _collection(self) -> dict:
+        lignes = self.filter_queryset(self.get_queryset()).values("id", "localisation", *self.PROPRIETES.values())
+        return {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "id": ligne["id"],
+                    "type": "Feature",
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [round(ligne["localisation"].x, 5), round(ligne["localisation"].y, 5)],
+                    },
+                    "properties": {cle: ligne[champ] for cle, champ in self.PROPRIETES.items()},
+                }
+                for ligne in lignes
+            ],
+        }

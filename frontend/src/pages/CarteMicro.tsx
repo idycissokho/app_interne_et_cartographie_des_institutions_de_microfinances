@@ -11,6 +11,7 @@ import { SenegalMap, type PointCarte, type StatutPoint, type TypePoint } from ".
 import { AppLayout } from "../components/layout/AppLayout";
 import { projeter } from "../data/projection";
 import { SENEGAL_REGIONS, cleRegion } from "../data/senegalRegions";
+import { URL_IMF_OPTIONS, type ImfOption } from "../lib/stats";
 import { useDonnees } from "../lib/useDonnees";
 
 interface FeaturePoint {
@@ -37,9 +38,9 @@ export function CarteMicro() {
   const [pt, setPt] = useState<PointMicro | null>(null);
   const [detail, setDetail] = useState<{ date_ouverture: string | null; nombre_membres: number | null } | null>(null);
 
-  const { donnees: d } = useDonnees<{ geo: { features: FeaturePoint[] }; imfs: Page<{ id: string; nom: string; sigle: string }>; bailleurs: Page<{ id: string; nom: string; sigle: string }> }>({
+  const { donnees: d } = useDonnees<{ geo: { features: FeaturePoint[] }; imfs: ImfOption[]; bailleurs: Page<{ id: string; nom: string; sigle: string }> }>({
     geo: `/points-service/geojson/${f.bailleur ? `?bailleur=${f.bailleur}` : ""}`,
-    imfs: "/imf/?page_size=1000",
+    imfs: URL_IMF_OPTIONS,
     bailleurs: "/imf/bailleurs/?page_size=1000",
   });
 
@@ -70,7 +71,7 @@ export function CarteMicro() {
   const set = (k: keyof typeof VIDE) => (v: string) => { setF({ ...f, [k]: v }); setPt(null); };
 
   const filtres: { id: string; label: string; value: string; change: (v: string) => void; options: [string, string][] }[] = [
-    { id: "mi-imf", label: "Institution (IMF)", value: f.imf, change: set("imf"), options: [["", "Toutes"], ...(d.imfs?.results ?? []).map((i): [string, string] => [i.id, i.sigle || i.nom])] },
+    { id: "mi-imf", label: "Institution (IMF)", value: f.imf, change: set("imf"), options: [["", "Toutes"], ...(d.imfs ?? []).map((i): [string, string] => [i.id, i.sigle || i.nom])] },
     { id: "mi-reg", label: "Région", value: f.region, change: set("region"), options: [["", "Toutes"], ...SENEGAL_REGIONS.map((r): [string, string] => [r.id, r.id]).sort((a, b) => a[1].localeCompare(b[1], "fr"))] },
     { id: "mi-type", label: "Type de point", value: f.type, change: set("type"), options: [["", "Tous"], ...TYPES] },
     { id: "mi-stat", label: "Statut", value: f.statut, change: set("statut"), options: [["", "Tous"], ...STATUTS] },

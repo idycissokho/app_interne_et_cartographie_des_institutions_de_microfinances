@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
 import { api, evenementDeconnexion, jetons } from "../api/client";
+import { cacheRequetes, requeteApi } from "../api/cache";
 import type { Utilisateur } from "../api/types";
 
 interface ContexteAuth {
@@ -26,15 +27,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setChargement(false);
       return;
     }
-    api
-      .get<Utilisateur>("/auth/profil/")
+    // fetchQuery : un seul appel même si l'effet est monté deux fois (mode strict de React).
+    cacheRequetes
+      .fetchQuery({ ...requeteApi<Utilisateur>("/auth/profil/"), staleTime: 0 })
       .then(setUtilisateur)
       .catch(() => jetons.effacer())
       .finally(() => setChargement(false));
   }, []);
 
   useEffect(() => {
-    const surDeconnexion = () => setUtilisateur(null);
+    const surDeconnexion = () => {
+      cacheRequetes.clear();
+      setUtilisateur(null);
+    };
     evenementDeconnexion.addEventListener("deconnexion", surDeconnexion);
     return () => evenementDeconnexion.removeEventListener("deconnexion", surDeconnexion);
   }, []);
@@ -45,6 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password: motDePasse,
     });
     jetons.effacer();
+    cacheRequetes.clear(); // les données dépendent du rôle : rien de l'ancienne session ne doit rester
     jetons.enregistrer(res.access, res.refresh, resterConnecte);
     setUtilisateur(res.utilisateur);
   }, []);
@@ -55,6 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (refresh) await api.post("/auth/logout/", { refresh });
     } finally {
       jetons.effacer();
+      cacheRequetes.clear();
       setUtilisateur(null);
     }
   }, []);

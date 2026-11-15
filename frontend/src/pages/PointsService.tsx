@@ -14,7 +14,9 @@ import { dansLeSenegal } from "../data/projection";
 import { montantCourt, nombre } from "../lib/format";
 import { SB, STATUT_POINT, TYPE_POINT, regionAffichee } from "../lib/metier";
 import { nombreFr, regionProche } from "../lib/region";
-import { useDonnees, type Compte } from "../lib/useDonnees";
+import { URL_IMF_OPTIONS, URL_STATISTIQUES, type ImfOption, type Statistiques } from "../lib/stats";
+import { LignesSquelette } from "../components/Squelette";
+import { useDonnees } from "../lib/useDonnees";
 import { COULEUR_TYPE_POINT } from "../styles/tokens";
 
 interface Ligne { id: string; nom: string; imf_nom: string; type_point: string; statut_point: string; region_nom: string | null; commune_nom: string | null; nombre_membres: number | null; encours: string }
@@ -39,17 +41,17 @@ export function PointsService() {
   const [tiroir, setTiroir] = useState<null | { id?: string }>(params.get("nouveau") && estAdmin ? {} : null);
   const [toast, setToast] = useState<string | null>(null);
 
-  const { donnees: d } = useDonnees<{ rows: Page<Ligne>; k0: Compte; k1: Compte; k2: Compte; k3: Compte }>({
+  const { donnees: d } = useDonnees<{ rows: Page<Ligne>; stats: Statistiques }>({
     rows: `/points-service/${qs({ page, page_size: TAILLE, ordering: "nom", sans_gps: sansGps ? "true" : "" })}`,
-    k0: "/points-service/?type_point=SIEGE&page_size=1", k1: "/points-service/?type_point=AGENCE&page_size=1",
-    k2: "/points-service/?type_point=GUICHET&page_size=1", k3: "/points-service/?type_point=BUREAU&page_size=1",
+    stats: URL_STATISTIQUES,
   }, [version]);
   const rows = d.rows?.results ?? [];
+  const parType = d.stats?.points.par_type;
   const total = d.rows?.count ?? 0;
   const pages = Math.max(1, Math.ceil(total / TAILLE));
   const kpis = [
-    { n: d.k0?.count, label: "Sièges sociaux", color: "#C9A44C" }, { n: d.k1?.count, label: "Agences", color: "#1F4E79" },
-    { n: d.k2?.count, label: "Guichets", color: "#B5763A" }, { n: d.k3?.count, label: "Bureaux de représentation", color: "#2E7D6B" },
+    { n: parType?.SIEGE, label: "Sièges sociaux", color: "#C9A44C" }, { n: parType?.AGENCE, label: "Agences", color: "#1F4E79" },
+    { n: parType?.GUICHET, label: "Guichets", color: "#B5763A" }, { n: parType?.BUREAU, label: "Bureaux de représentation", color: "#2E7D6B" },
   ];
   const numeros = Array.from({ length: pages }, (_, i) => i + 1).filter((n) => Math.abs(n - page) <= 2 || n === 1 || n === pages);
 
@@ -89,6 +91,7 @@ export function PointsService() {
             <table style={{ width: "100%", minWidth: 860, borderCollapse: "collapse", fontSize: 14 }}>
               <thead><tr style={{ textAlign: "left", fontSize: 11, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "#6B7280", background: "#FDFBF6" }}><th style={{ padding: "12px 18px" }}>Point de service</th><th style={{ padding: "12px 8px" }}>IMF</th><th style={{ padding: "12px 8px" }}>Type</th><th style={{ padding: "12px 8px" }}>Localisation</th><th style={{ padding: "12px 8px" }}>Statut</th><th style={{ padding: "12px 8px", textAlign: "right" }}>Membres</th><th style={{ padding: "12px 18px", textAlign: "right" }}>Encours</th></tr></thead>
               <tbody>
+                {!d.rows && <LignesSquelette colonnes={7} />}
                 {rows.map((r) => {
                   const c = SB[r.statut_point === "SUSPENDU" ? "SUSPENDU_POINT" : r.statut_point];
                   const col = COULEUR_TYPE_POINT[r.type_point];
@@ -133,8 +136,8 @@ function TiroirPoint({ id, imfInitiale, onClose, onSaved }: { id?: string; imfIn
   const [erreurs, setErreurs] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState(false);
   const [envoi, setEnvoi] = useState(false);
-  const { donnees: r } = useDonnees<{ imfs: Page<{ id: string; nom: string; sigle: string }>; regions: Page<Zone>; depts: Page<Zone>; communes: Page<Zone> }>({
-    imfs: "/imf/?page_size=1000",
+  const { donnees: r } = useDonnees<{ imfs: ImfOption[]; regions: Page<Zone>; depts: Page<Zone>; communes: Page<Zone> }>({
+    imfs: URL_IMF_OPTIONS,
     regions: "/cartographie/zones/?type_zone=REGION&page_size=1000",
     depts: "/cartographie/zones/?type_zone=DEPARTEMENT&page_size=1000",
     communes: "/cartographie/zones/?type_zone=COMMUNE&page_size=1000",
@@ -200,7 +203,7 @@ function TiroirPoint({ id, imfInitiale, onClose, onSaved }: { id?: string; imfIn
       pied={<><button type="button" onClick={onClose} style={btnSecondaire}>Annuler</button><button type="button" className="ps-primary" disabled={envoi} onClick={enregistrer} style={btnPrimaire}>Enregistrer le point</button></>}>
       <form onSubmit={(e) => { e.preventDefault(); enregistrer(); }} style={{ flex: 1, overflowY: "auto", padding: "22px 26px", display: "flex", flexDirection: "column", gap: 22 }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <div style={champ}><Label htmlFor="ps-imf" requis>Institution</Label><select id="ps-imf" className={inputCls(err.imf)} value={f.imf} onChange={(e) => set("imf")(e.target.value)}><option value="">Choisir une institution…</option>{(r.imfs?.results ?? []).map((i) => <option key={i.id} value={i.id}>{i.nom}{i.sigle ? ` (${i.sigle})` : ""}</option>)}</select><Erreur>{err.imf}</Erreur></div>
+          <div style={champ}><Label htmlFor="ps-imf" requis>Institution</Label><select id="ps-imf" className={inputCls(err.imf)} value={f.imf} onChange={(e) => set("imf")(e.target.value)}><option value="">Choisir une institution…</option>{(r.imfs ?? []).map((i) => <option key={i.id} value={i.id}>{i.nom}{i.sigle ? ` (${i.sigle})` : ""}</option>)}</select><Erreur>{err.imf}</Erreur></div>
           <div style={champ}><Label htmlFor="ps-nom" requis>Nom du point</Label><input id="ps-nom" className={inputCls(err.nom)} value={f.nom} onChange={(e) => set("nom")(e.target.value)} placeholder="Ex. Agence de …" /><Erreur>{err.nom}</Erreur></div>
           <fieldset style={{ border: "none", margin: 0, padding: 0 }}>
             <legend className="ps-label" style={{ marginBottom: 8 }}>Type de point <span className="ps-req">*</span></legend>

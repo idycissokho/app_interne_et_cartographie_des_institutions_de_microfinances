@@ -9,8 +9,9 @@ import { useAuth } from "../auth/AuthContext";
 import { SenegalMap } from "../components/carto/SenegalMap";
 import { AppLayout } from "../components/layout/AppLayout";
 import { CODE_FONCTION, dateLongue, ilYa, isoJour, joursAvant, nombre, pourcent } from "../lib/format";
-import { statsParRegion, type AgregatZone } from "../lib/stats";
-import { useDonnees, type Compte } from "../lib/useDonnees";
+import { statsParRegion, type AgregatZone, URL_REGIONS, URL_STATISTIQUES, type Statistiques } from "../lib/stats";
+import { Squelette } from "../components/Squelette";
+import { useDonnees } from "../lib/useDonnees";
 
 interface MandatEcheance { id: string; fonction_mandat: string; dirigeant_nom_complet: string; imf_sigle: string; imf_nom: string; imf_region: string | null; date_fin: string }
 interface EntreeAudit { id: string; action: string; role: string; date_action: string; utilisateur_email: string | null; details: { libelle?: string } }
@@ -37,30 +38,17 @@ export function TableauDeBord() {
   const recherche = useRef<HTMLInputElement>(null);
   const auj = new Date();
   const dans90 = new Date(Date.now() + 90 * 86400000);
-  const janvier = `${auj.getFullYear()}-01-01`;
 
+  // Tous les compteurs viennent d'un seul appel (statistiques), partagé avec les autres pages.
   const { donnees: d } = useDonnees<{
-    agreees: Compte; agreeesAn: Compte; imfTotal: Compte; enCours: Compte; radiees: Compte;
-    mutuelles: Compte; coops: Compte; sa: Compte;
-    points: Compte; sansGps: Compte; dirigeants: Compte; echeances: Page<MandatEcheance>;
-    regions: AgregatZone[]; communes: AgregatZone[]; audit: Page<EntreeAudit>;
+    stats: Statistiques; echeances: Page<MandatEcheance>; regions: AgregatZone[]; audit: Page<EntreeAudit>;
   }>({
-    agreees: "/imf/?statut_reglementaire=AGREE&page_size=1",
-    agreeesAn: `/imf/?statut_reglementaire=AGREE&date_creation__gte=${janvier}&page_size=1`,
-    imfTotal: "/imf/?page_size=1",
-    enCours: "/imf/?statut_reglementaire=EN_COURS&page_size=1",
-    radiees: "/imf/?statut_reglementaire=RADIEE&page_size=1",
-    mutuelles: "/imf/?type_imf=MUTUELLE&page_size=1",
-    coops: "/imf/?type_imf=COOPERATIVE&page_size=1",
-    sa: "/imf/?type_imf=SA&page_size=1",
-    points: "/points-service/?page_size=1",
-    sansGps: "/points-service/?sans_gps=true&page_size=1",
-    dirigeants: "/dirigeants/?mandats__statut_mandat=EN_FONCTION&page_size=1",
+    stats: URL_STATISTIQUES,
     echeances: `/dirigeants/mandats/?date_fin__gte=${isoJour(auj)}&date_fin__lte=${isoJour(dans90)}&ordering=date_fin&page_size=4`,
-    regions: "/cartographie/zones/agregats/?type_zone=REGION",
-    communes: "/cartographie/zones/agregats/?type_zone=COMMUNE",
+    regions: URL_REGIONS,
     audit: estAdmin ? "/audit/?page_size=3" : null,
   });
+  const st = d.stats;
 
   useEffect(() => {
     const raccourci = (e: KeyboardEvent) => {
@@ -73,22 +61,21 @@ export function TableauDeBord() {
     return () => window.removeEventListener("keydown", raccourci);
   }, []);
 
-  const n = (c?: Compte | null) => c?.count ?? 0;
-  const totalImf = n(d.imfTotal) || 1;
-  const totalPoints = n(d.points);
-  const geoloc = totalPoints ? (100 * (totalPoints - n(d.sansGps))) / totalPoints : 0;
-  const communes = d.communes ?? [];
-  const couvertes = communes.filter((c) => c.nb_points_service > 0).length;
+  const totalImf = st?.imf.total || 1;
+  const totalPoints = st?.points.total ?? 0;
+  const geoloc = totalPoints ? (100 * (totalPoints - (st?.points.sans_gps ?? 0))) / totalPoints : 0;
+  const totalCommunes = st?.communes.total ?? 0;
+  const couvertes = st?.communes.couvertes ?? 0;
   const types = [
-    { label: "Mutuelles d'épargne et de crédit", v: n(d.mutuelles) },
-    { label: "Coopératives", v: n(d.coops) },
-    { label: "Sociétés anonymes", v: n(d.sa) },
+    { label: "Mutuelles d'épargne et de crédit", v: st?.imf.par_type.MUTUELLE ?? 0 },
+    { label: "Coopératives", v: st?.imf.par_type.COOPERATIVE ?? 0 },
+    { label: "Sociétés anonymes", v: st?.imf.par_type.SA ?? 0 },
   ];
-  types.push({ label: "Autres", v: Math.max(0, n(d.imfTotal) - types.reduce((a, t) => a + t.v, 0)) });
+  types.push({ label: "Autres", v: Math.max(0, (st?.imf.total ?? 0) - types.reduce((a, t) => a + t.v, 0)) });
   const statuts = [
-    { label: "Agréées", v: n(d.agreees), c: "#15803D" },
-    { label: "En cours d'agrément", v: n(d.enCours), c: "#D97706" },
-    { label: "Retraits / radiations", v: n(d.radiees), c: "#B91C1C" },
+    { label: "Agréées", v: st?.imf.agreees ?? 0, c: "#15803D" },
+    { label: "En cours d'agrément", v: st?.imf.en_cours ?? 0, c: "#D97706" },
+    { label: "Retraits / radiations", v: st?.imf.radiees ?? 0, c: "#B91C1C" },
   ];
   const echeances = d.echeances?.results ?? [];
   const urgent = echeances.some((m) => joursAvant(m.date_fin) <= 30);
@@ -136,23 +123,23 @@ export function TableauDeBord() {
         <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(220px, 100%), 1fr))", gap: 16 }}>
           <article className="tb-card tb-up d1" style={carte}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><span style={{ fontSize: 13, fontWeight: 700, color: "#4A5568" }}>IMF agréées</span><span style={icone}>{svg(<path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6" />)}</span></div>
-            <div style={{ fontSize: 38, fontWeight: 800, letterSpacing: "-0.03em" }}>{nombre(n(d.agreees))}</div>
-            <div style={{ fontSize: 13, color: "#15803D", fontWeight: 700 }}>+{nombre(n(d.agreeesAn))} <span style={{ color: "#6B7280", fontWeight: 500 }}>depuis janvier</span></div>
+            <div style={{ fontSize: 38, fontWeight: 800, letterSpacing: "-0.03em" }}>{st ? nombre(st.imf.agreees) : <Squelette largeur={96} hauteur={38} />}</div>
+            <div style={{ fontSize: 13, color: "#15803D", fontWeight: 700 }}>+{nombre((st?.imf.agreees_depuis_janvier ?? 0))} <span style={{ color: "#6B7280", fontWeight: 500 }}>depuis janvier</span></div>
           </article>
           <article className="tb-card tb-up d2" style={carte}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><span style={{ fontSize: 13, fontWeight: 700, color: "#4A5568" }}>Points de service</span><span style={icone}>{svg(<><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z" /><circle cx="12" cy="9.5" r="2.5" /></>)}</span></div>
-            <div style={{ fontSize: 38, fontWeight: 800, letterSpacing: "-0.03em" }}>{nombre(totalPoints)}</div>
+            <div style={{ fontSize: 38, fontWeight: 800, letterSpacing: "-0.03em" }}>{st ? nombre(totalPoints) : <Squelette largeur={96} hauteur={38} />}</div>
             <div style={{ fontSize: 13, color: "#6B7280" }}>dont <b style={{ color: "#0B1424" }}>{pourcent(geoloc)}</b> géolocalisés</div>
           </article>
           <article className="tb-card tb-up d3" style={carte}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><span style={{ fontSize: 13, fontWeight: 700, color: "#4A5568" }}>Dirigeants en fonction</span><span style={icone}>{svg(<><circle cx="12" cy="8" r="3.5" /><path d="M5 20c.8-3.5 3.6-5.5 7-5.5s6.2 2 7 5.5" /></>)}</span></div>
-            <div style={{ fontSize: 38, fontWeight: 800, letterSpacing: "-0.03em" }}>{nombre(n(d.dirigeants))}</div>
+            <div style={{ fontSize: 38, fontWeight: 800, letterSpacing: "-0.03em" }}>{st ? nombre(st.dirigeants.en_fonction) : <Squelette largeur={96} hauteur={38} />}</div>
             <div style={{ fontSize: 13, color: "#B45309", fontWeight: 700 }}>{nombre(d.echeances?.count ?? 0)} mandats <span style={{ color: "#6B7280", fontWeight: 500 }}>expirent sous 90 j</span></div>
           </article>
           <article className="tb-card tb-up d4" style={carte}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><span style={{ fontSize: 13, fontWeight: 700, color: "#4A5568" }}>Communes couvertes</span><span style={icone}>{svg(<path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z" />)}</span></div>
-            <div style={{ fontSize: 38, fontWeight: 800, letterSpacing: "-0.03em" }}>{nombre(couvertes)} <span style={{ fontSize: 18, color: "#6B7280", fontWeight: 600 }}>/ {nombre(communes.length)}</span></div>
-            <div style={{ height: 6, borderRadius: 99, background: "#F1ECE0", overflow: "hidden" }}><div className="tb-bar" style={{ width: `${communes.length ? Math.round((100 * couvertes) / communes.length) : 0}%`, height: "100%", borderRadius: 99, background: "linear-gradient(90deg, #C9A44C, #E9C76A)" }} /></div>
+            <div style={{ fontSize: 38, fontWeight: 800, letterSpacing: "-0.03em" }}>{nombre(couvertes)} <span style={{ fontSize: 18, color: "#6B7280", fontWeight: 600 }}>/ {nombre(totalCommunes)}</span></div>
+            <div style={{ height: 6, borderRadius: 99, background: "#F1ECE0", overflow: "hidden" }}><div className="tb-bar" style={{ width: `${totalCommunes ? Math.round((100 * couvertes) / totalCommunes) : 0}%`, height: "100%", borderRadius: 99, background: "linear-gradient(90deg, #C9A44C, #E9C76A)" }} /></div>
           </article>
         </section>
 

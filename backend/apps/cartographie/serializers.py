@@ -9,6 +9,7 @@ Sérialiseurs du module cartographie :
 
 from rest_framework import serializers
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
+
 from .models import ZoneGeographique
 
 
@@ -70,21 +71,12 @@ class ZoneAgregatsSerializer(serializers.ModelSerializer):
         ]
 
     def get_principaux_bailleurs(self, obj):
-        """Les 2 bailleurs associés au plus grand nombre d'IMF présentes dans la zone."""
-        from django.db.models import Count, Q
+        """Les 2 bailleurs associés au plus grand nombre d'IMF présentes dans la zone.
 
-        from apps.cartographie.models import CHAMP_POINT_PAR_TYPE
-        from apps.imf.models import Bailleur
-
-        champ = CHAMP_POINT_PAR_TYPE[obj.type_zone]
-        presence = Q(**{f"imfs__points_service__{champ}": obj, "imfs__points_service__is_active": True})
-        top = (
-            Bailleur.objects.filter(is_active=True)
-            .annotate(n=Count("imfs", filter=presence, distinct=True))
-            .filter(n__gt=0)
-            .order_by("-n", "nom")[:2]
-        )
-        return [b.sigle or b.nom for b in top]
+        Calculés pour toutes les zones en une requête par la vue (contexte
+        « principaux_bailleurs ») : pas de requête par zone ici.
+        """
+        return self.context.get("principaux_bailleurs", {}).get(obj.pk, [])
 
 
 class ZoneGeographiqueGeoSerializer(GeoFeatureModelSerializer):

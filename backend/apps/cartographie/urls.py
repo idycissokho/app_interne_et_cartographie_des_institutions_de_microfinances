@@ -6,10 +6,13 @@ Routes du module cartographie :
   GET/PUT/PATCH/DELETE /api/v1/cartographie/zones/<uuid>/  — Détail zone
   GET                  /api/v1/cartographie/zones/geojson/ — Export GeoJSON
   GET                  /api/v1/cartographie/zones/agregats/ — Indicateurs par zone (carte macro)
+  GET                  /api/v1/cartographie/statistiques/   — Compteurs du tableau de bord
 """
 
 from django.urls import path
+
 from .views import (
+    StatistiquesView,
     ZoneAgregatsView,
     ZoneGeographiqueDetailView,
     ZoneGeographiqueGeoView,
@@ -19,6 +22,7 @@ from .views import (
 app_name = "cartographie"
 
 urlpatterns = [
+    path("statistiques/", StatistiquesView.as_view(), name="statistiques"),
     path("zones/", ZoneGeographiqueListCreateView.as_view(), name="zone-list"),
     path("zones/agregats/", ZoneAgregatsView.as_view(), name="zone-agregats"),
     path("zones/geojson/", ZoneGeographiqueGeoView.as_view(), name="zone-geojson"),

@@ -7,54 +7,43 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 
-import type { Page } from "../api/types";
 import { SenegalMap } from "../components/carto/SenegalMap";
 import { AppLayout } from "../components/layout/AppLayout";
 import { SENEGAL_REGIONS, cleRegion } from "../data/senegalRegions";
-import { isoJour, nombre } from "../lib/format";
-import { statsParRegion, type AgregatZone } from "../lib/stats";
-import { useDonnees, type Compte } from "../lib/useDonnees";
+import { nombre } from "../lib/format";
+import { statsParRegion, type AgregatZone, URL_REGIONS, URL_STATISTIQUES, type Statistiques } from "../lib/stats";
+import { Squelette } from "../components/Squelette";
+import { useDonnees } from "../lib/useDonnees";
 
-interface ImfLigne { telephone: string; email: string; a_gps: boolean; bailleurs_noms: string[] }
 
 const pct = (a: number, b: number) => (b ? Math.round((100 * a) / b) : 0);
 
 export function Supervision() {
   const [zone, setZone] = useState("Kédougou");
-  const dans30 = isoJour(new Date(Date.now() + 30 * 86400000));
 
-  const { donnees: d } = useDonnees<{
-    mandats30: Compte; sansGps: Compte; points: Compte; enCours: Compte; imfs: Page<ImfLigne>;
-    mandats: Compte; sansJustif: Compte; zones: AgregatZone[];
-  }>({
-    mandats30: `/dirigeants/mandats/?date_fin__lte=${dans30}&page_size=1`,
-    sansGps: "/points-service/?sans_gps=true&page_size=1",
-    points: "/points-service/?page_size=1",
-    enCours: "/imf/?statut_reglementaire=EN_COURS&page_size=1",
-    imfs: "/imf/?page_size=1000",
-    mandats: "/dirigeants/mandats/?page_size=1",
-    sansJustif: "/dirigeants/mandats/?sans_justificatif=true&page_size=1",
-    zones: "/cartographie/zones/agregats/?type_zone=REGION",
-  });
-
-  const n = (c?: Compte | null) => c?.count ?? 0;
-  const imfs = d.imfs?.results ?? [];
-  const incompletes = imfs.filter((i) => !i.telephone || !i.email || !i.a_gps).length;
-  const avecBailleur = imfs.filter((i) => i.bailleurs_noms.length > 0).length;
+  const { donnees: d } = useDonnees<{ stats: Statistiques; zones: AgregatZone[] }>({ stats: URL_STATISTIQUES, zones: URL_REGIONS });
+  const st = d.stats;
+  const totalImf = st?.imf.total ?? 0;
+  const incompletes = st?.imf.incompletes ?? 0;
+  const avecBailleur = st?.imf.avec_bailleur ?? 0;
+  const points = st?.points.total ?? 0;
+  const sansGps = st?.points.sans_gps ?? 0;
+  const mandats = st?.mandats.total ?? 0;
+  const sansJustif = st?.mandats.sans_justificatif ?? 0;
   const stats = statsParRegion(d.zones);
   const R = SENEGAL_REGIONS.map((r) => ({ id: r.id, pts: stats[cleRegion(r.id)]?.pts ?? 0 })).sort((a, b) => a.pts - b.pts);
 
   const alerts = [
-    { label: "Mandats expirés ou < 30 j", value: n(d.mandats30), color: "#B91C1C", bg: "#FDECEC", cta: "Relancer les IMF", to: "/dirigeants", icon: "M12 8v5l3 2M12 3a9 9 0 1 0 0 18 9 9 0 1 0 0-18" },
-    { label: "Points sans coordonnées GPS", value: n(d.sansGps), color: "#B45309", bg: "#FEF3C7", cta: "Géolocaliser", to: "/points-service?sans_gps=true", icon: "M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z" },
+    { label: "Mandats expirés ou < 30 j", value: (st?.mandats.echeance_30j ?? 0), color: "#B91C1C", bg: "#FDECEC", cta: "Relancer les IMF", to: "/dirigeants", icon: "M12 8v5l3 2M12 3a9 9 0 1 0 0 18 9 9 0 1 0 0-18" },
+    { label: "Points sans coordonnées GPS", value: sansGps, color: "#B45309", bg: "#FEF3C7", cta: "Géolocaliser", to: "/points-service?sans_gps=true", icon: "M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z" },
     { label: "Fiches IMF incomplètes", value: incompletes, color: "#8A6A1F", bg: "#F3ECDC", cta: "Compléter", to: "/imf", icon: "M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6zM14 3v6h6" },
-    { label: "IMF en cours d'agrément", value: n(d.enCours), color: "#1F4E79", bg: "#E0ECF7", cta: "Suivre les dossiers", to: "/imf?statut=EN_COURS", icon: "M12 3 4 6v6c0 4.5 3.4 8 8 9 4.6-1 8-4.5 8-9V6l-8-3z" },
+    { label: "IMF en cours d'agrément", value: (st?.imf.en_cours ?? 0), color: "#1F4E79", bg: "#E0ECF7", cta: "Suivre les dossiers", to: "/imf?statut=EN_COURS", icon: "M12 3 4 6v6c0 4.5 3.4 8 8 9 4.6-1 8-4.5 8-9V6l-8-3z" },
   ];
   const quality = [
-    { label: "Référentiel IMF", v: pct(imfs.length - incompletes, imfs.length), color: "#15803D", hint: "Contacts et position GPS du siège renseignés" },
-    { label: "Points de service", v: pct(n(d.points) - n(d.sansGps), n(d.points)), color: "#C9A44C", hint: `${nombre(n(d.sansGps))} points sans coordonnées GPS` },
-    { label: "Dirigeants", v: pct(n(d.mandats) - n(d.sansJustif), n(d.mandats)), color: "#B45309", hint: `Justificatifs manquants pour ${nombre(n(d.sansJustif))} mandats` },
-    { label: "Bailleurs associés", v: pct(avecBailleur, imfs.length), color: "#B91C1C", hint: "Champ optionnel peu renseigné" },
+    { label: "Référentiel IMF", v: pct(totalImf - incompletes, totalImf), color: "#15803D", hint: "Contacts et position GPS du siège renseignés" },
+    { label: "Points de service", v: pct(points - sansGps, points), color: "#C9A44C", hint: `${nombre(sansGps)} points sans coordonnées GPS` },
+    { label: "Dirigeants", v: pct(mandats - sansJustif, mandats), color: "#B45309", hint: `Justificatifs manquants pour ${nombre(sansJustif)} mandats` },
+    { label: "Bailleurs associés", v: pct(avecBailleur, totalImf), color: "#B91C1C", hint: "Champ optionnel peu renseigné" },
   ];
 
   return (
@@ -77,7 +66,7 @@ export function Supervision() {
             <article key={a.label} className="su-card su-in d1" style={{ background: "#FFFFFF", border: "1px solid #ECE5D5", borderRadius: 20, padding: 18, display: "flex", flexDirection: "column", gap: 12, position: "relative", overflow: "hidden" }}>
               <span style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 4, background: a.color }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><span style={{ fontSize: 13, fontWeight: 700, color: "#4A5568" }}>{a.label}</span><span style={{ width: 36, height: 36, borderRadius: 11, background: a.bg, color: a.color, display: "flex", alignItems: "center", justifyContent: "center" }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={a.icon} /></svg></span></div>
-              <div style={{ fontSize: 34, fontWeight: 800, letterSpacing: "-0.03em" }}>{nombre(a.value)}</div>
+              <div style={{ fontSize: 34, fontWeight: 800, letterSpacing: "-0.03em" }}>{st ? nombre(a.value) : <Squelette largeur={64} hauteur={34} />}</div>
               <Link to={a.to} style={{ fontSize: 13, fontWeight: 700, textDecoration: "none" }}>{a.cta} →</Link>
             </article>
           ))}

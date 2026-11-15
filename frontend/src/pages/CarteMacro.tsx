@@ -11,8 +11,8 @@ import { AppLayout } from "../components/layout/AppLayout";
 import { SENEGAL_REGIONS, cleRegion } from "../data/senegalRegions";
 import { telechargerCsv } from "../lib/csv";
 import { nombre } from "../lib/format";
-import { statsParRegion, type AgregatZone } from "../lib/stats";
-import { useDonnees, type Compte } from "../lib/useDonnees";
+import { statsParRegion, type AgregatZone, URL_REGIONS, URL_STATISTIQUES, type Statistiques } from "../lib/stats";
+import { useDonnees } from "../lib/useDonnees";
 
 const IND: { k: Indicateur; label: string }[] = [
   { k: "pts", label: "Points de service" }, { k: "imf", label: "IMF" }, { k: "membres", label: "Membres" }, { k: "encours", label: "Encours" },
@@ -33,7 +33,7 @@ export function CarteMacro() {
   const [ind, setInd] = useState<Indicateur>("pts");
   const [mode, setMode] = useState<"regions" | "choro">("regions");
   const [level, setLevel] = useState("Régions");
-  const { donnees: d } = useDonnees<{ zones: AgregatZone[]; imf: Compte }>({ zones: "/cartographie/zones/agregats/?type_zone=REGION", imf: "/imf/?page_size=1" });
+  const { donnees: d } = useDonnees<{ zones: AgregatZone[]; stats: Statistiques }>({ zones: URL_REGIONS, stats: URL_STATISTIQUES });
 
   const stats = statsParRegion(d.zones);
   const parCle = new Map((d.zones ?? []).map((z) => [cleRegion(z.nom), z]));
@@ -48,7 +48,7 @@ export function CarteMacro() {
   const indLabel = IND.find((i) => i.k === ind)!.label;
 
   const kpis = [
-    { label: "IMF présentes", value: nombre(d.imf?.count ?? 0), style: { ...kp, background: "#0B1424", color: "#F4EFE3" }, sub: "#F3D98C" },
+    { label: "IMF présentes", value: nombre(d.stats?.imf.total ?? 0), style: { ...kp, background: "#0B1424", color: "#F4EFE3" }, sub: "#F3D98C" },
     { label: "Points de service", value: nombre(sum("pts")), style: { ...kp, background: "#FFFFFF", border: "1px solid #ECE5D5" }, sub: "#8A6A1F" },
     { label: "Membres", value: (sum("membres") / 1e6).toFixed(2).replace(".", ",") + " M", style: { ...kp, background: "#FFFFFF", border: "1px solid #ECE5D5" }, sub: "#8A6A1F" },
     { label: "Encours (Mds FCFA)", value: sum("encours").toFixed(0), style: { ...kp, background: "#FFFFFF", border: "1px solid #ECE5D5" }, sub: "#8A6A1F" },

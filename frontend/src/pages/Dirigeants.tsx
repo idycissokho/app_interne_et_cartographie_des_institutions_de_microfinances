@@ -11,6 +11,8 @@ import { EMAIL_OK, Erreur, Etapes, FileDrop, Label, Modal, Toast, btnPrimaire, b
 import { AppLayout } from "../components/layout/AppLayout";
 import { CODE_FONCTION, nombre } from "../lib/format";
 import { FONCTIONS, LIBELLE_FONCTION, SB, STATUT_MANDAT, avancementMandat, initiales } from "../lib/metier";
+import { URL_IMF_OPTIONS, type ImfOption } from "../lib/stats";
+import { LignesSquelette } from "../components/Squelette";
 import { useDonnees } from "../lib/useDonnees";
 
 interface Mandat {
@@ -72,6 +74,7 @@ export function Dirigeants() {
             <table style={{ width: "100%", minWidth: 900, borderCollapse: "collapse", fontSize: 14 }}>
               <thead><tr style={{ textAlign: "left", fontSize: 11, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "#6B7280", background: "#FDFBF6" }}><th style={{ padding: "12px 18px" }}>Dirigeant</th><th style={{ padding: "12px 8px" }}>Fonction</th><th style={{ padding: "12px 8px" }}>IMF</th><th style={{ padding: "12px 8px" }}>Mandat</th><th style={{ padding: "12px 8px" }}>Statut</th><th style={{ padding: "12px 18px" }}>Justificatif</th></tr></thead>
               <tbody>
+                {!d.rows && <LignesSquelette colonnes={6} />}
                 {rows.map((r) => {
                   const av = avancementMandat(r.date_debut, r.date_fin);
                   const c = SB[r.statut_mandat];
@@ -123,7 +126,7 @@ function ModaleMandat({ mandat, onClose, onSaved }: { mandat?: Mandat; onClose: 
   const [touched, setTouched] = useState(false);
   const [erreurs, setErreurs] = useState<Record<string, string>>({});
   const [envoi, setEnvoi] = useState(false);
-  const { donnees: r } = useDonnees<{ imfs: Page<{ id: string; nom: string; sigle: string }> }>({ imfs: "/imf/?page_size=1000" });
+  const { donnees: r } = useDonnees<{ imfs: ImfOption[] }>({ imfs: URL_IMF_OPTIONS });
 
   useEffect(() => {
     if (mode !== "existing") return;
@@ -233,7 +236,7 @@ function ModaleMandat({ mandat, onClose, onSaved }: { mandat?: Mandat; onClose: 
             {!edition && <button type="button" onClick={() => setStep(1)} style={{ border: "none", background: "transparent", color: "#F3D98C", font: "inherit", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Modifier</button>}
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 14 }} className="ps-grille2">
-            <div style={champ}><Label htmlFor="di-imf" requis>Institution</Label><select id="di-imf" className={cls(err2.imf)} value={m.imf} onChange={(e) => setM({ ...m, imf: e.target.value })}><option value="">Choisir…</option>{(r.imfs?.results ?? []).map((i) => <option key={i.id} value={i.id}>{i.nom}{i.sigle ? ` (${i.sigle})` : ""}</option>)}</select><Erreur>{err2.imf}</Erreur></div>
+            <div style={champ}><Label htmlFor="di-imf" requis>Institution</Label><select id="di-imf" className={cls(err2.imf)} value={m.imf} onChange={(e) => setM({ ...m, imf: e.target.value })}><option value="">Choisir…</option>{(r.imfs ?? []).map((i) => <option key={i.id} value={i.id}>{i.nom}{i.sigle ? ` (${i.sigle})` : ""}</option>)}</select><Erreur>{err2.imf}</Erreur></div>
             <div style={champ}><Label htmlFor="di-fct" requis>Fonction</Label><select id="di-fct" className={cls(erreurs.fonction_mandat)} value={m.fonction} onChange={(e) => setM({ ...m, fonction: e.target.value })}>{FONCTIONS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></div>
             <div style={champ}><Label htmlFor="di-deb" requis>Début du mandat</Label><input id="di-deb" type="date" className={cls(err2.debut)} value={m.debut} onChange={(e) => setM({ ...m, debut: e.target.value })} /><Erreur>{err2.debut}</Erreur></div>
             <div style={champ}><Label htmlFor="di-fin">Fin du mandat</Label><input id="di-fin" type="date" className={cls(err2.fin)} value={m.fin} onChange={(e) => setM({ ...m, fin: e.target.value })} />{err2.fin ? <Erreur>{err2.fin}</Erreur> : <span className="fi-help">Doit être postérieure au début. Laisser vide si indéterminée.</span>}</div>

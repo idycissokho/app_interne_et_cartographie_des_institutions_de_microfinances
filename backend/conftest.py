@@ -35,3 +35,11 @@ def client_superviseur(db):
 @pytest.fixture
 def client_consultant(db):
     return _client_pour(UtilisateurFactory())
+
+
+@pytest.fixture(autouse=True)
+def cache_vide():
+    """Chaque test démarre avec un cache vide (la base est remise à zéro, le cache doit l'être aussi)."""
+    from django.core.cache import cache
+
+    cache.clear()

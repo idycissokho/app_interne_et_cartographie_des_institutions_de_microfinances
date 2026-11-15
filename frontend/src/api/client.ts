@@ -75,6 +75,9 @@ async function renouveler(): Promise<boolean> {
 /** Déclenché quand la session est définitivement expirée. */
 export const evenementDeconnexion = new EventTarget();
 
+/** Déclenché après chaque écriture réussie (POST, PATCH, DELETE) : le cache des lectures est alors périmé. */
+export const evenementEcriture = new EventTarget();
+
 export async function requete<T = unknown>(
   chemin: string,
   options: RequestInit & { brut?: boolean } = {},
@@ -96,6 +99,8 @@ export async function requete<T = unknown>(
     const details = await reponse.json().catch(() => reponse.statusText);
     throw new ErreurApi(reponse.status, details);
   }
+  const ecriture = (options.method ?? "GET") !== "GET" && !chemin.startsWith("/auth/");
+  if (ecriture) evenementEcriture.dispatchEvent(new Event("ecriture"));
   if (options.brut) return reponse as unknown as T;
   if (reponse.status === 204) return undefined as T;
   return reponse.json() as Promise<T>;

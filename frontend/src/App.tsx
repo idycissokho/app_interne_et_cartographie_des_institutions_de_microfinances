@@ -1,25 +1,29 @@
-import type { ReactNode } from "react";
+import { lazy, Suspense, type ReactNode } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import type { Role } from "./api/types";
 import { AuthProvider, useAuth } from "./auth/AuthContext";
-import { Audit } from "./pages/Audit";
-import { CarteMacro } from "./pages/CarteMacro";
-import { CarteMicro } from "./pages/CarteMicro";
-import { Connexion } from "./pages/Connexion";
-import { Dirigeants } from "./pages/Dirigeants";
-import { Donnees } from "./pages/Donnees";
-import { FormulaireIMF } from "./pages/FormulaireIMF";
-import { Institutions } from "./pages/Institutions";
-import { PointsService } from "./pages/PointsService";
-import { Consultation } from "./pages/Consultation";
-import { Supervision } from "./pages/Supervision";
-import { TableauDeBord } from "./pages/TableauDeBord";
+import { EcranSquelette } from "./components/Squelette";
+import { PAGES } from "./lib/pages";
+
+// Chaque page est un fichier JavaScript séparé, téléchargé à sa première visite.
+const Connexion = lazy(PAGES.connexion);
+const TableauDeBord = lazy(PAGES.tableauDeBord);
+const CarteMacro = lazy(PAGES.carteMacro);
+const CarteMicro = lazy(PAGES.carteMicro);
+const Supervision = lazy(PAGES.supervision);
+const Consultation = lazy(PAGES.consultation);
+const Institutions = lazy(PAGES.institutions);
+const FormulaireIMF = lazy(PAGES.formulaireIMF);
+const PointsService = lazy(PAGES.pointsService);
+const Dirigeants = lazy(PAGES.dirigeants);
+const Donnees = lazy(PAGES.donnees);
+const Audit = lazy(PAGES.audit);
 
 /** Connexion requise, et éventuellement un ensemble de rôles autorisés. */
 function Protege({ children, roles }: { children: ReactNode; roles?: Role[] }) {
   const { utilisateur, chargement } = useAuth();
-  if (chargement) return null;
+  if (chargement) return <EcranSquelette />;
   if (!utilisateur) return <Navigate to="/connexion" replace />;
   if (roles && !roles.includes(utilisateur.role)) return <Navigate to="/" replace />;
   return <>{children}</>;
@@ -34,6 +38,7 @@ export function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <Suspense fallback={<EcranSquelette />}>
         <Routes>
           <Route path="/connexion" element={<Connexion />} />
           <Route path="/" element={<Protege><TableauDeBord /></Protege>} />
@@ -50,6 +55,7 @@ export function App() {
           <Route path="/audit" element={<Protege roles={ADMIN}><Audit /></Protege>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        </Suspense>
       </BrowserRouter>
     </AuthProvider>
   );

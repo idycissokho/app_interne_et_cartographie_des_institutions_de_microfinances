@@ -3,6 +3,7 @@ imf/urls.py
 ===========
 Routes du module IMF :
   GET/POST             /api/v1/imf/                      — Liste et création
+  GET                  /api/v1/imf/options/              — Toutes les IMF en version courte
   GET/PUT/PATCH/DELETE /api/v1/imf/<uuid>/               — Détail, modification, suppression logique
   GET                  /api/v1/imf/<uuid>/mandats/       — Onglet « Dirigeants » de la fiche IMF
   GET/POST             /api/v1/imf/bailleurs/            — Référentiel des bailleurs
@@ -13,12 +14,19 @@ from django.urls import path
 
 from apps.dirigeants.views import MandatsParIMFView
 
-from .views import BailleurDetailView, BailleurListCreateView, IMFDetailView, IMFListCreateView
+from .views import (
+    BailleurDetailView,
+    BailleurListCreateView,
+    IMFDetailView,
+    IMFListCreateView,
+    IMFOptionsView,
+)
 
 app_name = "imf"
 
 urlpatterns = [
     path("", IMFListCreateView.as_view(), name="imf-list"),
+    path("options/", IMFOptionsView.as_view(), name="imf-options"),
     path("bailleurs/", BailleurListCreateView.as_view(), name="bailleur-list"),
     path("bailleurs/<uuid:pk>/", BailleurDetailView.as_view(), name="bailleur-detail"),
     path("<uuid:pk>/", IMFDetailView.as_view(), name="imf-detail"),

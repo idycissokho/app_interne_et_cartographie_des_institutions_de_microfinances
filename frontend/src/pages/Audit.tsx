@@ -8,6 +8,7 @@ import { qs } from "../api/client";
 import type { Page } from "../api/types";
 import { AppLayout } from "../components/layout/AppLayout";
 import { nombre } from "../lib/format";
+import { LignesSquelette } from "../components/Squelette";
 import { useDonnees } from "../lib/useDonnees";
 
 interface Entree { id: string; utilisateur_email: string | null; action: string; objet_concerne: string; role: string; date_action: string; details: Record<string, unknown> }
@@ -52,6 +53,7 @@ export function Audit() {
             <table style={{ width: "100%", minWidth: 860, borderCollapse: "collapse", fontSize: 14 }}>
               <thead><tr style={{ textAlign: "left", fontSize: 11, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "#6B7280", background: "#FDFBF6" }}><th style={{ padding: "12px 18px" }}>Date</th><th style={{ padding: "12px 8px" }}>Action</th><th style={{ padding: "12px 8px" }}>Objet</th><th style={{ padding: "12px 8px" }}>Utilisateur</th><th style={{ padding: "12px 18px" }}>Rôle</th></tr></thead>
               <tbody>
+                {!d.rows && <LignesSquelette colonnes={5} />}
                 {rows.map((e) => (
                   <tr key={e.id} className="in-row" style={{ borderTop: "1px solid #F6F1E4" }}>
                     <td style={{ padding: "13px 18px", whiteSpace: "nowrap", color: "#4A5568" }}>{new Date(e.date_action).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" })}</td>
