@@ -1,57 +1,149 @@
 /**
- * Écran 10 — Dirigeants et mandats : liste + modale en 2 étapes
- * (maquette-carto-imf/ecrans/10-dirigeants.dc.html).
+ * Écran 10 — Dirigeants et mandats : référentiel consultable (recherche, filtres par
+ * institution / fonction / statut / région, tri par colonne, regroupement), fiche dirigeant
+ * et modale de mandat en 2 étapes. Base visuelle : maquette-carto-imf/ecrans/10-dirigeants.dc.html.
+ * Les filtres vivent dans l'URL (?imf=…&fonction=…) : une vue filtrée se partage et se retrouve.
  */
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 
 import { api, qs, requete } from "../api/client";
-import type { Page } from "../api/types";
+import type { Mandat, Page } from "../api/types";
 import { useAuth } from "../auth/AuthContext";
+import { ChoixIMF } from "../components/dirigeants/ChoixIMF";
+import { FicheDirigeant, dateCourte, echeance } from "../components/dirigeants/FicheDirigeant";
 import { EMAIL_OK, Erreur, Etapes, FileDrop, Label, Modal, Toast, btnPrimaire, btnSecondaire, erreursChamps } from "../components/form";
 import { AppLayout } from "../components/layout/AppLayout";
-import { CODE_FONCTION, nombre } from "../lib/format";
-import { FONCTIONS, LIBELLE_FONCTION, SB, STATUT_MANDAT, avancementMandat, initiales } from "../lib/metier";
-import { URL_IMF_OPTIONS, type ImfOption } from "../lib/stats";
+import { CODE_FONCTION, isoJour, nombre } from "../lib/format";
+import { FAMILLE_FONCTION, FONCTIONS, LIBELLE_FONCTION, SB, STATUT_IMF_COURT, STATUT_MANDAT, TYPE_IMF_COURT, avancementMandat, initiales, regionAffichee } from "../lib/metier";
+import { URL_IMF_OPTIONS, URL_REGIONS, URL_STATISTIQUES, type AgregatZone, type ImfOption, type Statistiques } from "../lib/stats";
 import { LignesSquelette } from "../components/Squelette";
 import { useDonnees } from "../lib/useDonnees";
 
-interface Mandat {
-  id: string; dirigeant: string; dirigeant_nom_complet: string; dirigeant_email: string; imf: string; imf_nom: string; imf_sigle: string;
-  fonction_mandat: string; date_debut: string; date_fin: string | null; statut_mandat: string; fichier_justificatif: string | null; documents_justificatifs: string;
-}
 interface DirigeantRes { id: string; nom_complet: string; email_professionnel: string; nb_mandats: number }
 
-const FAMILLES: [string, string, string[]][] = [
-  ["Toutes", "Toutes les fonctions", []],
-  ["Conseils", "Conseils", ["PCA", "PRESIDENT_CONSEIL", "PRESIDENT_CONSEIL_SURVEILLANCE"]],
-  ["Direction", "Direction", ["DG", "DGA", "GERANT", "DAF", "RESPONSABLE_SI", "RESPONSABLE_OPERATIONS"]],
-  ["Comités", "Comités", ["PRESIDENT_COMITE_CREDIT"]],
-  ["Contrôle", "Contrôle", ["RESPONSABLE_CONFORMITE", "AUDITEUR_INTERNE"]],
-];
+/** Familles de fonctions : [valeur de FAMILLE_FONCTION, libellé de la pastille]. */
+const FAMILLES: [string, string][] = [["Gouvernance", "Conseils"], ["Direction", "Direction"], ["Comités", "Comités"], ["Contrôle", "Contrôle"]];
+const fonctionsDe = (famille: string) => FONCTIONS.filter(([v]) => FAMILLE_FONCTION[v] === famille);
 const STATUTS: [string, string, string][] = [["EN_FONCTION", "En fonction", "#15803D"], ["INTERIM", "Intérim", "#D97706"], ["SUSPENDU", "Suspendu", "#B91C1C"]];
+const ALERTES: Record<string, string> = { sans_justificatif: "Sans justificatif", echeance: "Échéance dépassée ou sous 30 j" };
+/** Tri par colonne → champs de ?ordering= (le premier est inversé pour un tri décroissant). */
+const TRIS: Record<string, string[]> = {
+  dirigeant: ["dirigeant__nom", "dirigeant__prenom", "-date_debut"],
+  fonction: ["fonction_mandat", "dirigeant__nom"],
+  imf: ["imf__nom", "imf", "dirigeant__nom"],
+  debut: ["date_debut", "dirigeant__nom"],
+  statut: ["statut_mandat", "dirigeant__nom"],
+};
+/** Regroupement : les lignes d'un même groupe doivent se suivre. */
+const GROUPES: Record<string, string> = {
+  imf: "imf__nom,imf,fonction_mandat,dirigeant__nom",
+  dirigeant: "dirigeant__nom,dirigeant__prenom,dirigeant,-date_debut",
+};
 const TAILLE = 20;
 const chip = (on: boolean): CSSProperties => ({ font: "inherit", fontSize: 13, fontWeight: 700, padding: "9px 14px", borderRadius: 999, cursor: "pointer", ...(on ? { background: "#0B1424", color: "#F3D98C", border: "1px solid #0B1424" } : { background: "#FFFFFF", color: "#4A5568", border: "1px solid #ECE5D5" }) });
 const seg = (on: boolean): CSSProperties => ({ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, height: 40, border: "none", borderRadius: 9, font: "inherit", fontSize: 13, fontWeight: 700, cursor: "pointer", ...(on ? { background: "#FFFFFF", color: "#0B1424", boxShadow: "0 2px 8px rgba(11,20,36,.10)" } : { background: "transparent", color: "#6B7280" }) });
 const pageBtn = (on = false): CSSProperties => ({ width: 36, height: 36, borderRadius: 10, font: "inherit", cursor: "pointer", ...(on ? { border: "none", background: "#0B1424", color: "#F3D98C", fontWeight: 800 } : { border: "1px solid #ECE5D5", background: "#FFFFFF", color: "#0B1424", fontWeight: 700 }) });
 const champ: CSSProperties = { display: "flex", flexDirection: "column", gap: 8, minWidth: 0 };
+const selectFiltre: CSSProperties = { cursor: "pointer", flex: "1 1 170px", minWidth: 0, width: "auto" };
+const badgeFonction: CSSProperties = { fontSize: 12, fontWeight: 800, color: "#6E5416", background: "#F3ECDC", padding: "4px 9px", borderRadius: 8, marginRight: 6, whiteSpace: "nowrap" };
+const avatar: CSSProperties = { width: 40, height: 40, flex: "none", borderRadius: "50%", background: "#0B1424", color: "#F3D98C", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 800 };
 const nomFichier = (url: string) => decodeURIComponent(url.split("/").pop() ?? "Fichier");
+const Icone = ({ d, taille = 16 }: { d: string; taille?: number }) => <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>;
+const I_OEIL = "M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6 3 3 0 1 0 0-6";
+const I_CRAYON = "M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4";
+const I_LOUPE = "M11 4a7 7 0 1 0 0 14 7 7 0 1 0 0-14M20 20l-3.6-3.6";
 
 export function Dirigeants() {
-  // Diagramme : créer un mandat = ADMIN, modifier un mandat = SUPERVISEUR/ADMIN, consulter = tous.
+  // Diagramme : créer un mandat = ADMIN, modifier un mandat ou un dirigeant = SUPERVISEUR/ADMIN, consulter = tous.
   const { estAdmin, peutModifier } = useAuth();
-  const [famille, setFamille] = useState("Toutes");
-  const [page, setPage] = useState(1);
-  const [version, setVersion] = useState(0);
-  const [modale, setModale] = useState<null | { mandat?: Mandat }>(null);
-  const [toast, setToast] = useState<string | null>(null);
-  const fonctions = FAMILLES.find((x) => x[0] === famille)![2];
-  const { donnees: d } = useDonnees<{ rows: Page<Mandat> }>({
-    rows: `/dirigeants/mandats/${qs({ page, page_size: TAILLE, fonction_mandat__in: fonctions.join(",") })}`,
-  }, [version]);
+  const [params, setParams] = useSearchParams();
+  const p = (cle: string) => params.get(cle) ?? "";
+  const q = p("q"), imf = p("imf"), fonction = p("fonction"), famille = p("famille"), statut = p("statut"), region = p("region");
+  const alerte = p("alerte") in ALERTES ? p("alerte") : "";
+  const groupe = p("groupe") in GROUPES ? p("groupe") : "";
+  const desc = p("tri").startsWith("-");
+  const cleTri = p("tri").replace(/^-/, "") in TRIS ? p("tri").replace(/^-/, "") : "dirigeant";
+  const page = Math.max(1, Number(p("page")) || 1);
+  /** Modifie des filtres dans l'URL (valeur vide = filtre retiré) et revient à la page 1. */
+  const maj = (modifs: Record<string, string>) => setParams((avant) => {
+    const s = new URLSearchParams(avant);
+    if (!("page" in modifs)) s.delete("page");
+    Object.entries(modifs).forEach(([k, v]) => (v ? s.set(k, v) : s.delete(k)));
+    return s;
+  }, { replace: true });
+
+  const [saisie, setSaisie] = useState(q);
+  const [fiche, setFiche] = useState<string | null>(null);
+  const [modale, setModale] = useState<null | { mandat?: Mandat; dirigeant?: DirigeantRes; retour?: string }>(null);
+  const [toast, setToast] = useState<{ titre: string; texte: string } | null>(null);
+
+  // La recherche part 300 ms après la dernière frappe.
+  useEffect(() => {
+    const t = setTimeout(() => { if (saisie.trim() !== q) maj({ q: saisie.trim() }); }, 300);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [saisie]);
+  // Filtre retiré ailleurs (pastille, « Tout effacer ») : le champ suit.
+  useEffect(() => { setSaisie((s) => (s.trim() === q ? s : q)); }, [q]);
+
+  const ordering = groupe
+    ? GROUPES[groupe]
+    : TRIS[cleTri].map((c, i) => (i === 0 && desc ? `-${c}` : c)).join(",");
+  const dans30j = new Date();
+  dans30j.setDate(dans30j.getDate() + 30);
+  const { donnees: d } = useDonnees<{ rows: Page<Mandat>; imfs: ImfOption[]; regions: AgregatZone[]; stats: Statistiques }>({
+    rows: `/dirigeants/mandats/${qs({
+      page, page_size: TAILLE, ordering, search: q, imf, imf__region: region, statut_mandat: statut,
+      fonction_mandat: fonction, fonction_mandat__in: fonction ? "" : fonctionsDe(famille).map(([v]) => v).join(","),
+      sans_justificatif: alerte === "sans_justificatif" ? "true" : "", date_fin__lte: alerte === "echeance" ? isoJour(dans30j) : "",
+    })}`,
+    imfs: URL_IMF_OPTIONS, regions: URL_REGIONS, stats: URL_STATISTIQUES,
+  });
   const rows = d.rows?.results ?? [];
   const total = d.rows?.count ?? 0;
   const pages = Math.max(1, Math.ceil(total / TAILLE));
   const numeros = Array.from({ length: pages }, (_, i) => i + 1).filter((n) => Math.abs(n - page) <= 2 || n === 1 || n === pages);
+  const imfs = d.imfs ?? [];
+  const institution = imfs.find((i) => i.id === imf);
+  const nomRegion = (id: string) => regionAffichee((d.regions ?? []).find((z) => z.id === id)?.nom) ?? "Région";
+
+  // Filtres actifs, rappelés en pastilles au-dessus du tableau : [libellé, filtre à retirer].
+  const actifs: [string, Record<string, string>][] = [
+    ...(q ? [[`« ${q} »`, { q: "" }] as [string, Record<string, string>]] : []),
+    ...(imf ? [[institution ? institution.sigle || institution.nom : "Institution", { imf: "" }] as [string, Record<string, string>]] : []),
+    ...(fonction ? [[LIBELLE_FONCTION[fonction] ?? fonction, { fonction: "" }] as [string, Record<string, string>]] : []),
+    ...(famille && !fonction ? [[FAMILLES.find((x) => x[0] === famille)?.[1] ?? famille, { famille: "" }] as [string, Record<string, string>]] : []),
+    ...(statut ? [[STATUT_MANDAT[statut] ?? statut, { statut: "" }] as [string, Record<string, string>]] : []),
+    ...(region ? [[nomRegion(region), { region: "" }] as [string, Record<string, string>]] : []),
+    ...(alerte ? [[ALERTES[alerte], { alerte: "" }] as [string, Record<string, string>]] : []),
+  ];
+  const toutEffacer = () => { setSaisie(""); setParams(groupe ? { groupe } : {}, { replace: true }); };
+
+  const st = d.stats;
+  const kpis: { n?: number; label: string; color: string; alerte?: string }[] = [
+    { n: st?.dirigeants.en_fonction, label: "Dirigeants en fonction", color: "#C9A44C" },
+    { n: st?.mandats.total, label: "Mandats enregistrés", color: "#1F4E79" },
+    { n: st?.mandats.sans_justificatif, label: "Sans justificatif", color: "#B45309", alerte: "sans_justificatif" },
+    { n: st?.mandats.echeance_30j, label: "Échéance dépassée ou < 30 j", color: "#B91C1C", alerte: "echeance" },
+  ];
+
+  const colDirigeant = groupe !== "dirigeant", colImf = groupe !== "imf";
+  const nbColonnes = 5 + Number(colDirigeant) + Number(colImf);
+  const cleGroupe = (r: Mandat) => (groupe === "imf" ? r.imf : groupe === "dirigeant" ? r.dirigeant : "");
+  const Th = ({ cle, children, pad = "12px 8px" }: { cle?: string; children: ReactNode; pad?: string }) => {
+    const actif = !!cle && !groupe && cleTri === cle;
+    return (
+      <th style={{ padding: pad, whiteSpace: "nowrap" }} aria-sort={actif ? (desc ? "descending" : "ascending") : undefined}>
+        {cle
+          ? <button type="button" className="di-tri" data-actif={actif} title="Trier" onClick={() => maj({ groupe: "", tri: actif && !desc ? `-${cle}` : cle === "dirigeant" ? "" : cle })}>{children}<span aria-hidden="true" style={{ fontSize: 9, color: actif ? "#C9A44C" : "#C8C0AE" }}>{actif && desc ? "▼" : "▲"}</span></button>
+          : children}
+      </th>
+    );
+  };
+  const ouvrirModale = (m: NonNullable<typeof modale>) => { setFiche(null); setModale(m); };
+  const fermerModale = () => { if (modale?.retour) setFiche(modale.retour); setModale(null); };
+  const annoncer = (titre: string, texte: string) => { setToast({ titre, texte }); setTimeout(() => setToast(null), 3500); };
 
   return (
     <AppLayout active="dirigeants" minHeight={1100}>
@@ -65,60 +157,158 @@ export function Dirigeants() {
           {estAdmin && <button type="button" onClick={() => setModale({})} style={{ height: 46, padding: "0 18px", borderRadius: 14, border: "none", background: "#C9A44C", font: "inherit", fontSize: 14, fontWeight: 800, color: "#0B1424", display: "flex", alignItems: "center", gap: 8, cursor: "pointer", boxShadow: "0 10px 24px rgba(201,164,76,.35)" }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>Nouveau mandat</button>}
         </header>
 
-        <div className="di-up d1" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {FAMILLES.map(([k, l]) => <button key={k} type="button" aria-pressed={k === famille} onClick={() => { setFamille(k); setPage(1); }} style={chip(k === famille)}>{l}</button>)}
+        {/* Indicateurs ; les deux alertes filtrent la liste d'un clic. */}
+        <div className="di-up" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(150px, 100%), 1fr))", gap: 14 }}>
+          {kpis.map((k) => {
+            const on = !!k.alerte && alerte === k.alerte;
+            const style: CSSProperties = { display: "flex", flexDirection: "column", gap: 4, padding: "16px 18px", borderRadius: 20, textAlign: "left", font: "inherit", color: "#0B1424", background: on ? "#FDF8EA" : "#FFFFFF", border: on ? "1.5px solid #C9A44C" : "1px solid #ECE5D5" };
+            const contenu = (<>
+              <span style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 600, color: "#4A5568" }}><span style={{ width: 8, height: 8, borderRadius: "50%", background: k.color }} />{k.label}</span>
+              <b style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.02em" }}>{k.n === undefined ? "—" : nombre(k.n)}</b>
+              {k.alerte && <span style={{ fontSize: 12, fontWeight: 700, color: "#8A6A1F" }}>{on ? "Filtre actif — retirer" : "Afficher ces mandats →"}</span>}
+            </>);
+            return k.alerte
+              ? <button key={k.label} type="button" className="di-kpi" aria-pressed={on} onClick={() => maj({ alerte: on ? "" : k.alerte! })} style={{ ...style, cursor: "pointer" }}>{contenu}</button>
+              : <div key={k.label} className="di-kpi" style={style}>{contenu}</div>;
+          })}
         </div>
 
+        {/* Recherche et filtres */}
+        <section className="di-up d1" aria-label="Recherche et filtres" style={{ position: "relative", zIndex: 5, borderRadius: 24, background: "#FFFFFF", border: "1px solid #ECE5D5", padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <div style={{ position: "relative", flex: "2 1 300px", minWidth: 0 }}>
+              <span style={{ position: "absolute", left: 14, top: 14, color: "#9AA3B2", pointerEvents: "none", display: "flex" }}><Icone d={I_LOUPE} taille={18} /></span>
+              <input className="fi-input ps-input" type="search" aria-label="Rechercher un dirigeant ou une institution" placeholder="Rechercher un nom, un prénom, un email, un téléphone, une institution…" value={saisie} onChange={(e) => setSaisie(e.target.value)} style={{ paddingLeft: 42 }} />
+            </div>
+            <div style={{ flex: "1 1 260px", minWidth: 0 }}><ChoixIMF imfs={imfs} valeur={imf} onChange={(id) => maj({ imf: id })} /></div>
+          </div>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <select className="fi-input ps-input" aria-label="Filtrer par fonction" value={fonction} onChange={(e) => maj({ fonction: e.target.value, famille: "" })} style={selectFiltre}>
+              <option value="">Toutes les fonctions</option>
+              {FAMILLES.map(([f, l]) => <optgroup key={f} label={l}>{fonctionsDe(f).map(([v, lib]) => <option key={v} value={v}>{lib}</option>)}</optgroup>)}
+            </select>
+            <select className="fi-input ps-input" aria-label="Filtrer par statut du mandat" value={statut} onChange={(e) => maj({ statut: e.target.value })} style={selectFiltre}>
+              <option value="">Tous les statuts</option>
+              {STATUTS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+            </select>
+            <select className="fi-input ps-input" aria-label="Filtrer par région de l'institution" value={region} onChange={(e) => maj({ region: e.target.value })} style={selectFiltre}>
+              <option value="">Toutes les régions</option>
+              {(d.regions ?? []).map((z) => <option key={z.id} value={z.id}>{regionAffichee(z.nom)}</option>)}
+            </select>
+          </div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button type="button" aria-pressed={!famille && !fonction} onClick={() => maj({ famille: "", fonction: "" })} style={chip(!famille && !fonction)}>Toutes les fonctions</button>
+            {FAMILLES.map(([k, l]) => { const on = !fonction && famille === k; return <button key={k} type="button" aria-pressed={on} onClick={() => maj({ famille: on ? "" : k, fonction: "" })} style={chip(on)}>{l}</button>; })}
+          </div>
+        </section>
+
+        {/* Institution filtrée : rappel de son identité et accès à sa fiche */}
+        {institution && (
+          <section className="di-up" style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", padding: "16px 20px", borderRadius: 20, background: "#0B1424", color: "#F4EFE3" }}>
+            <span style={{ width: 46, height: 46, flex: "none", borderRadius: 14, background: "linear-gradient(135deg, #E9D49A, #C9A44C)", color: "#0B1424", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800 }}>{initiales(institution.sigle || institution.nom)}</span>
+            <div style={{ flex: "1 1 280px", minWidth: 0 }}>
+              <b style={{ display: "block", fontSize: 16, overflowWrap: "anywhere" }}>{institution.nom}</b>
+              <span style={{ fontSize: 13, color: "#A9B3C4" }}>{[TYPE_IMF_COURT[institution.type_imf], STATUT_IMF_COURT[institution.statut_reglementaire], regionAffichee(institution.region_siege), institution.numero_agrement].filter(Boolean).join(" · ")}</span>
+            </div>
+            <div style={{ display: "flex", gap: 22 }}>
+              <div><b style={{ display: "block", fontSize: 22, color: "#F3D98C" }}>{d.rows ? nombre(total) : "—"}</b><span style={{ fontSize: 12, color: "#A9B3C4" }}>mandat{total > 1 ? "s" : ""}</span></div>
+              <div><b style={{ display: "block", fontSize: 22, color: "#F3D98C" }}>{nombre(institution.nb_points_service)}</b><span style={{ fontSize: 12, color: "#A9B3C4" }}>point{institution.nb_points_service > 1 ? "s" : ""} de service</span></div>
+            </div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {[[`/points-service?imf=${institution.id}`, "Ses points de service →"], [`/consultation?imf=${institution.id}`, "Fiche de l'institution →"]].map(([to, l]) => <Link key={to} to={to} style={{ height: 40, padding: "0 14px", borderRadius: 12, border: "1px solid rgba(243,217,140,.45)", color: "#F3D98C", fontSize: 13, fontWeight: 700, textDecoration: "none", display: "flex", alignItems: "center", boxSizing: "border-box" }}>{l}</Link>)}
+            </div>
+          </section>
+        )}
+
         <section className="di-up d1" style={{ borderRadius: 24, background: "#FFFFFF", border: "1px solid #ECE5D5", overflow: "hidden" }}>
+          {/* Résultat : compteur, filtres actifs, regroupement */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", padding: "14px 18px", borderBottom: "1px solid #F1ECE0" }}>
+            <span aria-live="polite" style={{ fontSize: 14, fontWeight: 800 }}>{d.rows ? `${nombre(total)} mandat${total > 1 ? "s" : ""}` : "Chargement…"}</span>
+            {actifs.map(([libelle, retrait]) => (
+              <button key={libelle} type="button" title="Retirer ce filtre" onClick={() => { if ("q" in retrait) setSaisie(""); maj(retrait); }} style={{ display: "inline-flex", alignItems: "center", gap: 6, maxWidth: 260, padding: "5px 10px", borderRadius: 999, border: "1px solid #E9D9A8", background: "#FDF8EA", color: "#6E5416", font: "inherit", fontSize: 12, fontWeight: 700, cursor: "pointer" }}><span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{libelle}</span><span aria-hidden="true">×</span></button>
+            ))}
+            {actifs.length > 0 && <button type="button" onClick={toutEffacer} style={{ border: "none", background: "transparent", padding: "5px 4px", font: "inherit", fontSize: 12, fontWeight: 700, color: "#4A5568", cursor: "pointer", textDecoration: "underline" }}>Tout effacer</button>}
+            <div role="radiogroup" aria-label="Regrouper les mandats" style={{ marginLeft: "auto", display: "flex", padding: 4, borderRadius: 12, background: "#F6F1E4", gap: 2 }}>
+              {([["", "Liste"], ["imf", "Par institution"], ["dirigeant", "Par dirigeant"]] as const).map(([k, l]) => <button key={k} type="button" role="radio" aria-checked={groupe === k} onClick={() => maj({ groupe: k })} style={{ ...seg(groupe === k), flex: "none", height: 34, padding: "0 12px" }}>{l}</button>)}
+            </div>
+          </div>
           <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", minWidth: 900, borderCollapse: "collapse", fontSize: 14 }}>
-              <thead><tr style={{ textAlign: "left", fontSize: 11, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "#6B7280", background: "#FDFBF6" }}><th style={{ padding: "12px 18px" }}>Dirigeant</th><th style={{ padding: "12px 8px" }}>Fonction</th><th style={{ padding: "12px 8px" }}>IMF</th><th style={{ padding: "12px 8px" }}>Mandat</th><th style={{ padding: "12px 8px" }}>Statut</th><th style={{ padding: "12px 18px" }}>Justificatif</th></tr></thead>
+            <table style={{ width: "100%", minWidth: 980, borderCollapse: "collapse", fontSize: 14 }}>
+              <thead><tr style={{ textAlign: "left", fontSize: 11, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "#6B7280", background: "#FDFBF6" }}>
+                {colDirigeant && <Th cle="dirigeant" pad="12px 18px">Dirigeant</Th>}
+                <Th cle="fonction" pad={colDirigeant ? undefined : "12px 18px"}>Fonction</Th>
+                {colImf && <Th cle="imf">Institution</Th>}
+                <Th cle="debut">Mandat</Th><Th cle="statut">Statut</Th><Th>Justificatif</Th>
+                <th style={{ padding: "12px 18px", textAlign: "right" }}>Actions</th>
+              </tr></thead>
               <tbody>
-                {!d.rows && <LignesSquelette colonnes={6} />}
-                {rows.map((r) => {
+                {!d.rows && <LignesSquelette colonnes={nbColonnes} />}
+                {rows.flatMap((r, i) => {
                   const av = avancementMandat(r.date_debut, r.date_fin);
                   const c = SB[r.statut_mandat];
+                  const ech = echeance(r.date_fin);
                   const lien = r.fichier_justificatif || r.documents_justificatifs;
-                  return (
-                    <tr key={r.id} className="di-row" tabIndex={peutModifier ? 0 : undefined} onClick={() => peutModifier && setModale({ mandat: r })} onKeyDown={(e) => peutModifier && e.key === "Enter" && setModale({ mandat: r })} style={{ borderTop: "1px solid #F6F1E4", cursor: peutModifier ? "pointer" : "default" }}>
-                      <td style={{ padding: "13px 18px" }}><div style={{ display: "flex", alignItems: "center", gap: 12 }}><span style={{ width: 40, height: 40, flex: "none", borderRadius: "50%", background: "#0B1424", color: "#F3D98C", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 800 }}>{initiales(r.dirigeant_nom_complet)}</span><div><div style={{ fontWeight: 800 }}>{r.dirigeant_nom_complet}</div><div style={{ fontSize: 12, color: "#6B7280" }}>{r.dirigeant_email || "—"}</div></div></div></td>
-                      <td style={{ padding: "13px 8px" }}><span style={{ fontSize: 12, fontWeight: 800, color: "#6E5416", background: "#F3ECDC", padding: "4px 9px", borderRadius: 8, marginRight: 6 }}>{CODE_FONCTION[r.fonction_mandat]}</span><span style={{ fontSize: 13, color: "#4A5568" }}>{LIBELLE_FONCTION[r.fonction_mandat]}</span></td>
-                      <td style={{ padding: "13px 8px", fontWeight: 600 }}>{r.imf_nom}</td>
-                      <td style={{ padding: "13px 8px", minWidth: 170 }}><div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#6B7280", marginBottom: 5 }}><span>{r.date_debut.slice(0, 4)}</span><span>{r.date_fin ? r.date_fin.slice(0, 4) : "—"}</span></div><div style={{ height: 6, borderRadius: 99, background: "#F1ECE0", overflow: "hidden" }}><div style={{ height: "100%", borderRadius: 99, background: av.color, width: `${av.prog}%` }} /></div></td>
-                      <td style={{ padding: "13px 8px" }}><span style={{ fontSize: 12, fontWeight: 800, padding: "5px 10px", borderRadius: 999, whiteSpace: "nowrap", background: c[0], color: c[1] }}>{STATUT_MANDAT[r.statut_mandat]}</span></td>
-                      <td style={{ padding: "13px 18px" }}>{lien
+                  const contact = [r.dirigeant_email, r.dirigeant_telephone].filter(Boolean).join(" · ");
+                  const premier = !!groupe && (i === 0 || cleGroupe(rows[i - 1]) !== cleGroupe(r));
+                  return [
+                    premier && (
+                      <tr key={`g-${r.id}`} style={{ background: "#FBF8F1", borderTop: "1px solid #ECE5D5" }}>
+                        <td colSpan={nbColonnes} style={{ padding: "10px 18px" }}>
+                          {groupe === "imf"
+                            ? <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}><span style={{ ...avatar, width: 32, height: 32, borderRadius: 10, fontSize: 11 }}>{initiales(r.imf_sigle || r.imf_nom)}</span><b style={{ fontSize: 14 }}>{r.imf_nom}</b>{r.imf_region && <span style={{ fontSize: 12, color: "#6B7280" }}>{regionAffichee(r.imf_region)}</span>}<button type="button" className="di-lien" style={{ marginLeft: "auto", fontSize: 12, color: "#8A6A1F" }} onClick={() => maj({ imf: r.imf })}>Uniquement cette institution →</button></div>
+                            : <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}><span style={{ ...avatar, width: 32, height: 32, fontSize: 11 }}>{initiales(r.dirigeant_nom_complet)}</span><b style={{ fontSize: 14 }}>{r.dirigeant_nom_complet}</b>{contact && <span style={{ fontSize: 12, color: "#6B7280" }}>{contact}</span>}<button type="button" className="di-lien" style={{ marginLeft: "auto", fontSize: 12, color: "#8A6A1F" }} onClick={() => setFiche(r.dirigeant)}>Ouvrir la fiche →</button></div>}
+                        </td>
+                      </tr>
+                    ),
+                    <tr key={r.id} className="di-row" tabIndex={0} title="Ouvrir la fiche du dirigeant" onClick={() => setFiche(r.dirigeant)} onKeyDown={(e) => e.key === "Enter" && e.target === e.currentTarget && setFiche(r.dirigeant)} style={{ borderTop: "1px solid #F6F1E4", cursor: "pointer" }}>
+                      {colDirigeant && <td style={{ padding: "13px 18px" }}><div style={{ display: "flex", alignItems: "center", gap: 12 }}><span style={avatar}>{initiales(r.dirigeant_nom_complet)}</span><div style={{ minWidth: 0 }}><div style={{ fontWeight: 800 }}>{r.dirigeant_nom_complet}</div><div style={{ fontSize: 12, color: "#6B7280", overflowWrap: "break-word", lineHeight: 1.45 }}>{r.dirigeant_email && <div>{r.dirigeant_email}</div>}{r.dirigeant_telephone && <div>{r.dirigeant_telephone}</div>}{!contact && "—"}</div></div></div></td>}
+                      <td style={{ padding: colDirigeant ? "13px 8px" : "13px 18px" }}>{CODE_FONCTION[r.fonction_mandat] && <span style={badgeFonction}>{CODE_FONCTION[r.fonction_mandat]}</span>}<span style={{ fontSize: 13, color: "#4A5568" }}>{LIBELLE_FONCTION[r.fonction_mandat] ?? r.fonction_mandat}</span></td>
+                      {colImf && <td style={{ padding: "13px 8px" }}><button type="button" className="di-lien" title="Voir tous les dirigeants de cette institution" onClick={(e) => { e.stopPropagation(); maj({ imf: r.imf }); }} style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.4 }}>{r.imf_nom}</button>{r.imf_region && <div style={{ fontSize: 12, color: "#6B7280", marginTop: 2 }}>{[r.imf_sigle, regionAffichee(r.imf_region)].filter(Boolean).join(" · ")}</div>}</td>}
+                      <td style={{ padding: "13px 8px", minWidth: 190 }}><div style={{ display: "flex", justifyContent: "space-between", gap: 8, fontSize: 12, color: "#6B7280", marginBottom: 5, whiteSpace: "nowrap" }}><span>{dateCourte(r.date_debut)}</span><span>{r.date_fin ? dateCourte(r.date_fin) : "sans échéance"}</span></div><div style={{ height: 6, borderRadius: 99, background: "#F1ECE0", overflow: "hidden" }}><div style={{ height: "100%", borderRadius: 99, background: av.color, width: `${av.prog}%` }} /></div>{ech && <div style={{ fontSize: 12, fontWeight: 800, color: ech.couleur, marginTop: 4 }}>{ech.texte}</div>}</td>
+                      <td style={{ padding: "13px 8px" }}><span style={{ fontSize: 12, fontWeight: 800, padding: "5px 10px", borderRadius: 999, whiteSpace: "nowrap", background: c?.[0], color: c?.[1] }}>{STATUT_MANDAT[r.statut_mandat] ?? r.statut_mandat}</span></td>
+                      <td style={{ padding: "13px 8px" }}>{lien
                         ? <a href={lien} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 700, textDecoration: "none" }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6z" /><path d="M14 3v6h6" /></svg>{r.fichier_justificatif ? nomFichier(r.fichier_justificatif) : "Lien externe"}</a>
                         : <span style={{ fontSize: 12, fontWeight: 700, color: "#B45309" }}>Manquant</span>}</td>
-                    </tr>
-                  );
+                      <td style={{ padding: "13px 18px", textAlign: "right", whiteSpace: "nowrap" }}>
+                        <button type="button" className="di-act" aria-label={`Voir la fiche de ${r.dirigeant_nom_complet}`} title="Voir la fiche" onClick={(e) => { e.stopPropagation(); setFiche(r.dirigeant); }}><Icone d={I_OEIL} /></button>
+                        {peutModifier && <button type="button" className="di-act" aria-label={`Modifier le mandat de ${r.dirigeant_nom_complet}`} title="Modifier le mandat" onClick={(e) => { e.stopPropagation(); ouvrirModale({ mandat: r }); }} style={{ marginLeft: 6 }}><Icone d={I_CRAYON} /></button>}
+                      </td>
+                    </tr>,
+                  ];
                 })}
-                {d.rows && rows.length === 0 && <tr><td colSpan={6} style={{ padding: "40px 18px", textAlign: "center", color: "#6B7280" }}>Aucun mandat pour ce filtre.</td></tr>}
               </tbody>
             </table>
           </div>
+          {d.rows && rows.length === 0 && <div style={{ padding: "44px 18px", textAlign: "center", color: "#6B7280", fontSize: 14 }}><b style={{ display: "block", fontSize: 15, color: "#0B1424", marginBottom: 4 }}>Aucun mandat ne correspond</b>{actifs.length > 0 ? <>Élargissez la recherche ou <button type="button" className="di-lien" style={{ color: "#8A6A1F" }} onClick={toutEffacer}>effacez les filtres</button>.</> : "Aucun mandat n'est encore enregistré."}</div>}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", padding: "14px 18px", borderTop: "1px solid #F1ECE0", fontSize: 13, color: "#4A5568" }}>
             <span>{total ? `${(page - 1) * TAILLE + 1}–${(page - 1) * TAILLE + rows.length} sur ${nombre(total)} mandats` : "0 mandat"}</span>
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-              <button type="button" aria-label="Page précédente" disabled={page <= 1} onClick={() => setPage(page - 1)} style={{ ...pageBtn(), fontWeight: 400, color: "#4A5568" }}>‹</button>
-              {numeros.map((n) => <button key={n} type="button" aria-current={n === page ? "page" : undefined} onClick={() => setPage(n)} style={pageBtn(n === page)}>{n}</button>)}
-              <button type="button" aria-label="Page suivante" disabled={page >= pages} onClick={() => setPage(page + 1)} style={{ ...pageBtn(), fontWeight: 400, color: "#4A5568" }}>›</button>
+              <button type="button" aria-label="Page précédente" disabled={page <= 1} onClick={() => maj({ page: String(page - 1) })} style={{ ...pageBtn(), fontWeight: 400, color: "#4A5568" }}>‹</button>
+              {numeros.map((n) => <button key={n} type="button" aria-current={n === page ? "page" : undefined} onClick={() => maj({ page: n === 1 ? "" : String(n) })} style={pageBtn(n === page)}>{n}</button>)}
+              <button type="button" aria-label="Page suivante" disabled={page >= pages} onClick={() => maj({ page: String(page + 1) })} style={{ ...pageBtn(), fontWeight: 400, color: "#4A5568" }}>›</button>
             </div>
           </div>
         </section>
       </main>
-      {modale && <ModaleMandat mandat={modale.mandat} onClose={() => setModale(null)} onSaved={(m) => { setModale(null); setToast(m); setVersion((v) => v + 1); setTimeout(() => setToast(null), 3500); }} />}
-      {toast && <Toast ton="ok" titre="Mandat enregistré" texte={toast} bas={28} />}
+      {fiche && <FicheDirigeant key={fiche} id={fiche} onClose={() => setFiche(null)}
+        onModifierMandat={(m) => ouvrirModale({ mandat: m, retour: fiche })}
+        onAjouterMandat={(dir) => ouvrirModale({ dirigeant: { id: dir.id, nom_complet: dir.nom_complet, email_professionnel: dir.email_professionnel, nb_mandats: dir.mandats.length }, retour: fiche })}
+        onVoirInstitution={(id) => { setFiche(null); setSaisie(""); setParams({ imf: id }, { replace: true }); }}
+        onEnregistre={(texte) => annoncer("Dirigeant mis à jour", texte)} />}
+      {modale && <ModaleMandat mandat={modale.mandat} dirigeant={modale.dirigeant} onClose={fermerModale} onSaved={(m) => { fermerModale(); annoncer("Mandat enregistré", m); }} />}
+      {toast && <Toast ton="ok" titre={toast.titre} texte={toast.texte} bas={28} />}
     </AppLayout>
   );
 }
 
-function ModaleMandat({ mandat, onClose, onSaved }: { mandat?: Mandat; onClose: () => void; onSaved: (msg: string) => void }) {
+/** Création ou modification d'un mandat. `dirigeant` : ajout d'un mandat à un dirigeant déjà choisi (depuis sa fiche). */
+function ModaleMandat({ mandat, dirigeant, onClose, onSaved }: { mandat?: Mandat; dirigeant?: DirigeantRes; onClose: () => void; onSaved: (msg: string) => void }) {
   const edition = !!mandat;
-  const [step, setStep] = useState(edition ? 2 : 1);
-  const [mode, setMode] = useState<"existing" | "new">("new");
+  const [step, setStep] = useState(edition || dirigeant ? 2 : 1);
+  const [mode, setMode] = useState<"existing" | "new">(dirigeant ? "existing" : "new");
   const [q, setQ] = useState("");
   const [trouves, setTrouves] = useState<DirigeantRes[]>([]);
-  const [choisi, setChoisi] = useState<DirigeantRes | null>(mandat ? { id: mandat.dirigeant, nom_complet: mandat.dirigeant_nom_complet, email_professionnel: mandat.dirigeant_email, nb_mandats: 0 } : null);
+  const [choisi, setChoisi] = useState<DirigeantRes | null>(mandat ? { id: mandat.dirigeant, nom_complet: mandat.dirigeant_nom_complet, email_professionnel: mandat.dirigeant_email, nb_mandats: 0 } : dirigeant ?? null);
   const [p, setP] = useState({ prenom: "", nom: "", tel: "", email: "", email2: "" });
   const [m, setM] = useState({ imf: mandat?.imf ?? "", fonction: mandat?.fonction_mandat ?? "DG", debut: mandat?.date_debut ?? "", fin: mandat?.date_fin ?? "", statut: mandat?.statut_mandat ?? "EN_FONCTION", lien: mandat?.documents_justificatifs ?? "" });
   const [fichier, setFichier] = useState<File | null>(null);

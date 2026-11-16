@@ -125,20 +125,32 @@ TEMPLATES = [
 # Base de données PostgreSQL + PostGIS
 # ---------------------------------------------------------------------------
 
-DATABASES = {
-    "default": {
-        # postgis active le support géospatial via GeoDjango
+# Deux façons de configurer la base, au choix de l'environnement d'installation :
+#  - DATABASE_URL (une seule variable, ex. hébergeur PostgreSQL) :
+#      postgres://utilisateur:motdepasse@hote:5432/base?sslmode=require
+#    Les paramètres après « ? » (sslmode, channel_binding…) sont transmis au pilote.
+#  - sinon DB_NAME / DB_USER / DB_PASSWORD / DB_HOST / DB_PORT (Docker Compose de l'intranet).
+# Dans les deux cas, le moteur PostGIS est imposé (GeoDjango).
+_OPTIONS_BASE = {
+    "CONN_MAX_AGE": env.int("DB_CONN_MAX_AGE", default=60),
+    "CONN_HEALTH_CHECKS": True,
+}
+
+if env("DATABASE_URL", default=""):
+    _base = env.db_url("DATABASE_URL", engine="django.contrib.gis.db.backends.postgis")
+    _base.setdefault("OPTIONS", {}).setdefault("connect_timeout", 10)
+else:
+    _base = {
         "ENGINE": "django.contrib.gis.db.backends.postgis",
         "NAME": env("DB_NAME"),
         "USER": env("DB_USER"),
         "PASSWORD": env("DB_PASSWORD"),
         "HOST": env("DB_HOST", default="localhost"),
         "PORT": env("DB_PORT", default="5432"),
-        "CONN_MAX_AGE": env.int("DB_CONN_MAX_AGE", default=60),
-        "CONN_HEALTH_CHECKS": True,
         "OPTIONS": {"connect_timeout": 10},
     }
-}
+
+DATABASES = {"default": {**_base, **_OPTIONS_BASE}}
 
 
 # ---------------------------------------------------------------------------
@@ -181,6 +193,16 @@ STORAGES = {
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "mediafiles"
+
+# Fichiers déposés (justificatifs, imports) servis par Django lui-même.
+# À laisser à False quand un serveur web les sert (Nginx de l'intranet).
+# Attention : ces fichiers sont alors accessibles SANS connexion à qui connaît leur adresse.
+SERVIR_MEDIAS = env.bool("DJANGO_SERVIR_MEDIAS", default=False)
+
+# Données fictives : remplace automatiquement noms, téléphones, e-mails et adresses
+# des dirigeants après chaque import (démonstration accessible sur Internet).
+# Voir apps/dirigeants/anonymisation.py et la commande « anonymiser_dirigeants ».
+DONNEES_FICTIVES = env.bool("DJANGO_DONNEES_FICTIVES", default=False)
 
 
 # ---------------------------------------------------------------------------

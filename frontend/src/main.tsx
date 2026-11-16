@@ -11,7 +11,11 @@ import { createRoot } from "react-dom/client";
 import { QueryClientProvider } from "@tanstack/react-query";
 
 import { cacheRequetes } from "./api/cache";
+import { reveillerServeur } from "./api/client";
 import { App } from "./App";
+
+// Démarre le serveur s'il est en veille, avant même la première requête de données.
+reveillerServeur();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

@@ -7,6 +7,7 @@ Vues DRF du module points de service :
 - PointServiceGeoView        : export GeoJSON pour la carte micro
 """
 
+from django.db.models import F
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, generics
 from rest_framework.permissions import IsAuthenticated
@@ -23,14 +24,45 @@ from .serializers import PointServiceDetailSerializer, PointServiceListSerialize
 RELATIONS = ("imf", "region", "departement", "commune")
 
 
+class TriVidesEnDernier(filters.OrderingFilter):
+    """Tri de ?ordering= qui place toujours les valeurs vides à la fin (membres, dépôts, région…).
+
+    Par défaut PostgreSQL met les NULL en tête d'un tri décroissant : « les plus gros
+    encours d'abord » commencerait par les points sans valeur.
+    """
+
+    def filter_queryset(self, request, queryset, view):
+        ordering = self.get_ordering(request, queryset, view)
+        if not ordering:
+            return queryset
+        return queryset.order_by(*[
+            F(champ[1:]).desc(nulls_last=True) if champ.startswith("-") else F(champ).asc(nulls_last=True)
+            for champ in ordering
+        ])
+
+
 class PointServiceListCreateView(
     AuditMixin, DroitsCasUtilisationMixin, generics.ListCreateAPIView
 ):
+    """GET  /api/v1/points-service/ — Liste des points actifs.
+    POST /api/v1/points-service/ — Création (ADMIN requis).
+
+    Filtres : voir PointServiceFilter. Recherche : nom, adresse, localité, téléphone, email,
+    référence du point ; nom, sigle, agrément de l'IMF ; commune, département.
+    Tri : ?ordering=imf__nom,nom — valeurs vides toujours en dernier.
+    """
+
     queryset = PointService.objects.filter(is_active=True).select_related(*RELATIONS)
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, TriVidesEnDernier]
     filterset_class = PointServiceFilter
-    search_fields = ["nom", "adresse"]
-    ordering_fields = ["nom", "date_ouverture", "encours"]
+    search_fields = [
+        "nom", "adresse", "lieu_dit", "telephone", "email", "reference_externe",
+        "imf__nom", "imf__sigle", "imf__numero_agrement", "commune__nom", "departement__nom",
+    ]
+    ordering_fields = [
+        "nom", "date_ouverture", "encours", "depots", "nombre_membres", "type_point", "statut_point",
+        "imf__nom", "imf", "region__nom", "departement__nom", "commune__nom",
+    ]
 
     def get_serializer_class(self):
         return PointServiceDetailSerializer if self.request.method == "POST" else PointServiceListSerializer

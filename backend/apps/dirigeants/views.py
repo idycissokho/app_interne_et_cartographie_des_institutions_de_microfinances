@@ -141,8 +141,10 @@ class MandatListView(generics.ListAPIView):
     """GET /api/v1/dirigeants/mandats/ — Tous les mandats actifs (liste « Dirigeants et mandats »).
 
     Lecture seule, non journalisée (aucune fiche dirigeant n'est ouverte).
-    Filtres : fonction_mandat, statut_mandat, imf, dirigeant, date_fin__gte / __lte (échéances),
-    sans_justificatif=true. Recherche : nom, prénom, email du dirigeant, IMF.
+    Filtres : fonction_mandat (exact / in), statut_mandat, imf, imf__region, dirigeant,
+    date_fin__gte / __lte (échéances), sans_justificatif=true.
+    Recherche : nom, prénom, email, téléphone du dirigeant ; nom, sigle, agrément de l'IMF.
+    Tri : dirigeant, institution, fonction, statut, dates (ex. ?ordering=imf__nom,imf,fonction_mandat).
     """
 
     serializer_class = MandatSerializer
@@ -152,11 +154,18 @@ class MandatListView(generics.ListAPIView):
         "fonction_mandat": ["exact", "in"],
         "statut_mandat": ["exact"],
         "imf": ["exact"],
+        "imf__region": ["exact"],
         "dirigeant": ["exact"],
         "date_fin": ["gte", "lte", "isnull"],
     }
-    search_fields = ["dirigeant__nom", "dirigeant__prenom", "dirigeant__email_professionnel", "imf__nom", "imf__sigle"]
-    ordering_fields = ["date_fin", "date_debut", "dirigeant__nom"]
+    search_fields = [
+        "dirigeant__nom", "dirigeant__prenom", "dirigeant__email_professionnel", "dirigeant__telephone",
+        "imf__nom", "imf__sigle", "imf__numero_agrement",
+    ]
+    ordering_fields = [
+        "date_fin", "date_debut", "dirigeant__nom", "dirigeant__prenom", "dirigeant",
+        "imf__nom", "imf", "fonction_mandat", "statut_mandat",
+    ]
 
     def get_queryset(self):
         qs = (

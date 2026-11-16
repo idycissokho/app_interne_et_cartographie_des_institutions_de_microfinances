@@ -1,0 +1,27 @@
+# =============================================================================
+# backend/.dockerignore — exclu de l'image Docker (production et développement)
+# Aucun secret ni aucune donnée réelle ne doit entrer dans une image.
+# (En développement, docker-compose monte de toute façon le dossier backend/.)
+# =============================================================================
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Fichiers déposés et générés (données réelles : imports, justificatifs)
+mediafiles/
+msediafiles/
+staticfiles/
+
+# Caches et environnements locaux
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+.DS_Store

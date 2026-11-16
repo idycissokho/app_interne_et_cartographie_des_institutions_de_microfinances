@@ -61,6 +61,29 @@ def test_liste_points_enrichie_et_filtre_sans_gps(jeu, client_consultant):
     assert client_consultant.get("/api/v1/points-service/?sans_gps=true").data["count"] == 1
 
 
+def test_points_recherche_tri_et_fiche(jeu, client_consultant):
+    url = "/api/v1/points-service/"
+    PointService.objects.filter(nom="Guichet").update(lieu_dit="Marché Sandaga", telephone="33 800 00 00")
+    # Recherche : localité, téléphone, institution.
+    assert client_consultant.get(f"{url}?search=sandaga").data["count"] == 1
+    assert client_consultant.get(f"{url}?search=33 800").data["count"] == 1
+    assert client_consultant.get(f"{url}?search=IA").data["count"] == 2
+    # Tri : les valeurs vides restent en dernier, dans les deux sens.
+    autre = PointService.objects.create(imf=jeu["imf"], nom="Bureau", type_point="BUREAU")
+    for sens in ("nombre_membres", "-nombre_membres"):
+        noms = [p["nom"] for p in client_consultant.get(f"{url}?ordering={sens}").data["results"]]
+        assert noms[-1] == "Bureau"
+    assert [p["nom"] for p in client_consultant.get(f"{url}?ordering=-nombre_membres").data["results"]][0] == "Siège"
+    assert client_consultant.get(f"{url}?ordering=region__nom,nom").data["results"][0]["nom"] == "Siège"
+    # Sans tri demandé : ordre par défaut inchangé, sans erreur.
+    assert client_consultant.get(url).data["count"] == 3
+    # Liste et fiche portent les libellés de localisation.
+    ligne = client_consultant.get(f"{url}?search=sandaga").data["results"][0]
+    assert ligne["lieu_dit"] == "Marché Sandaga" and "departement_nom" in ligne
+    fiche = client_consultant.get(f"{url}{autre.pk}/").data
+    assert fiche["imf_sigle"] == "IA" and fiche["region_nom"] is None
+
+
 def test_mandats_globaux_filtres_et_non_journalises(jeu, client_consultant):
     url = "/api/v1/dirigeants/mandats/"
     tous = client_consultant.get(url).data
@@ -74,6 +97,25 @@ def test_mandats_globaux_filtres_et_non_journalises(jeu, client_consultant):
     assert client_consultant.get(f"{url}?statut_mandat=EN_FONCTION").data["count"] == 2
     assert client_consultant.get(f"{url}?sans_justificatif=true").data["count"] == 2
     assert not JournalAudit.objects.filter(action="CONSULTATION").exists()
+
+
+def test_mandats_globaux_recherche_tri_et_region(jeu, client_consultant):
+    url = "/api/v1/dirigeants/mandats/"
+    autre = IMF.objects.create(nom="Autre IMF", sigle="AU", type_imf="SA", adresse_siege="Thiès",
+                               numero_agrement="TH1-20-00001")
+    Mandat.objects.create(dirigeant=jeu["d1"], imf=autre, fonction_mandat="GERANT", date_debut="2021-01-01")
+
+    # Recherche : chaque mot doit se retrouver (dirigeant ou institution).
+    assert client_consultant.get(f"{url}?search=awa diop").data["count"] == 3
+    assert client_consultant.get(f"{url}?search=TH1-20").data["count"] == 1
+    # Tous les dirigeants d'une institution, d'une région.
+    assert client_consultant.get(f"{url}?imf={autre.pk}").data["count"] == 1
+    assert client_consultant.get(f"{url}?imf__region={jeu['dakar'].pk}").data["count"] == 3
+    # Tri par institution puis fonction.
+    tries = client_consultant.get(f"{url}?ordering=imf__nom,imf,fonction_mandat").data["results"]
+    assert [m["imf_nom"] for m in tries] == ["Autre IMF", "IMF A", "IMF A", "IMF A"]
+    assert [m["fonction_mandat"] for m in tries[1:]] == ["DG", "DG", "PCA"]
+    assert "dirigeant_telephone" in tries[0]
 
 
 def test_compteur_mandats_juste_avec_filtre_fonction(jeu, client_consultant):

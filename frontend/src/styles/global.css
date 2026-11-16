@@ -178,6 +178,17 @@ select.ps-input{cursor:pointer;padding-right:10px;accent-color:#C9A44C}
 select.di-input{cursor:pointer;padding-right:10px}
 .di-drop:hover{border-color:#C9A44C;background:#FDF8EA}
 .di-primary:hover{background:#D9B65E}
+/* Référentiel des dirigeants : en-têtes triables, actions de ligne, tuiles-filtres, liste d'institutions. */
+.di-tri{display:inline-flex;align-items:center;gap:6px;border:none;background:transparent;padding:0;font:inherit;letter-spacing:inherit;text-transform:inherit;color:inherit;cursor:pointer}
+.di-tri:hover,.di-tri[data-actif=true]{color:#0B1424}
+.di-act{width:34px;height:34px;border-radius:10px;border:1px solid #ECE5D5;background:#FFFFFF;color:#0B1424;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:background .15s ease,border-color .15s ease}
+.di-act:hover{background:#FDF8EA;border-color:#C9A44C}
+.di-kpi{transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease}
+button.di-kpi:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(11,20,36,.08)}
+.di-opt:hover{background:#FBF8F1}
+.di-lien{border:none;background:transparent;padding:0;font:inherit;font-weight:700;color:#0B1424;cursor:pointer;text-align:left}
+.di-lien:hover{color:#8A6A1F;text-decoration:underline}
+.di-row:focus-visible{outline:2px solid #C9A44C;outline-offset:-2px}
 @media (prefers-reduced-motion:reduce){.di-up,.di-modal,.di-fade{animation:none}}
 
 
@@ -345,3 +356,10 @@ html.cs-fige{overflow:hidden}
 @keyframes sq-shine{from{background-position:100% 0}to{background-position:0 0}}
 .sq{display:inline-block;vertical-align:middle;border-radius:8px;background:linear-gradient(90deg,#F1ECE0 30%,#FAF3DF 50%,#F1ECE0 70%);background-size:300% 100%;animation:sq-shine 1.3s ease-in-out infinite}
 @media (prefers-reduced-motion:reduce){.sq{animation:none}}
+
+/* Avis système (AvisSysteme.tsx) : roue d'attente du réveil du serveur. */
+@keyframes sys-roue{to{transform:rotate(360deg)}}
+@keyframes sys-avis{from{opacity:0;transform:translate(-50%,12px)}to{opacity:1;transform:translate(-50%,0)}}
+.sys-roue{animation:sys-roue .9s linear infinite}
+.sys-avis{animation:sys-avis .35s cubic-bezier(.2,.7,.2,1) both}
+@media (prefers-reduced-motion:reduce){.sys-roue{animation-duration:2.4s}.sys-avis{animation:none}}

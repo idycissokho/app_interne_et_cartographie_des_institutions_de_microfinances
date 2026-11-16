@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import type { Role } from "./api/types";
 import { AuthProvider, useAuth } from "./auth/AuthContext";
+import { AvisReveil, BandeauDemo } from "./components/AvisSysteme";
 import { EcranSquelette } from "./components/Squelette";
 import { PAGES } from "./lib/pages";
 
@@ -57,6 +58,8 @@ export function App() {
         </Routes>
         </Suspense>
       </BrowserRouter>
+      <AvisReveil />
+      <BandeauDemo />
     </AuthProvider>
   );
 }
