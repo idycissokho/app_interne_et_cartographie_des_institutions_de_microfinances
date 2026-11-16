@@ -76,6 +76,25 @@ def test_mandats_globaux_filtres_et_non_journalises(jeu, client_consultant):
     assert not JournalAudit.objects.filter(action="CONSULTATION").exists()
 
 
+def test_mandats_globaux_recherche_tri_et_region(jeu, client_consultant):
+    url = "/api/v1/dirigeants/mandats/"
+    autre = IMF.objects.create(nom="Autre IMF", sigle="AU", type_imf="SA", adresse_siege="Thiès",
+                               numero_agrement="TH1-20-00001")
+    Mandat.objects.create(dirigeant=jeu["d1"], imf=autre, fonction_mandat="GERANT", date_debut="2021-01-01")
+
+    # Recherche : chaque mot doit se retrouver (dirigeant ou institution).
+    assert client_consultant.get(f"{url}?search=awa diop").data["count"] == 3
+    assert client_consultant.get(f"{url}?search=TH1-20").data["count"] == 1
+    # Tous les dirigeants d'une institution, d'une région.
+    assert client_consultant.get(f"{url}?imf={autre.pk}").data["count"] == 1
+    assert client_consultant.get(f"{url}?imf__region={jeu['dakar'].pk}").data["count"] == 3
+    # Tri par institution puis fonction.
+    tries = client_consultant.get(f"{url}?ordering=imf__nom,imf,fonction_mandat").data["results"]
+    assert [m["imf_nom"] for m in tries] == ["Autre IMF", "IMF A", "IMF A", "IMF A"]
+    assert [m["fonction_mandat"] for m in tries[1:]] == ["DG", "DG", "PCA"]
+    assert "dirigeant_telephone" in tries[0]
+
+
 def test_compteur_mandats_juste_avec_filtre_fonction(jeu, client_consultant):
     res = client_consultant.get("/api/v1/dirigeants/?mandats__fonction_mandat=DG").data["results"]
     awa = next(d for d in res if d["nom_complet"] == "Awa Diop")

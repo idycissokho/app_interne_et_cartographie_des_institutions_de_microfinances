@@ -65,8 +65,13 @@ export interface Mandat {
   id: string;
   dirigeant: string;
   dirigeant_nom_complet: string;
+  dirigeant_email: string;
+  dirigeant_telephone: string;
   imf: string;
   imf_nom: string;
+  imf_sigle: string;
+  /** Région du siège (liste globale des mandats uniquement). */
+  imf_region: string | null;
   fonction_mandat: string;
   date_debut: string;
   date_fin: string | null;
@@ -90,6 +95,7 @@ export interface Dirigeant {
   prenom: string;
   nom_complet: string;
   telephone: string;
+  adresse: string;
   email_professionnel: string;
   email_secondaire: string;
   mandats: Mandat[];

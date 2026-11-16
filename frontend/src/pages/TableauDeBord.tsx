@@ -105,7 +105,7 @@ export function TableauDeBord() {
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>Nouvelle IMF
             </button>
           )}
-          <button type="button" aria-label="Notifications" title={urgent ? "Des mandats expirent sous 30 jours" : "Aucune alerte"} onClick={() => naviguer("/dirigeants")} style={{ width: 48, height: 48, borderRadius: 14, border: "1px solid #ECE5D5", background: "#FFFFFF", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", cursor: "pointer", color: "#0B1424" }}>
+          <button type="button" aria-label="Notifications" title={urgent ? "Des mandats expirent sous 30 jours" : "Aucune alerte"} onClick={() => naviguer("/dirigeants?alerte=echeance")} style={{ width: 48, height: 48, borderRadius: 14, border: "1px solid #ECE5D5", background: "#FFFFFF", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", cursor: "pointer", color: "#0B1424" }}>
             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8M10 20a2 2 0 0 0 4 0" /></svg>
             {urgent && <span style={{ position: "absolute", top: 11, right: 12, width: 8, height: 8, borderRadius: "50%", background: "#C2410C" }} />}
           </button>
