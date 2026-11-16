@@ -214,7 +214,9 @@ export function Dirigeants() {
               <div><b style={{ display: "block", fontSize: 22, color: "#F3D98C" }}>{d.rows ? nombre(total) : "—"}</b><span style={{ fontSize: 12, color: "#A9B3C4" }}>mandat{total > 1 ? "s" : ""}</span></div>
               <div><b style={{ display: "block", fontSize: 22, color: "#F3D98C" }}>{nombre(institution.nb_points_service)}</b><span style={{ fontSize: 12, color: "#A9B3C4" }}>point{institution.nb_points_service > 1 ? "s" : ""} de service</span></div>
             </div>
-            <Link to={`/consultation?imf=${institution.id}`} style={{ height: 40, padding: "0 14px", borderRadius: 12, border: "1px solid rgba(243,217,140,.45)", color: "#F3D98C", fontSize: 13, fontWeight: 700, textDecoration: "none", display: "flex", alignItems: "center", boxSizing: "border-box" }}>Fiche de l'institution →</Link>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {[[`/points-service?imf=${institution.id}`, "Ses points de service →"], [`/consultation?imf=${institution.id}`, "Fiche de l'institution →"]].map(([to, l]) => <Link key={to} to={to} style={{ height: 40, padding: "0 14px", borderRadius: 12, border: "1px solid rgba(243,217,140,.45)", color: "#F3D98C", fontSize: 13, fontWeight: 700, textDecoration: "none", display: "flex", alignItems: "center", boxSizing: "border-box" }}>{l}</Link>)}
+            </div>
           </section>
         )}
 

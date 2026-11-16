@@ -28,6 +28,7 @@ class PointServiceListSerializer(serializers.ModelSerializer):
 
     imf_nom = serializers.CharField(source="imf.nom", read_only=True)
     region_nom = serializers.CharField(source="region.nom", read_only=True, default=None)
+    departement_nom = serializers.CharField(source="departement.nom", read_only=True, default=None)
     commune_nom = serializers.CharField(source="commune.nom", read_only=True, default=None)
     imf_sigle = serializers.CharField(source="imf.sigle", read_only=True)
 
@@ -35,7 +36,8 @@ class PointServiceListSerializer(serializers.ModelSerializer):
         model = PointService
         fields = [
             "id", "nom", "imf", "imf_nom", "imf_sigle", "type_point", "statut_point",
-            "statut_reglementaire", "region", "region_nom", "commune_nom",
+            "statut_reglementaire", "region", "region_nom", "departement_nom", "commune_nom",
+            "adresse", "lieu_dit", "telephone",
             "nombre_membres", "encours", "depots", "a_gps", "is_active",
         ]
 
@@ -49,6 +51,10 @@ class PointServiceDetailSerializer(serializers.ModelSerializer):
     """Sérialiseur complet pour le détail, la création et la modification."""
 
     imf_nom = serializers.CharField(source="imf.nom", read_only=True)
+    imf_sigle = serializers.CharField(source="imf.sigle", read_only=True)
+    region_nom = serializers.CharField(source="region.nom", read_only=True, default=None)
+    departement_nom = serializers.CharField(source="departement.nom", read_only=True, default=None)
+    commune_nom = serializers.CharField(source="commune.nom", read_only=True, default=None)
     region = _zone_field(ZoneGeographique.TypeZone.REGION)
     departement = _zone_field(ZoneGeographique.TypeZone.DEPARTEMENT)
     commune = _zone_field(ZoneGeographique.TypeZone.COMMUNE)
@@ -56,9 +62,10 @@ class PointServiceDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = PointService
         fields = [
-            "id", "imf", "imf_nom", "nom", "reference_externe",
+            "id", "imf", "imf_nom", "imf_sigle", "nom", "reference_externe",
             "type_point", "statut_point", "statut_reglementaire",
-            "adresse", "region", "departement", "commune", "telephone", "email",
+            "adresse", "region", "departement", "commune",
+            "region_nom", "departement_nom", "commune_nom", "telephone", "email",
             "localisation", "date_ouverture", "encours", "depots", "nombre_membres",
             "lieu_dit", "url_fiche",
             "is_active", "date_creation", "date_modification",

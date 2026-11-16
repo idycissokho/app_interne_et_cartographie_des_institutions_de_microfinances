@@ -61,6 +61,29 @@ def test_liste_points_enrichie_et_filtre_sans_gps(jeu, client_consultant):
     assert client_consultant.get("/api/v1/points-service/?sans_gps=true").data["count"] == 1
 
 
+def test_points_recherche_tri_et_fiche(jeu, client_consultant):
+    url = "/api/v1/points-service/"
+    PointService.objects.filter(nom="Guichet").update(lieu_dit="Marché Sandaga", telephone="33 800 00 00")
+    # Recherche : localité, téléphone, institution.
+    assert client_consultant.get(f"{url}?search=sandaga").data["count"] == 1
+    assert client_consultant.get(f"{url}?search=33 800").data["count"] == 1
+    assert client_consultant.get(f"{url}?search=IA").data["count"] == 2
+    # Tri : les valeurs vides restent en dernier, dans les deux sens.
+    autre = PointService.objects.create(imf=jeu["imf"], nom="Bureau", type_point="BUREAU")
+    for sens in ("nombre_membres", "-nombre_membres"):
+        noms = [p["nom"] for p in client_consultant.get(f"{url}?ordering={sens}").data["results"]]
+        assert noms[-1] == "Bureau"
+    assert [p["nom"] for p in client_consultant.get(f"{url}?ordering=-nombre_membres").data["results"]][0] == "Siège"
+    assert client_consultant.get(f"{url}?ordering=region__nom,nom").data["results"][0]["nom"] == "Siège"
+    # Sans tri demandé : ordre par défaut inchangé, sans erreur.
+    assert client_consultant.get(url).data["count"] == 3
+    # Liste et fiche portent les libellés de localisation.
+    ligne = client_consultant.get(f"{url}?search=sandaga").data["results"][0]
+    assert ligne["lieu_dit"] == "Marché Sandaga" and "departement_nom" in ligne
+    fiche = client_consultant.get(f"{url}{autre.pk}/").data
+    assert fiche["imf_sigle"] == "IA" and fiche["region_nom"] is None
+
+
 def test_mandats_globaux_filtres_et_non_journalises(jeu, client_consultant):
     url = "/api/v1/dirigeants/mandats/"
     tous = client_consultant.get(url).data
