@@ -7,12 +7,15 @@ Chaque domaine fonctionnel expose ses propres URLs via include().
 
 from django.conf import settings
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import include, path, re_path
+from django.views.static import serve
 from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularRedocView,
     SpectacularSwaggerView,
 )
+
+from config.sante import sante
 
 # ---------------------------------------------------------------------------
 # Préfixe API — toutes les routes REST sont regroupées sous /api/v1/
@@ -23,6 +26,9 @@ API_V1 = "api/v1/"
 urlpatterns = [
     # Interface d'administration Django
     path("admin/", admin.site.urls),
+
+    # État du serveur (sans données, sans connexion) — voir config/sante.py
+    path(f"{API_V1}sante/", sante, name="sante"),
 
     # Authentification JWT (login, refresh, verify)
     path(f"{API_V1}auth/", include("apps.authentication.urls")),
@@ -49,3 +55,10 @@ if settings.DEBUG:
 # (INTERNAL_IPS) échoue en 500 « 'djdt' is not a registered namespace ».
 if "debug_toolbar" in settings.INSTALLED_APPS:
     urlpatterns += [path("__debug__/", include("debug_toolbar.urls"))]
+
+# Fichiers déposés servis par Django, uniquement si DJANGO_SERVIR_MEDIAS=true
+# (hébergement sans serveur web devant Django). Sur l'intranet, Nginx s'en charge.
+if settings.SERVIR_MEDIAS:
+    urlpatterns += [
+        re_path(r"^media/(?P<path>.*)$", serve, {"document_root": settings.MEDIA_ROOT}),
+    ]

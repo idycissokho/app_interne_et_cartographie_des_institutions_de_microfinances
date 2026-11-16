@@ -44,6 +44,7 @@ from datetime import date, datetime
 from functools import cached_property
 from pathlib import Path
 
+from django.conf import settings
 from django.db import transaction
 
 from apps.cartographie.models import ZoneGeographique
@@ -1009,5 +1010,18 @@ PROCESSORS: dict[str, type[BaseImportProcessor]] = {
 
 
 def lancer_importation(importation: ImportationFichier) -> BilanImport:
-    """Exécute le processor correspondant au type de l'import et retourne son bilan."""
-    return PROCESSORS[importation.type_import](importation).executer()
+    """Exécute le processor correspondant au type de l'import et retourne son bilan.
+
+    Avec DJANGO_DONNEES_FICTIVES=true (démonstration), les dirigeants importés sont
+    aussitôt anonymisés : aucune donnée personnelle réelle ne reste en base.
+    """
+    bilan = PROCESSORS[importation.type_import](importation).executer()
+    if settings.DONNEES_FICTIVES and importation.type_import == ImportationFichier.TypeImport.DIRIGEANTS:
+        from apps.dirigeants.anonymisation import anonymiser_dirigeants
+
+        anonymiser_dirigeants()
+        importation.refresh_from_db()  # la réponse de l'API doit montrer le rapport masqué
+        rapport = importation.rapport_erreurs or []
+        bilan.erreurs = [r for r in rapport if not r.get("avertissement")]
+        bilan.avertissements = [r for r in rapport if r.get("avertissement")]
+    return bilan

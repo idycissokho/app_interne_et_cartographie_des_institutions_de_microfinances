@@ -28,6 +28,10 @@ if env.bool("DJANGO_TRUST_X_FORWARDED_PROTO", default=False):  # noqa: F405
 
 USE_X_FORWARDED_HOST = env.bool("DJANGO_USE_X_FORWARDED_HOST", default=False)  # noqa: F405
 
+# Garde-fou : aucun outil de débogage ne doit être actif en production.
+INSTALLED_APPS = [app for app in INSTALLED_APPS if app not in ("debug_toolbar", "django_extensions")]  # noqa: F405
+MIDDLEWARE = [m for m in MIDDLEWARE if not m.startswith("debug_toolbar")]  # noqa: F405
+
 if not ALLOWED_HOSTS:  # noqa: F405
     raise ImproperlyConfigured("DJANGO_ALLOWED_HOSTS doit contenir les domaines de production.")
 

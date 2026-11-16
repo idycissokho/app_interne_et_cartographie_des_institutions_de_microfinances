@@ -38,5 +38,5 @@ newrelic==14.3.0
 
 # Gestion des fichiers médias et uploads
 Pillow==10.4.0
-django-debug-toolbar==4.4.6
+# django-debug-toolbar : uniquement dans development.txt (jamais installé en production).
 
