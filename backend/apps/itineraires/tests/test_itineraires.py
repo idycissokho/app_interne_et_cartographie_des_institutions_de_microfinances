@@ -171,6 +171,24 @@ def test_recherche_nom_sigle_agrement(client_superviseur, point, texte, attendu)
     assert attendu in {r["type"] for r in resultats}
 
 
+URL_CARTE = URL_RECHERCHE + "carte/"
+
+
+def test_carte_toutes_les_structures_fiables(client_superviseur, imf, point):
+    """Sièges d'IMF et points de service à l'ouverture de la page ; positions non fiables exclues."""
+    PointService.objects.create(imf=imf, nom="Agence défaut", localisation=Point(-17.33333, 14.75))
+    PointService.objects.create(imf=imf, nom="Agence sans GPS")
+    IMF.objects.create(nom="IMF sans GPS", type_imf="SA", adresse_siege="Dakar")
+    epingles = client_superviseur.get(URL_CARTE).data["results"]
+    assert sorted((e["type"], e["nom"], e["type_point"]) for e in epingles) == [
+        ("institution", "Mutuelle Test", "IMF"), ("point_service", "Agence Rufisque", "AGENCE"),
+    ]
+
+
+def test_carte_refusee_au_consultant(client_consultant):
+    assert client_consultant.get(URL_CARTE).status_code == 403
+
+
 def test_recherche_trop_courte(client_superviseur, point):
     assert client_superviseur.get(URL_RECHERCHE + "?q=a").data["results"] == []
 

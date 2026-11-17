@@ -12,12 +12,11 @@
 import "../components/itineraire/itineraire.css";
 
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as EvPointeur } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as EvPointeur } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import { requeteApi } from "../api/cache";
 import { ErreurApi, requete } from "../api/client";
-import type { StatutPoint, TypePoint } from "../components/carto/SenegalMap";
 import { btnPrimaire, btnSecondaire } from "../components/form";
 import { CarteItineraire, type PointItineraire } from "../components/itineraire/CarteItineraire";
 import { IconeDestination, RechercheDestination } from "../components/itineraire/RechercheDestination";
@@ -27,21 +26,16 @@ import { PRECISION_FAIBLE, useGeolocalisation } from "../components/itineraire/u
 import { AppLayout } from "../components/layout/AppLayout";
 import { Squelette } from "../components/Squelette";
 import { Badge } from "../components/tableau/Tableau";
-import { dansLeSenegal } from "../data/projection";
 import { TYPE_POINT } from "../lib/metier";
 import { useDonnees } from "../lib/useDonnees";
 
-interface FeaturePoint {
-  id: string;
-  geometry: { coordinates: [number, number] };
-  properties: { nom: string; imf_nom: string; type_point: TypePoint; statut_point: StatutPoint };
-}
 interface Origine extends Position { source: "gps" | "carte"; precision?: number }
 type Cran = "replie" | "moyen" | "plein";
 
 const TOUS_LES_MODES = MODES.map((m) => m.cle);
-/** Position attribuée par défaut dans les fichiers sources (non fiable, exclue comme côté serveur). */
-const parDefaut = (lat: number, lon: number) => Math.abs(lat - 14.75) < 1e-4 && Math.abs(lon + 17.33333) < 1e-4;
+const AUCUNE: PointItineraire[] = [];
+/** Toutes les épingles (sièges d'IMF et points de service à la position fiable), filtrées par le serveur. */
+export const URL_EPINGLES = "/itineraires/destinations/carte/";
 const MOBILE = "(max-width: 760px)";
 const hauteurCran = (cran: Cran) => (cran === "replie" ? 92 : Math.round(window.innerHeight * (cran === "plein" ? 0.88 : 0.46)));
 const bouton: CSSProperties = { display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8, flex: "1 1 auto" };
@@ -90,18 +84,9 @@ export function Itineraire() {
     setPlacement(false);
   }, [geo.etat]);
 
-  /* --- Épingles : points de service à la position fiable (même règle que le serveur) --- */
-  const { donnees } = useDonnees<{ geo: { features: FeaturePoint[] } }>({ geo: "/points-service/geojson/" });
-  const points = useMemo<PointItineraire[]>(
-    () =>
-      (donnees.geo?.features ?? []).flatMap((f) => {
-        const [lon, lat] = f.geometry.coordinates;
-        if (!dansLeSenegal(lat, lon) || parDefaut(lat, lon)) return [];
-        const p = f.properties;
-        return [{ id: f.id, nom: p.nom, imf_nom: p.imf_nom, type: p.type_point, statut: p.statut_point, lat, lon }];
-      }),
-    [donnees.geo],
-  );
+  /* --- Épingles : toutes les structures dès l'ouverture, comme la carte micro --- */
+  const { donnees } = useDonnees<{ epingles: { results: PointItineraire[] } }>({ epingles: URL_EPINGLES });
+  const points = donnees.epingles?.results ?? AUCUNE;
 
   /* --- Destination relue par le serveur --- */
   const destination = useQuery({
@@ -280,12 +265,17 @@ export function Itineraire() {
             onOrigine={placerDepart} onPoint={setPointOuvert}
           />
           {pointOuvert && (
-            <div className="it-popup" role="dialog" aria-label={`Point de service ${pointOuvert.nom}`}>
+            <div className="it-popup" role="dialog" aria-label={pointOuvert.nom}>
               <button type="button" className="it-popup-fermer" aria-label="Fermer" onClick={() => setPointOuvert(null)}>×</button>
-              <div className="it-sugg-nom" style={{ paddingRight: 28 }}>{pointOuvert.nom}</div>
-              <div className="it-sugg-sous">{pointOuvert.imf_nom}</div>
-              <div><Badge ton="neutre" point={false}>{TYPE_POINT[pointOuvert.type] ?? pointOuvert.type}</Badge></div>
-              <button type="button" style={{ ...btnPrimaire, height: 44, width: "100%" }} onClick={() => choisir({ type: "point_service", id: pointOuvert.id })}>Y aller</button>
+              <div style={{ display: "flex", gap: 10, alignItems: "center", paddingRight: 28 }}>
+                <IconeDestination type={pointOuvert.type} />
+                <div style={{ minWidth: 0 }}>
+                  <div className="it-sugg-nom">{pointOuvert.nom}</div>
+                  <div className="it-sugg-sous">{pointOuvert.sous_titre}</div>
+                </div>
+              </div>
+              <div><Badge ton="neutre" point={false}>{pointOuvert.type === "institution" ? "Institution (siège)" : TYPE_POINT[pointOuvert.type_point] ?? pointOuvert.type_point}</Badge></div>
+              <button type="button" style={{ ...btnPrimaire, height: 44, width: "100%" }} onClick={() => choisir({ type: pointOuvert.type, id: pointOuvert.id })}>Y aller</button>
             </div>
           )}
         </div>

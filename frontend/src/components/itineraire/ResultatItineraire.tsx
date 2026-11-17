@@ -3,7 +3,7 @@
  * étapes en français, récapitulatif de la destination et lien Google Maps. Tous les états :
  * chargement, erreur du moteur (Réessayer), aucun itinéraire, mode indisponible.
  */
-import type { CSSProperties, ReactNode } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
 
 import { regionAffichee } from "../../lib/metier";
 import { btnPrimaire } from "../form";
@@ -35,7 +35,11 @@ export function ChargementItineraire() {
   );
 }
 
+/** Étapes affichées d'emblée ; les suivantes sur demande (un trajet en compte souvent 20 à 30). */
+const ETAPES_VISIBLES = 4;
+
 export function ResultatItineraire({ resultat, mode, onMode }: { resultat: ReponseCalcul; mode: Mode; onMode: (m: Mode) => void }) {
+  const [toutes, setToutes] = useState(false);
   const modes = MODES.filter((m) => resultat.modes[m.cle]);
   const courant = resultat.modes[mode];
 
@@ -52,7 +56,7 @@ export function ResultatItineraire({ resultat, mode, onMode }: { resultat: Repon
               className="it-onglet" data-rapide={rapide || undefined} onClick={() => onMode(m.cle)}
             >
               <span className="it-onglet-mode">{m.libelle}</span>
-              <span className="it-onglet-duree">{ok ? duree(r.duree_min) : r.statut === "aucun_itineraire" ? "Aucun" : "Indisponible"}</span>
+              <span className={ok ? "it-onglet-duree" : "it-onglet-duree it-onglet-na"}>{ok ? duree(r.duree_min) : r.statut === "aucun_itineraire" ? "Aucun trajet" : "Indisponible"}</span>
               <span className="it-onglet-dist">{ok ? distance(r.distance_km) : " "}</span>
               {rapide && <span className="it-rapide">Le plus rapide</span>}
             </button>
@@ -62,8 +66,9 @@ export function ResultatItineraire({ resultat, mode, onMode }: { resultat: Repon
 
       <div id="it-detail" role="tabpanel" aria-labelledby={`it-onglet-${mode}`}>
         {!courant ? null : courant.statut === "ok" ? (
+          <>
           <ol className="it-etapes" aria-label="Étapes du trajet">
-            {courant.etapes.map((e, i) => (
+            {(toutes ? courant.etapes : courant.etapes.slice(0, ETAPES_VISIBLES)).map((e, i) => (
               <li key={i}>
                 <span className="it-etape-num" aria-hidden="true">{i + 1}</span>
                 <span className="it-etape-texte">{e.instruction}</span>
@@ -71,6 +76,12 @@ export function ResultatItineraire({ resultat, mode, onMode }: { resultat: Repon
               </li>
             ))}
           </ol>
+          {courant.etapes.length > ETAPES_VISIBLES && (
+            <button type="button" className="it-lien" aria-expanded={toutes} onClick={() => setToutes((v) => !v)}>
+              {toutes ? "Masquer le détail" : `Afficher les ${courant.etapes.length} étapes`}
+            </button>
+          )}
+          </>
         ) : courant.statut === "aucun_itineraire" ? (
           <Avis ton="alerte" titre="Aucun itinéraire trouvé">{courant.message || "Essayez un autre mode ou déplacez le point de départ près d'une route."}</Avis>
         ) : courant.statut === "erreur" ? (
