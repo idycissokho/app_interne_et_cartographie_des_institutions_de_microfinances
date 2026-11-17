@@ -78,6 +78,14 @@ export function Itineraire() {
   // Sur téléphone, le menu est au-dessus : la page s'ouvre directement sur la carte.
   useEffect(() => { if (matchMedia(MOBILE).matches) page.current?.scrollIntoView({ block: "start" }); }, []);
 
+  // Lien « Itinéraire » de la carte micro (?position=1) : la position est demandée aussitôt.
+  // Le navigateur pose la question la première fois ; ensuite le trajet s'affiche directement.
+  const demanderPosition = params.get("position") === "1";
+  const { localiser } = geo;
+  useEffect(() => {
+    if (demanderPosition) localiser();
+  }, [demanderPosition, localiser]);
+
   useEffect(() => {
     if (geo.etat.statut !== "ok") return;
     setOrigine({ lat: geo.etat.lat, lon: geo.etat.lon, source: "gps", precision: geo.etat.precision });

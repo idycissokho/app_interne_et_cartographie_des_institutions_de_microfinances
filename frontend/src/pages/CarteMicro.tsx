@@ -7,6 +7,7 @@ import { Link, useSearchParams } from "react-router-dom";
 
 import { api } from "../api/client";
 import type { Page } from "../api/types";
+import { useAuth } from "../auth/AuthContext";
 import { SenegalMap, type PointCarte, type StatutPoint, type TypePoint } from "../components/carto/SenegalMap";
 import { AppLayout } from "../components/layout/AppLayout";
 import { Badge, TON_STATUT } from "../components/tableau/Tableau";
@@ -33,6 +34,8 @@ const tuileLabel: CSSProperties = { fontSize: "var(--t-2xs)", color: "#6B7280", 
 const point = (bg: string, extra: CSSProperties = {}): CSSProperties => ({ width: 10, height: 10, borderRadius: "50%", background: bg, ...extra });
 
 export function CarteMicro() {
+  // Itinéraire : mêmes rôles que la section (SUPERVISEUR, ADMIN).
+  const { peutModifier } = useAuth();
   const [params] = useSearchParams();
   const [f, setF] = useState({ ...VIDE, region: params.get("region") ?? "" });
   const [pt, setPt] = useState<PointMicro | null>(null);
@@ -118,7 +121,7 @@ export function CarteMicro() {
 
           <div className="mi-zone" style={{ flex: "999 1 480px", minWidth: 0, position: "relative", overflow: "hidden" }}>
             <div className="mi-carte-pos" style={{ position: "absolute", inset: 0 }}>
-              <SenegalMap theme="light" fillMode="muted" flow showPoints showLabels={false} zoomSelection molette rayon={0} agrandir=".mi-cadre" selected={f.region} points={points} pointFilter={flt} selectedPoint={pt}
+              <SenegalMap theme="light" fillMode="muted" flow showPoints showLabels={false} zoomSelection zoomPoint molette rayon={0} agrandir=".mi-cadre" selected={f.region} points={points} pointFilter={flt} selectedPoint={pt}
                 onPickPoint={(p) => setPt(p as PointMicro)} onPick={(id) => { setF({ ...f, region: id }); setPt(null); }} />
             </div>
 
@@ -149,7 +152,8 @@ export function CarteMicro() {
                   <div style={{ display: "flex", alignItems: "center", gap: 10, color: "#4A5568" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A6A1F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>{pt.p.email || "—"}</div>
                   <div style={{ display: "flex", gap: 8 }}>
                     <Link to={`/consultation?imf=${pt.p.imf}`} style={{ flex: 1, height: 42, borderRadius: 10, background: "#C9A44C", color: "#0B1424", fontSize: "var(--t-sm)", fontWeight: 600, textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center" }}>Ouvrir la fiche IMF</Link>
-                    <a href={`https://www.openstreetmap.org/directions?to=${pt.lat}%2C${pt.lon}`} target="_blank" rel="noreferrer" style={{ height: 42, padding: "0 14px", borderRadius: 10, border: "1px solid #E7E5E4", background: "#FFFFFF", fontSize: "var(--t-sm)", fontWeight: 600, color: "#0B1424", textDecoration: "none", display: "flex", alignItems: "center", boxSizing: "border-box" }}>Itinéraire</a>
+                    {/* Ouvre la section Itinéraire vers ce point et demande aussitôt la position de l'appareil. */}
+                    {peutModifier && <Link to={`/itineraire?type=point_service&id=${pt.id}&position=1`} style={{ height: 42, padding: "0 14px", borderRadius: 10, border: "1px solid #E7E5E4", background: "#FFFFFF", fontSize: "var(--t-sm)", fontWeight: 600, color: "#0B1424", textDecoration: "none", display: "flex", alignItems: "center", boxSizing: "border-box" }}>Itinéraire</Link>}
                   </div>
                 </div>
               </article>
