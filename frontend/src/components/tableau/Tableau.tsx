@@ -60,7 +60,7 @@ export function LigneGroupe({ colonnes, children }: { colonnes: number; children
 }
 
 /** Lignes d'attente pendant le chargement. */
-export function LignesChargement({ colonnes, lignes = 8 }: { colonnes: number; lignes?: number }) {
+export function LignesChargement({ colonnes, lignes = 6 }: { colonnes: number; lignes?: number }) {
   return (
     <>
       {Array.from({ length: lignes }, (_, i) => (
@@ -144,3 +144,6 @@ export function ChampRecherche({ valeur, onChange, libelle, placeholder }: { val
 export function Pastille({ actif, onClick, children }: { actif: boolean; onClick: () => void; children: ReactNode }) {
   return <button type="button" className="tbl-pastille" aria-pressed={actif} onClick={onClick}>{children}</button>;
 }
+
+/** Nombre d'éléments par page dans toutes les listes et tous les tableaux de l'application. */
+export const PAR_PAGE = 6;

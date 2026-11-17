@@ -9,7 +9,7 @@ import { api, telecharger } from "../api/client";
 import type { Page } from "../api/types";
 import { Erreur, Etapes, erreursChamps } from "../components/form";
 import { AppLayout } from "../components/layout/AppLayout";
-import { CadreTableau, EnTete, Tableau } from "../components/tableau/Tableau";
+import { CadreTableau, EnTete, PAR_PAGE, Pagination, Tableau } from "../components/tableau/Tableau";
 import { telechargerCsv } from "../lib/csv";
 import { ilYa, nombre, pourcent } from "../lib/format";
 import { URL_STATISTIQUES, type Statistiques } from "../lib/stats";
@@ -43,6 +43,7 @@ export function Donnees() {
   const [res, setRes] = useState<Importation | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
   const [version, setVersion] = useState(0);
+  const [pageErreurs, setPageErreurs] = useState(1);
   const { donnees: d } = useDonnees<{ hist: Page<Importation>; stats: Statistiques }>({
     hist: "/importation/?page_size=5&ordering=-date_creation", stats: URL_STATISTIQUES,
   }, [version]);
@@ -57,6 +58,7 @@ export function Donnees() {
     const fd = new FormData();
     fd.append("type_import", type); fd.append("fichier", fichier);
     try {
+      setPageErreurs(1);
       setRes(await api.post<Importation>("/importation/", fd));
       setStep(3); setVersion((v) => v + 1);
     } catch (e) {
@@ -147,11 +149,12 @@ export function Donnees() {
                   </div>
                   {lignesErreur.length > 0 && (
                     <CadreTableau
+                      pied={lignesErreur.length > PAR_PAGE ? <Pagination page={pageErreurs} pages={Math.ceil(lignesErreur.length / PAR_PAGE)} onPage={setPageErreurs} resume={`${lignesErreur.length} erreurs`} /> : undefined}
                       barre={<><b style={{ fontSize: "var(--t-base)", fontWeight: 600 }}>Rapport d'erreurs</b><a href="#" onClick={(e) => { e.preventDefault(); telechargerCsv(`rapport_import_${res.id.slice(0, 8)}.csv`, [["Ligne", "Champ", "Valeur", "Problème"], ...lignesErreur.map((x) => [x.l ?? "", x.c, x.v, x.m])]); }} style={{ marginLeft: "auto", fontSize: "var(--t-sm)", fontWeight: 500, textDecoration: "none" }}>Télécharger le rapport (CSV)</a></>}>
                       <Tableau largeurMin={520}>
                         <thead><tr><EnTete num>Ligne</EnTete><EnTete>Champ</EnTete><EnTete>Valeur</EnTete><EnTete>Problème</EnTete></tr></thead>
                         <tbody>
-                          {lignesErreur.map((x, i) => (
+                          {lignesErreur.slice((pageErreurs - 1) * PAR_PAGE, pageErreurs * PAR_PAGE).map((x, i) => (
                             <tr key={i}>
                               <td data-label="Ligne" className="num">{x.l ?? "—"}</td>
                               <td data-label="Champ"><code style={{ fontSize: "var(--t-xs)", background: "#F5F5F4", padding: "3px 7px", borderRadius: 6, color: "#44403C" }}>{x.c}</code></td>
@@ -193,7 +196,7 @@ export function Donnees() {
             {exports.map((x) => (
               <article key={x.id} style={{ borderRadius: 12, background: "#FFFFFF", border: "1px solid #E7E5E4", padding: 22, display: "flex", flexDirection: "column", gap: 16 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 14 }}><span style={{ width: 48, height: 48, flex: "none", borderRadius: 10, background: "#F5F5F4", color: "#0B1424", display: "flex", alignItems: "center", justifyContent: "center" }}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={I[x.t]} /></svg></span><div><h2 style={{ margin: 0, fontSize: "var(--t-lg)", fontWeight: 700 }}>{x.label}</h2><div style={{ fontSize: "var(--t-sm)", color: "#6B7280" }}>{x.count}</div></div></div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}><label htmlFor={x.id} style={{ fontSize: "var(--t-xs)", fontWeight: 600, color: "#4A5568" }}>Périmètre</label><select id={x.id} disabled title="L'export porte sur tout le référentiel (filtre par région non disponible côté API)." style={{ height: 44, borderRadius: 10, border: "1.5px solid #D6D3D1", background: "#FFFFFF", padding: "0 12px", font: "inherit", fontSize: "var(--t-md)", color: "#0B1424" }}><option>Toutes les régions</option></select></div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}><label htmlFor={x.id} style={{ fontSize: "var(--t-xs)", fontWeight: 600, color: "#4A5568" }}>Périmètre</label><select id={x.id} className="fi-input" disabled title="L'export porte sur tout le référentiel (filtre par région non disponible côté API)." style={{ width: "100%" }}><option>Toutes les régions</option></select></div>
                 <label title="L'export ne contient que les éléments actifs." style={{ display: "flex", alignItems: "center", gap: 10, fontSize: "var(--t-sm)", color: "#4A5568", opacity: 0.6 }}><input type="checkbox" disabled style={{ width: 18, height: 18, accentColor: "#C9A44C" }} /> Inclure les éléments archivés</label>
                 <button type="button" className="ie-primary" onClick={() => telecharger(`/importation/export/${x.t}/`, `export_${x.t.toLowerCase()}.csv`)} style={{ marginTop: "auto", height: 46, borderRadius: 10, border: "none", background: "#C9A44C", font: "inherit", fontSize: "var(--t-md)", fontWeight: 700, color: "#0B1424", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 21h16" /></svg>Exporter en CSV</button>
               </article>

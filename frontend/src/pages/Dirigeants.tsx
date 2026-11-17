@@ -17,7 +17,7 @@ import { AppLayout } from "../components/layout/AppLayout";
 import { CODE_FONCTION, isoJour, nombre } from "../lib/format";
 import { FAMILLE_FONCTION, FONCTIONS, LIBELLE_FONCTION, STATUT_IMF_COURT, STATUT_MANDAT, TYPE_IMF_COURT, avancementMandat, initiales, regionAffichee } from "../lib/metier";
 import { URL_IMF_OPTIONS, URL_REGIONS, URL_STATISTIQUES, type AgregatZone, type ImfOption, type Statistiques } from "../lib/stats";
-import { Badge, BoutonIcone, CadreTableau, CelluleActions, EnTete, EtatVide, LigneGroupe, LignesChargement, Pagination, TON_STATUT, Tableau } from "../components/tableau/Tableau";
+import { Badge, BoutonIcone, CadreTableau, CelluleActions, EnTete, EtatVide, LigneGroupe, LignesChargement, Pagination, TON_STATUT, Tableau, PAR_PAGE } from "../components/tableau/Tableau";
 import { useDonnees } from "../lib/useDonnees";
 
 interface DirigeantRes { id: string; nom_complet: string; email_professionnel: string; nb_mandats: number }
@@ -40,7 +40,7 @@ const GROUPES: Record<string, string> = {
   imf: "imf__nom,imf,fonction_mandat,dirigeant__nom",
   dirigeant: "dirigeant__nom,dirigeant__prenom,dirigeant,-date_debut",
 };
-const TAILLE = 20;
+const TAILLE = PAR_PAGE;
 const chip = (on: boolean): CSSProperties => ({ font: "inherit", fontSize: "var(--t-sm)", fontWeight: 600, padding: "9px 14px", borderRadius: 999, cursor: "pointer", ...(on ? { background: "#0B1424", color: "#FFFFFF", border: "1px solid #0B1424" } : { background: "#FFFFFF", color: "#4A5568", border: "1px solid #E7E5E4" }) });
 const seg = (on: boolean): CSSProperties => ({ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, height: 40, border: "none", borderRadius: 9, font: "inherit", fontSize: "var(--t-sm)", fontWeight: 600, cursor: "pointer", ...(on ? { background: "#FFFFFF", color: "#0B1424", boxShadow: "0 1px 2px rgba(11,20,36,.08)" } : { background: "transparent", color: "#6B7280" }) });
 const champ: CSSProperties = { display: "flex", flexDirection: "column", gap: 8, minWidth: 0 };

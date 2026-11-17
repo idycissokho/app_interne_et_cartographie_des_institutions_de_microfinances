@@ -8,7 +8,7 @@ import { qs } from "../api/client";
 import type { Page } from "../api/types";
 import { AppLayout } from "../components/layout/AppLayout";
 import { nombre } from "../lib/format";
-import { Badge, CadreTableau, ChampRecherche, EnTete, EtatVide, LignesChargement, Pagination, Pastille, Tableau } from "../components/tableau/Tableau";
+import { Badge, CadreTableau, ChampRecherche, EnTete, EtatVide, LignesChargement, Pagination, Pastille, Tableau, PAR_PAGE } from "../components/tableau/Tableau";
 import { useDonnees } from "../lib/useDonnees";
 
 interface Entree { id: string; utilisateur_email: string | null; action: string; objet_concerne: string; role: string; date_action: string; details: Record<string, unknown> }
@@ -18,7 +18,7 @@ const ACTIONS: [string, string, string][] = [
   ["SUPPRESSION", "Désactivations", "#B91C1C"], ["IMPORTATION", "Imports", "#1F4E79"], ["EXPORTATION", "Exports", "#2E7D6B"], ["CONNEXION", "Connexions", "#6B7280"],
 ];
 const LIB: Record<string, string> = Object.fromEntries(ACTIONS.slice(1).map(([k, l]) => [k, l.replace(/s$/, "")]));
-const TAILLE = 25;
+const TAILLE = PAR_PAGE;
 
 export function Audit() {
   const [action, setAction] = useState("");
