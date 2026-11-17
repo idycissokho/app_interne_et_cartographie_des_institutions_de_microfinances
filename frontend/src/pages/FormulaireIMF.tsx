@@ -22,7 +22,7 @@ const TY = [
 const ST = [{ value: "AGREE", label: "Agréée", color: "#15803D" }, { value: "EN_COURS", label: "En cours d'agrément", color: "#D97706" }, { value: "RADIEE", label: "Radiée", color: "#B91C1C" }];
 const SECT: [string, string][] = [["identite", "Identité"], ["statut", "Statut"], ["siege", "Siège & GPS"], ["contacts", "Contacts"], ["bailleurs", "Bailleurs"]];
 const VIDE = { nom: "", sigle: "", type: "MUTUELLE", statut: "EN_COURS", adresse: "", lat: "", lon: "", tel: "", email: "", web: "", bailleurs: [] as string[] };
-const carte: CSSProperties = { borderRadius: 22, background: "#FFFFFF", border: "1px solid #ECE5D5", padding: 24, display: "flex", flexDirection: "column" };
+const carte: CSSProperties = { borderRadius: 12, background: "#FFFFFF", border: "1px solid #E7E5E4", padding: 24, display: "flex", flexDirection: "column" };
 
 interface ImfApi { nom: string; sigle: string; type_imf: string; statut_reglementaire: string; adresse_siege: string; localisation_siege: { coordinates: [number, number] } | null; telephone: string; email: string; site_web: string; bailleurs: string[] }
 
@@ -94,22 +94,22 @@ export function FormulaireIMF() {
     <AppLayout active="imf" minHeight={1100}>
       <main className="app-main fi-main" style={{ flex: "999 1 640px", minWidth: 0, padding: "28px 32px 0 32px", boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 22 }}>
         <header className="fi-up" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <nav aria-label="Fil d'Ariane" style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13, color: "#6B7280" }}><Link to="/imf" style={{ fontWeight: 700, textDecoration: "none" }}>Institutions</Link><span>›</span><span style={{ color: "#0B1424", fontWeight: 600 }}>{titre}</span></nav>
+          <nav aria-label="Fil d'Ariane" style={{ display: "flex", gap: 8, alignItems: "center", fontSize: "var(--t-sm)", color: "#6B7280" }}><Link to="/imf" style={{ fontWeight: 600, textDecoration: "none" }}>Institutions</Link><span>›</span><span style={{ color: "#0B1424", fontWeight: 500 }}>{titre}</span></nav>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 16, flexWrap: "wrap" }}>
-            <div><h1 style={{ margin: 0, fontSize: 34, fontWeight: 800, letterSpacing: "-0.03em" }}>{titre}</h1><p style={{ margin: "6px 0 0 0", fontSize: 14, color: "#4A5568" }}>Renseignez l'identité, le statut et le siège de l'IMF. Vous pourrez ensuite ajouter ses points de service et ses dirigeants.</p></div>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 14, background: "#FFFFFF", border: "1px solid #ECE5D5" }}>
-              <svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="16" fill="none" stroke="#F1ECE0" strokeWidth="5" /><circle cx="20" cy="20" r="16" fill="none" stroke="#C9A44C" strokeWidth="5" strokeLinecap="round" strokeDasharray={`${((circ * nDone) / 5).toFixed(1)} ${circ.toFixed(1)}`} transform="rotate(-90 20 20)" style={{ transition: "stroke-dasharray .4s ease" }} /></svg>
-              <div><div style={{ fontSize: 18, fontWeight: 800 }}>{Math.round((100 * nDone) / 5)} %</div><div style={{ fontSize: 12, color: "#6B7280" }}>de la fiche complétée</div></div>
+            <div><h1 style={{ margin: 0, fontSize: "var(--t-3xl)", fontWeight: 700, letterSpacing: "-0.022em" }}>{titre}</h1><p style={{ margin: "6px 0 0 0", fontSize: "var(--t-base)", color: "#4A5568", lineHeight: 1.55 }}>Renseignez l'identité, le statut et le siège de l'IMF. Vous pourrez ensuite ajouter ses points de service et ses dirigeants.</p></div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 10, background: "#FFFFFF", border: "1px solid #E7E5E4" }}>
+              <svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="16" fill="none" stroke="#F0EFED" strokeWidth="5" /><circle cx="20" cy="20" r="16" fill="none" stroke="#C9A44C" strokeWidth="5" strokeLinecap="round" strokeDasharray={`${((circ * nDone) / 5).toFixed(1)} ${circ.toFixed(1)}`} transform="rotate(-90 20 20)" style={{ transition: "stroke-dasharray .4s ease" }} /></svg>
+              <div><div style={{ fontSize: "var(--t-lg)", fontWeight: 700 }}>{Math.round((100 * nDone) / 5)} %</div><div style={{ fontSize: "var(--t-xs)", color: "#6B7280" }}>de la fiche complétée</div></div>
             </div>
           </div>
         </header>
 
         <div style={{ display: "flex", flexWrap: "wrap", gap: 24, alignItems: "flex-start" }}>
-          <nav aria-label="Sections du formulaire" className="fi-up d1 fi-sommaire" style={{ flex: "1 1 220px", maxWidth: 250, minWidth: 0, display: "flex", flexDirection: "column", gap: 4, padding: 10, borderRadius: 20, background: "#FFFFFF", border: "1px solid #ECE5D5", position: "sticky", top: 20 }}>
+          <nav aria-label="Sections du formulaire" className="fi-up d1 fi-sommaire" style={{ flex: "1 1 220px", maxWidth: 250, minWidth: 0, display: "flex", flexDirection: "column", gap: 4, padding: 10, borderRadius: 12, background: "#FFFFFF", border: "1px solid #E7E5E4", position: "sticky", top: 20 }}>
             {SECT.map(([k, l]) => (
-              <a key={k} className="fi-nav" href={`#${k}`} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 12px", borderRadius: 12, textDecoration: "none", color: "#0B1424" }}>
-                <span style={{ width: 22, height: 22, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 900, ...(done[k] ? { background: "#15803D", color: "#FFFFFF" } : { border: "2px solid #D3C9B2", boxSizing: "border-box" }) }}>{done[k] ? "✓" : ""}</span>
-                <span style={{ flex: 1, fontSize: 14, fontWeight: 700 }}>{l}</span>
+              <a key={k} className="fi-nav" href={`#${k}`} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 12px", borderRadius: 10, textDecoration: "none", color: "#0B1424" }}>
+                <span style={{ width: 22, height: 22, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--t-xs)", fontWeight: 700, ...(done[k] ? { background: "#15803D", color: "#FFFFFF" } : { border: "2px solid #A8A29E", boxSizing: "border-box" }) }}>{done[k] ? "✓" : ""}</span>
+                <span style={{ flex: 1, fontSize: "var(--t-md)", fontWeight: 600 }}>{l}</span>
               </a>
             ))}
           </nav>
@@ -131,7 +131,7 @@ export function FormulaireIMF() {
             <section id="statut" className="fi-up d2" style={{ ...carte, gap: 18 }}>
               <EnteteSection n={2} titre={<>Statut réglementaire <span className="fi-req">*</span></>} sousTitre="Situation de l'institution vis-à-vis de l'agrément." />
               <Segmented label="Statut réglementaire" options={ST} value={f.statut} onChange={(v) => setF({ ...f, statut: v })} />
-              {f.statut === "RADIEE" && <div style={{ display: "flex", gap: 10, padding: "12px 14px", borderRadius: 12, background: "#FDECEC", color: "#991B1B", fontSize: 13, lineHeight: 1.5 }}><span><b>Attention :</b> une IMF radiée n'apparaît plus sur les cartes publiques. Ses points de service restent consultables dans l'historique.</span></div>}
+              {f.statut === "RADIEE" && <div style={{ display: "flex", gap: 10, padding: "12px 14px", borderRadius: 10, background: "#FDECEC", color: "#991B1B", fontSize: "var(--t-sm)", lineHeight: 1.5 }}><span><b>Attention :</b> une IMF radiée n'apparaît plus sur les cartes publiques. Ses points de service restent consultables dans l'historique.</span></div>}
             </section>
 
             <section id="siege" className="fi-up d3" style={{ ...carte, gap: 18 }}>
@@ -145,12 +145,12 @@ export function FormulaireIMF() {
                   </div>
                   {err.gps && <Erreur>Ces coordonnées sont en dehors du Sénégal (lat. 12,3 à 16,7 ; long. −17,6 à −11,3).</Erreur>}
                   <Erreur>{erreursApi.localisation_siege}</Erreur>
-                  {inSn && <span className="fi-help" style={{ display: "flex", gap: 8, alignItems: "center" }}><span style={{ color: "#15803D", fontWeight: 800 }}>✓</span><span>Position située en région de <b style={{ color: "#0B1424" }}>{region}</b> (déduite des coordonnées).</span></span>}
-                  <button type="button" onClick={() => navigator.geolocation?.getCurrentPosition((p) => setF((x) => ({ ...x, lat: p.coords.latitude.toFixed(5), lon: p.coords.longitude.toFixed(5) })))} style={{ alignSelf: "flex-start", height: 40, padding: "0 14px", borderRadius: 11, border: "1px dashed #C9A44C", background: "#FDFBF6", font: "inherit", fontSize: 13, fontWeight: 700, color: "#6E5416", display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3" /></svg>Utiliser ma position actuelle</button>
+                  {inSn && <span className="fi-help" style={{ display: "flex", gap: 8, alignItems: "center" }}><span style={{ color: "#15803D", fontWeight: 700 }}>✓</span><span>Position située en région de <b style={{ color: "#0B1424" }}>{region}</b> (déduite des coordonnées).</span></span>}
+                  <button type="button" onClick={() => navigator.geolocation?.getCurrentPosition((p) => setF((x) => ({ ...x, lat: p.coords.latitude.toFixed(5), lon: p.coords.longitude.toFixed(5) })))} style={{ alignSelf: "flex-start", height: 40, padding: "0 14px", borderRadius: 10, border: "1px dashed #C9A44C", background: "#FFFFFF", font: "inherit", fontSize: "var(--t-sm)", fontWeight: 600, color: "#6E5416", display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3" /></svg>Utiliser ma position actuelle</button>
                 </div>
-                <div style={{ flex: "1 1 300px", minWidth: 0, height: 300, borderRadius: 18, border: "1px solid #ECE5D5", boxSizing: "border-box", position: "relative", overflow: "hidden" }}>
+                <div style={{ flex: "1 1 300px", minWidth: 0, height: 300, borderRadius: 12, border: "1px solid #E7E5E4", boxSizing: "border-box", position: "relative", overflow: "hidden" }}>
                   <SenegalMap theme="light" fillMode="muted" flow={false} showLabels zoomSelection rayon={17} selected={region} selectedPoint={inSn ? { ...projeter(lon, lat), lon, lat } : null} />
-                  <span style={{ position: "absolute", left: 12, top: 10, zIndex: 3, fontSize: 11, fontWeight: 700, color: "#4A5568", background: "rgba(255,255,255,.92)", padding: "4px 8px", borderRadius: 8, pointerEvents: "none" }}>Aperçu de la position</span>
+                  <span style={{ position: "absolute", left: 12, top: 10, zIndex: 3, fontSize: "var(--t-2xs)", fontWeight: 600, color: "#4A5568", background: "rgba(255,255,255,.92)", padding: "4px 8px", borderRadius: 8, pointerEvents: "none" }}>Aperçu de la position</span>
                 </div>
               </div>
             </section>
@@ -165,19 +165,19 @@ export function FormulaireIMF() {
             </section>
 
             <section id="bailleurs" className="fi-up d5" style={{ ...carte, gap: 16 }}>
-              <EnteteSection n={5} titre="Bailleurs associés" extra={<span style={{ fontSize: 12, fontWeight: 700, color: "#6B7280", background: "#F1ECE0", padding: "3px 8px", borderRadius: 999, marginLeft: 6 }}>Optionnel</span>} sousTitre="Sélectionnez les partenaires qui financent ou accompagnent l'IMF." />
+              <EnteteSection n={5} titre="Bailleurs associés" extra={<span style={{ fontSize: "var(--t-xs)", fontWeight: 600, color: "#6B7280", background: "#F0EFED", padding: "3px 8px", borderRadius: 999, marginLeft: 6 }}>Optionnel</span>} sousTitre="Sélectionnez les partenaires qui financent ou accompagnent l'IMF." />
               <ToggleChips options={bailleurs} valeurs={f.bailleurs} onToggle={(b) => setF({ ...f, bailleurs: f.bailleurs.includes(b) ? f.bailleurs.filter((x) => x !== b) : [...f.bailleurs, b] })} />
               {bailleurs.length === 0 && <span className="fi-help">Aucun bailleur dans le référentiel.</span>}
               <Erreur>{erreursApi.bailleurs}</Erreur>
             </section>
 
             <Erreur>{erreursApi.__global}</Erreur>
-            <div className="fi-barre" style={{ position: "sticky", bottom: 0, zIndex: 5, margin: "6px -32px 0 -32px", padding: "16px 32px", background: "rgba(250,247,240,.92)", backdropFilter: "blur(10px)", borderTop: "1px solid #ECE5D5", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-              <span style={{ fontSize: 13, color: "#6B7280" }}><span className="fi-req">*</span> Champs obligatoires</span>
+            <div className="fi-barre" style={{ position: "sticky", bottom: 0, zIndex: 5, margin: "6px -32px 0 -32px", padding: "16px 32px", background: "rgba(255,255,255,.92)", backdropFilter: "blur(10px)", borderTop: "1px solid #E7E5E4", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+              <span style={{ fontSize: "var(--t-sm)", color: "#6B7280" }}><span className="fi-req">*</span> Champs obligatoires</span>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <Link className="fi-ghost" to="/imf" style={{ height: 48, padding: "0 18px", borderRadius: 14, fontSize: 14, fontWeight: 700, color: "#0B1424", display: "flex", alignItems: "center", textDecoration: "none" }}>Annuler</Link>
-                {estAdmin && <button type="button" disabled={envoi} onClick={() => enregistrer(true)} style={{ height: 48, padding: "0 18px", borderRadius: 14, border: "1.5px solid #0B1424", background: "#FFFFFF", font: "inherit", fontSize: 14, fontWeight: 800, color: "#0B1424", cursor: "pointer" }}>Enregistrer et ajouter un point</button>}
-                <button type="submit" className="fi-primary" disabled={envoi} style={{ height: 48, padding: "0 22px", borderRadius: 14, border: "none", background: "#C9A44C", font: "inherit", fontSize: 14, fontWeight: 800, color: "#0B1424", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, boxShadow: "0 10px 24px rgba(201,164,76,.35)" }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7" /></svg>Enregistrer l'institution</button>
+                <Link className="fi-ghost" to="/imf" style={{ height: 48, padding: "0 18px", borderRadius: 10, fontSize: "var(--t-md)", fontWeight: 600, color: "#0B1424", display: "flex", alignItems: "center", textDecoration: "none" }}>Annuler</Link>
+                {estAdmin && <button type="button" disabled={envoi} onClick={() => enregistrer(true)} style={{ height: 48, padding: "0 18px", borderRadius: 10, border: "1.5px solid #0B1424", background: "#FFFFFF", font: "inherit", fontSize: "var(--t-md)", fontWeight: 700, color: "#0B1424", cursor: "pointer" }}>Enregistrer et ajouter un point</button>}
+                <button type="submit" className="fi-primary" disabled={envoi} style={{ height: 48, padding: "0 22px", borderRadius: 10, border: "none", background: "#C9A44C", font: "inherit", fontSize: "var(--t-md)", fontWeight: 700, color: "#0B1424", cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7" /></svg>Enregistrer l'institution</button>
               </div>
             </div>
           </form>

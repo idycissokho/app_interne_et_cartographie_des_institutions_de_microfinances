@@ -22,10 +22,10 @@ const fmt = (k: Indicateur, v: number) => {
   if (k === "encours") return v.toFixed(1).replace(".", ",");
   return String(v);
 };
-const seg = { border: "none", font: "inherit", fontSize: 13, fontWeight: 700, padding: "9px 14px", borderRadius: 10, cursor: "pointer" } as const;
-const pill = { font: "inherit", fontSize: 13, fontWeight: 700, padding: "8px 14px", borderRadius: 999, cursor: "pointer" } as const;
-const kp = { borderRadius: 18, padding: "16px 18px" } as const;
-const tuile: CSSProperties = { padding: 14, borderRadius: 16, background: "rgba(255,255,255,.06)" };
+const seg = { border: "none", font: "inherit", fontSize: "var(--t-sm)", fontWeight: 600, padding: "9px 14px", borderRadius: 10, cursor: "pointer" } as const;
+const pill = { font: "inherit", fontSize: "var(--t-sm)", fontWeight: 600, padding: "8px 14px", borderRadius: 999, cursor: "pointer" } as const;
+const kp = { borderRadius: 12, padding: "16px 18px" } as const;
+const tuile: CSSProperties = { padding: 14, borderRadius: 10, border: "1px solid #E7E5E4" };
 
 export function CarteMacro() {
   const { utilisateur, estAdmin } = useAuth();
@@ -48,10 +48,10 @@ export function CarteMacro() {
   const indLabel = IND.find((i) => i.k === ind)!.label;
 
   const kpis = [
-    { label: "IMF présentes", value: nombre(d.stats?.imf.total ?? 0), style: { ...kp, background: "#0B1424", color: "#F4EFE3" }, sub: "#F3D98C" },
-    { label: "Points de service", value: nombre(sum("pts")), style: { ...kp, background: "#FFFFFF", border: "1px solid #ECE5D5" }, sub: "#8A6A1F" },
-    { label: "Membres", value: (sum("membres") / 1e6).toFixed(2).replace(".", ",") + " M", style: { ...kp, background: "#FFFFFF", border: "1px solid #ECE5D5" }, sub: "#8A6A1F" },
-    { label: "Encours (Mds FCFA)", value: sum("encours").toFixed(0), style: { ...kp, background: "#FFFFFF", border: "1px solid #ECE5D5" }, sub: "#8A6A1F" },
+    { label: "IMF présentes", value: nombre(d.stats?.imf.total ?? 0), style: { ...kp, background: "#FFFFFF", border: "1px solid #E7E5E4" }, sub: "#6B7280" },
+    { label: "Points de service", value: nombre(sum("pts")), style: { ...kp, background: "#FFFFFF", border: "1px solid #E7E5E4" }, sub: "#6B7280" },
+    { label: "Membres", value: (sum("membres") / 1e6).toFixed(2).replace(".", ",") + " M", style: { ...kp, background: "#FFFFFF", border: "1px solid #E7E5E4" }, sub: "#6B7280" },
+    { label: "Encours (Mds FCFA)", value: sum("encours").toFixed(0), style: { ...kp, background: "#FFFFFF", border: "1px solid #E7E5E4" }, sub: "#6B7280" },
   ];
 
   const exporter = () =>
@@ -65,93 +65,92 @@ export function CarteMacro() {
       <main className="app-main" style={{ flex: "999 1 640px", minWidth: 0, padding: "28px 32px 40px 32px", boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 20 }}>
         <header className="cm-in" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 16, flexWrap: "wrap" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "#8A6A1F" }}>Pilotage · Vision territoriale</span>
-            <h1 style={{ margin: 0, fontSize: 34, fontWeight: 800, letterSpacing: "-0.03em" }}>Carte macro du secteur</h1>
-            <p style={{ margin: 0, fontSize: 14, color: "#4A5568" }}>Agrégats par zone : IMF présentes, points de service, membres, encours.</p>
+            <span style={{ fontSize: "var(--t-sm)", fontWeight: 500, color: "#6B7280" }}>Pilotage / Vision territoriale</span>
+            <h1 style={{ margin: 0, fontSize: "var(--t-3xl)", fontWeight: 700, letterSpacing: "-0.022em" }}>Carte macro du secteur</h1>
+            <p style={{ margin: 0, fontSize: "var(--t-base)", color: "#4A5568", lineHeight: 1.55 }}>Agrégats par zone : IMF présentes, points de service, membres, encours.</p>
           </div>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-            <div role="group" aria-label="Niveau territorial" style={{ display: "flex", padding: 5, borderRadius: 14, background: "#FFFFFF", border: "1px solid #ECE5D5" }}>
+            <div role="group" aria-label="Niveau territorial" style={{ display: "flex", padding: 5, borderRadius: 10, background: "#FFFFFF", border: "1px solid #E7E5E4" }}>
               {["Régions", "Départements", "Communes"].map((l) => (
-                <button key={l} type="button" aria-pressed={l === level} onClick={() => setLevel(l)} style={{ ...seg, ...(l === level ? { background: "#0B1424", color: "#F3D98C" } : { background: "transparent", color: "#4A5568" }) }}>{l}</button>
+                <button key={l} type="button" aria-pressed={l === level} onClick={() => setLevel(l)} style={{ ...seg, ...(l === level ? { background: "#FFFFFF", color: "#0B1424", boxShadow: "0 1px 2px rgba(11,20,36,.08), 0 0 0 1px #E7E5E4" } : { background: "transparent", color: "#6B7280" }) }}>{l}</button>
               ))}
             </div>
-            {estAdmin && <button type="button" onClick={exporter} style={{ height: 46, padding: "0 18px", borderRadius: 14, border: "none", background: "#0B1424", color: "#F3D98C", font: "inherit", fontSize: 14, fontWeight: 700, display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 21h16" /></svg>Exporter</button>}
+            {estAdmin && <button type="button" onClick={exporter} style={{ height: 46, padding: "0 18px", borderRadius: 10, border: "1px solid #E7E5E4", background: "#FFFFFF", color: "#0B1424", font: "inherit", fontSize: "var(--t-md)", fontWeight: 600, display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 21h16" /></svg>Exporter</button>}
           </div>
         </header>
 
         <section className="cm-in d1" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(190px, 100%), 1fr))", gap: 14 }}>
           {kpis.map((k) => (
             <div key={k.label} style={k.style}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: k.sub }}>{k.label}</div>
-              <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.02em", marginTop: 4 }}>{k.value}</div>
+              <div style={{ fontSize: "var(--t-xs)", fontWeight: 600, color: k.sub }}>{k.label}</div>
+              <div style={{ fontSize: "var(--t-2xl)", fontWeight: 700, letterSpacing: "-0.02em", marginTop: 4 }}>{k.value}</div>
             </div>
           ))}
         </section>
 
         <div style={{ display: "flex", flexWrap: "wrap", gap: 20, alignItems: "flex-start" }}>
-          <section className="cm-in d2 cm-cadre" style={{ flex: "999 1 560px", minWidth: 0, position: "relative", borderRadius: 28, background: "#FFFFFF", border: "1px solid #ECE5D5", boxShadow: "0 30px 60px -30px rgba(11,20,36,.25)", padding: 20, boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 10, overflow: "hidden" }}>
+          <section className="cm-in d2 cm-cadre" style={{ flex: "999 1 560px", minWidth: 0, position: "relative", borderRadius: 12, background: "#FFFFFF", border: "1px solid #E7E5E4", padding: 20, boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 10, overflow: "hidden" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", position: "relative", zIndex: 2 }}>
-              <div role="group" aria-label="Mode de coloration" style={{ display: "flex", padding: 4, borderRadius: 12, background: "#F6F1E4" }}>
+              <div role="group" aria-label="Mode de coloration" style={{ display: "flex", padding: 4, borderRadius: 10, background: "#F5F5F4" }}>
                 {([{ k: "regions", label: "Par région" }, { k: "choro", label: "Par indicateur" }] as const).map((m) => (
                   <button key={m.k} type="button" aria-pressed={m.k === mode} onClick={() => setMode(m.k)} style={{ ...seg, ...(m.k === mode ? { background: "#FFFFFF", color: "#0B1424", boxShadow: "0 2px 8px rgba(11,20,36,.08)" } : { background: "transparent", color: "#6B7280" }) }}>{m.label}</button>
                 ))}
               </div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {IND.map((i) => (
-                  <button key={i.k} type="button" aria-pressed={i.k === ind} onClick={() => { setInd(i.k); setMode("choro"); }} style={{ ...pill, ...(i.k === ind ? { background: "#C9A44C", color: "#0B1424", border: "1px solid #C9A44C" } : { background: "#FFFFFF", color: "#4A5568", border: "1px solid #ECE5D5" }) }}>{i.label}</button>
+                  <button key={i.k} type="button" aria-pressed={i.k === ind} onClick={() => { setInd(i.k); setMode("choro"); }} style={{ ...pill, ...(i.k === ind ? { background: "#C9A44C", color: "#0B1424", border: "1px solid #C9A44C" } : { background: "#FFFFFF", color: "#4A5568", border: "1px solid #E7E5E4" }) }}>{i.label}</button>
                 ))}
               </div>
             </div>
 
-            <div className="cm-carte" style={{ height: 600, position: "relative", borderRadius: 20 }}>
+            <div className="cm-carte" style={{ height: 600, position: "relative", borderRadius: 12 }}>
               <SenegalMap theme="light" fillMode={mode} indicator={ind} stats={stats} selected={sel} flow showLabels={false} onPick={setSel} rayon={20} agrandir=".cm-cadre" />
             </div>
 
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
               {mode === "choro" && (
-                <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 12, color: "#4A5568" }}><b style={{ color: "#0B1424" }}>{indLabel}</b><span>faible</span><span style={{ width: 180, height: 10, borderRadius: 99, background: "linear-gradient(90deg, #F7EED3, #EBD594, #D9B65E, #C29433, #9A7124, #6E4F17, #43300D)" }} /><span>élevé</span></div>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: "var(--t-xs)", color: "#4A5568" }}><b style={{ color: "#0B1424" }}>{indLabel}</b><span>faible</span><span style={{ width: 180, height: 10, borderRadius: 99, background: "linear-gradient(90deg, #F7EED3, #EBD594, #D9B65E, #C29433, #9A7124, #6E4F17, #43300D)" }} /><span>élevé</span></div>
               )}
-              {mode === "regions" && <div style={{ fontSize: 12, color: "#4A5568" }}>Chaque région a sa couleur. Cliquez une région pour afficher son profil.</div>}
-              <div style={{ fontSize: 11, color: "#6B7280" }}>Limites administratives : Gouvernement du Sénégal / OCHA via geoBoundaries (CC BY 3.0 IGO)</div>
+              {mode === "regions" && <div style={{ fontSize: "var(--t-xs)", color: "#4A5568" }}>Chaque région a sa couleur. Cliquez une région pour afficher son profil.</div>}
+              <div style={{ fontSize: "var(--t-2xs)", color: "#6B7280" }}>Limites administratives : Gouvernement du Sénégal / OCHA via geoBoundaries (CC BY 3.0 IGO)</div>
             </div>
           </section>
 
           <aside style={{ flex: "1 1 340px", maxWidth: 400, minWidth: 0, display: "flex", flexDirection: "column", gap: 16 }}>
-            <article className="cm-in d2" style={{ borderRadius: 24, background: "#0B1424", color: "#F4EFE3", padding: 22, display: "flex", flexDirection: "column", gap: 16, position: "relative", overflow: "hidden" }}>
-              <div style={{ position: "absolute", right: -40, top: -40, width: 160, height: 160, borderRadius: "50%", background: cur.color, opacity: 0.35, filter: "blur(30px)" }} />
+            <article className="cm-in d2" style={{ borderRadius: 12, background: "#FFFFFF", border: "1px solid #E7E5E4", padding: 22, display: "flex", flexDirection: "column", gap: 16, position: "relative", overflow: "hidden" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10, position: "relative" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <span style={{ width: 14, height: 40, borderRadius: 6, background: cur.color }} />
-                  <div><div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "#F3D98C" }}>Région</div><div style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-0.02em" }}>{cur.id}</div></div>
+                  <span style={{ width: 10, height: 10, borderRadius: "50%", background: cur.color, boxShadow: "0 0 0 1px rgba(11,20,36,.12)" }} />
+                  <div><div style={{ fontSize: "var(--t-xs)", fontWeight: 500, color: "#6B7280" }}>Région</div><div style={{ fontSize: "var(--t-2xl)", fontWeight: 700, letterSpacing: "-0.02em" }}>{cur.id}</div></div>
                 </div>
-                <span style={{ fontSize: 12, fontWeight: 800, color: "#0B1424", background: "#F3D98C", padding: "6px 10px", borderRadius: 999 }}>{rank}ᵉ / 14</span>
+                <span className="badge sans-point">{rank}ᵉ / 14</span>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10, position: "relative" }}>
-                <div style={tuile}><div style={{ fontSize: 24, fontWeight: 800 }}>{cur.imf}</div><div style={{ fontSize: 12, color: "#A9B3C4" }}>IMF présentes</div></div>
-                <div style={tuile}><div style={{ fontSize: 24, fontWeight: 800 }}>{cur.pts}</div><div style={{ fontSize: 12, color: "#A9B3C4" }}>Points de service</div></div>
-                <div style={tuile}><div style={{ fontSize: 24, fontWeight: 800 }}>{fmt("membres", cur.membres)}</div><div style={{ fontSize: 12, color: "#A9B3C4" }}>Membres</div></div>
-                <div style={tuile}><div style={{ fontSize: 24, fontWeight: 800 }}>{fmt("encours", cur.encours)}</div><div style={{ fontSize: 12, color: "#A9B3C4" }}>Encours (Mds FCFA)</div></div>
+                <div style={tuile}><div style={{ fontSize: "var(--t-xl)", fontWeight: 700 }}>{cur.imf}</div><div style={{ fontSize: "var(--t-xs)", color: "#6B7280" }}>IMF présentes</div></div>
+                <div style={tuile}><div style={{ fontSize: "var(--t-xl)", fontWeight: 700 }}>{cur.pts}</div><div style={{ fontSize: "var(--t-xs)", color: "#6B7280" }}>Points de service</div></div>
+                <div style={tuile}><div style={{ fontSize: "var(--t-xl)", fontWeight: 700 }}>{fmt("membres", cur.membres)}</div><div style={{ fontSize: "var(--t-xs)", color: "#6B7280" }}>Membres</div></div>
+                <div style={tuile}><div style={{ fontSize: "var(--t-xl)", fontWeight: 700 }}>{fmt("encours", cur.encours)}</div><div style={{ fontSize: "var(--t-xs)", color: "#6B7280" }}>Encours (Mds FCFA)</div></div>
               </div>
               <div style={{ position: "relative" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#A9B3C4", marginBottom: 6 }}><span>Part nationale · {indLabel}</span><b style={{ color: "#F3D98C" }}>{(share * 100).toFixed(1).replace(".", ",")} %</b></div>
-                <div style={{ height: 8, borderRadius: 99, background: "rgba(255,255,255,.08)", overflow: "hidden" }}><div style={{ height: "100%", borderRadius: 99, background: "linear-gradient(90deg, #C9A44C, #F3D98C)", width: `${Math.min(100, Math.max(2, Math.round(share * 100 * 2.2)))}%`, transition: "width .6s cubic-bezier(.2,.7,.2,1)" }} /></div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "var(--t-xs)", color: "#6B7280", marginBottom: 6 }}><span>Part nationale · {indLabel}</span><b style={{ color: "#0B1424", fontWeight: 600 }}>{(share * 100).toFixed(1).replace(".", ",")} %</b></div>
+                <div style={{ height: 6, borderRadius: 99, background: "#F0EFED", overflow: "hidden" }}><div style={{ height: "100%", borderRadius: 99, background: "#C9A44C", width: `${Math.min(100, Math.max(2, Math.round(share * 100 * 2.2)))}%`, transition: "width .6s cubic-bezier(.2,.7,.2,1)" }} /></div>
               </div>
-              <div style={{ fontSize: 13, color: "#A9B3C4", position: "relative" }}>Principaux bailleurs : <span style={{ color: "#F4EFE3", fontWeight: 600 }}>{cur.bailleurs.length ? cur.bailleurs.join(" · ") : "—"}</span></div>
+              <div style={{ fontSize: "var(--t-sm)", color: "#6B7280", position: "relative" }}>Principaux bailleurs : <span style={{ color: "#0B1424", fontWeight: 500 }}>{cur.bailleurs.length ? cur.bailleurs.join(" · ") : "—"}</span></div>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap", position: "relative" }}>
-                <Link to={`/carte/micro?region=${encodeURIComponent(cur.id)}`} style={{ flex: 1, minWidth: 140, height: 44, borderRadius: 12, background: "#C9A44C", color: "#0B1424", fontSize: 13, fontWeight: 800, textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>Voir les points <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg></Link>
-                <Link to={utilisateur?.role === "CONSULTANT" ? "/consultation" : "/imf"} style={{ flex: 1, minWidth: 120, height: 44, borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", color: "#F4EFE3", fontSize: 13, fontWeight: 700, textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center" }}>Liste des IMF</Link>
+                <Link to={`/carte/micro?region=${encodeURIComponent(cur.id)}`} style={{ flex: 1, minWidth: 140, height: 44, borderRadius: 10, background: "#C9A44C", color: "#0B1424", fontSize: "var(--t-sm)", fontWeight: 700, textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>Voir les points <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg></Link>
+                <Link to={utilisateur?.role === "CONSULTANT" ? "/consultation" : "/imf"} style={{ flex: 1, minWidth: 120, height: 44, borderRadius: 10, border: "1px solid #E7E5E4", color: "#0B1424", fontSize: "var(--t-sm)", fontWeight: 600, textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center" }}>Liste des IMF</Link>
               </div>
             </article>
 
-            <article className="cm-in d3" style={{ borderRadius: 24, background: "#FFFFFF", border: "1px solid #ECE5D5", padding: 18, display: "flex", flexDirection: "column", gap: 4 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "4px 8px 10px 8px" }}><h2 style={{ margin: 0, fontSize: 16, fontWeight: 800 }}>Classement des 14 régions</h2><span style={{ fontSize: 12, color: "#6B7280" }}>{indLabel}</span></div>
+            <article className="cm-in d3" style={{ borderRadius: 12, background: "#FFFFFF", border: "1px solid #E7E5E4", padding: 18, display: "flex", flexDirection: "column", gap: 4 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "4px 8px 10px 8px" }}><h2 style={{ margin: 0, fontSize: "var(--t-base)", fontWeight: 700 }}>Classement des 14 régions</h2><span style={{ fontSize: "var(--t-xs)", color: "#6B7280" }}>{indLabel}</span></div>
               {sorted.map((r, i) => (
-                <button key={r.id} type="button" className="cm-row" onClick={() => setSel(r.id)} aria-pressed={r.id === sel} style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", border: "none", font: "inherit", color: "#0B1424", padding: "9px 8px", borderRadius: 12, cursor: "pointer", background: r.id === sel ? "#F3ECDC" : "transparent" }}>
-                  <span style={{ width: 20, fontSize: 12, fontWeight: 800, color: "#9AA3B2" }}>{i + 1}</span>
+                <button key={r.id} type="button" className="cm-row" onClick={() => setSel(r.id)} aria-pressed={r.id === sel} style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", border: "none", font: "inherit", color: "#0B1424", padding: "9px 8px", borderRadius: 10, cursor: "pointer", background: r.id === sel ? "#F5F5F4" : "transparent" }}>
+                  <span style={{ width: 20, fontSize: "var(--t-xs)", fontWeight: 700, color: "#9AA3B2" }}>{i + 1}</span>
                   <span style={{ width: 10, height: 10, borderRadius: 3, background: r.color }} />
-                  <span style={{ flex: 1, textAlign: "left", fontSize: 14, fontWeight: 600 }}>{r.id}</span>
-                  <span style={{ width: 90, height: 6, borderRadius: 99, background: "#F1ECE0", overflow: "hidden" }}><span style={{ display: "block", height: "100%", borderRadius: 99, background: r.color, width: `${Math.round((100 * r[ind]) / max)}%`, transition: "width .6s ease" }} /></span>
-                  <span style={{ width: 56, textAlign: "right", fontSize: 13, fontWeight: 800 }}>{fmt(ind, r[ind])}</span>
+                  <span style={{ flex: 1, textAlign: "left", fontSize: "var(--t-md)", fontWeight: 500 }}>{r.id}</span>
+                  <span style={{ width: 90, height: 6, borderRadius: 99, background: "#F0EFED", overflow: "hidden" }}><span style={{ display: "block", height: "100%", borderRadius: 99, background: r.color, width: `${Math.round((100 * r[ind]) / max)}%`, transition: "width .6s ease" }} /></span>
+                  <span style={{ width: 56, textAlign: "right", fontSize: "var(--t-sm)", fontWeight: 700 }}>{fmt(ind, r[ind])}</span>
                 </button>
               ))}
             </article>

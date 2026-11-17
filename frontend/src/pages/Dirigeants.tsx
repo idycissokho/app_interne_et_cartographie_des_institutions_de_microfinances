@@ -15,9 +15,9 @@ import { FicheDirigeant, dateCourte, echeance } from "../components/dirigeants/F
 import { EMAIL_OK, Erreur, Etapes, FileDrop, Label, Modal, Toast, btnPrimaire, btnSecondaire, erreursChamps } from "../components/form";
 import { AppLayout } from "../components/layout/AppLayout";
 import { CODE_FONCTION, isoJour, nombre } from "../lib/format";
-import { FAMILLE_FONCTION, FONCTIONS, LIBELLE_FONCTION, SB, STATUT_IMF_COURT, STATUT_MANDAT, TYPE_IMF_COURT, avancementMandat, initiales, regionAffichee } from "../lib/metier";
+import { FAMILLE_FONCTION, FONCTIONS, LIBELLE_FONCTION, STATUT_IMF_COURT, STATUT_MANDAT, TYPE_IMF_COURT, avancementMandat, initiales, regionAffichee } from "../lib/metier";
 import { URL_IMF_OPTIONS, URL_REGIONS, URL_STATISTIQUES, type AgregatZone, type ImfOption, type Statistiques } from "../lib/stats";
-import { LignesSquelette } from "../components/Squelette";
+import { Badge, BoutonIcone, CadreTableau, CelluleActions, EnTete, EtatVide, LigneGroupe, LignesChargement, Pagination, TON_STATUT, Tableau } from "../components/tableau/Tableau";
 import { useDonnees } from "../lib/useDonnees";
 
 interface DirigeantRes { id: string; nom_complet: string; email_professionnel: string; nb_mandats: number }
@@ -41,13 +41,12 @@ const GROUPES: Record<string, string> = {
   dirigeant: "dirigeant__nom,dirigeant__prenom,dirigeant,-date_debut",
 };
 const TAILLE = 20;
-const chip = (on: boolean): CSSProperties => ({ font: "inherit", fontSize: 13, fontWeight: 700, padding: "9px 14px", borderRadius: 999, cursor: "pointer", ...(on ? { background: "#0B1424", color: "#F3D98C", border: "1px solid #0B1424" } : { background: "#FFFFFF", color: "#4A5568", border: "1px solid #ECE5D5" }) });
-const seg = (on: boolean): CSSProperties => ({ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, height: 40, border: "none", borderRadius: 9, font: "inherit", fontSize: 13, fontWeight: 700, cursor: "pointer", ...(on ? { background: "#FFFFFF", color: "#0B1424", boxShadow: "0 2px 8px rgba(11,20,36,.10)" } : { background: "transparent", color: "#6B7280" }) });
-const pageBtn = (on = false): CSSProperties => ({ width: 36, height: 36, borderRadius: 10, font: "inherit", cursor: "pointer", ...(on ? { border: "none", background: "#0B1424", color: "#F3D98C", fontWeight: 800 } : { border: "1px solid #ECE5D5", background: "#FFFFFF", color: "#0B1424", fontWeight: 700 }) });
+const chip = (on: boolean): CSSProperties => ({ font: "inherit", fontSize: "var(--t-sm)", fontWeight: 600, padding: "9px 14px", borderRadius: 999, cursor: "pointer", ...(on ? { background: "#0B1424", color: "#FFFFFF", border: "1px solid #0B1424" } : { background: "#FFFFFF", color: "#4A5568", border: "1px solid #E7E5E4" }) });
+const seg = (on: boolean): CSSProperties => ({ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, height: 40, border: "none", borderRadius: 9, font: "inherit", fontSize: "var(--t-sm)", fontWeight: 600, cursor: "pointer", ...(on ? { background: "#FFFFFF", color: "#0B1424", boxShadow: "0 1px 2px rgba(11,20,36,.08)" } : { background: "transparent", color: "#6B7280" }) });
 const champ: CSSProperties = { display: "flex", flexDirection: "column", gap: 8, minWidth: 0 };
 const selectFiltre: CSSProperties = { cursor: "pointer", flex: "1 1 170px", minWidth: 0, width: "auto" };
-const badgeFonction: CSSProperties = { fontSize: 12, fontWeight: 800, color: "#6E5416", background: "#F3ECDC", padding: "4px 9px", borderRadius: 8, marginRight: 6, whiteSpace: "nowrap" };
-const avatar: CSSProperties = { width: 40, height: 40, flex: "none", borderRadius: "50%", background: "#0B1424", color: "#F3D98C", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 800 };
+const badgeFonction: CSSProperties = { fontSize: "var(--t-xs)", fontWeight: 600, color: "#44403C", background: "#F5F5F4", padding: "3px 7px", borderRadius: 6, whiteSpace: "nowrap" };
+const avatar: CSSProperties = { width: 36, height: 36, flex: "none", borderRadius: "50%", background: "#F5F5F4", color: "#44403C", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--t-xs)", fontWeight: 600 };
 const nomFichier = (url: string) => decodeURIComponent(url.split("/").pop() ?? "Fichier");
 const Icone = ({ d, taille = 16 }: { d: string; taille?: number }) => <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>;
 const I_OEIL = "M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6 3 3 0 1 0 0-6";
@@ -103,7 +102,6 @@ export function Dirigeants() {
   const rows = d.rows?.results ?? [];
   const total = d.rows?.count ?? 0;
   const pages = Math.max(1, Math.ceil(total / TAILLE));
-  const numeros = Array.from({ length: pages }, (_, i) => i + 1).filter((n) => Math.abs(n - page) <= 2 || n === 1 || n === pages);
   const imfs = d.imfs ?? [];
   const institution = imfs.find((i) => i.id === imf);
   const nomRegion = (id: string) => regionAffichee((d.regions ?? []).find((z) => z.id === id)?.nom) ?? "Région";
@@ -131,15 +129,9 @@ export function Dirigeants() {
   const colDirigeant = groupe !== "dirigeant", colImf = groupe !== "imf";
   const nbColonnes = 5 + Number(colDirigeant) + Number(colImf);
   const cleGroupe = (r: Mandat) => (groupe === "imf" ? r.imf : groupe === "dirigeant" ? r.dirigeant : "");
-  const Th = ({ cle, children, pad = "12px 8px" }: { cle?: string; children: ReactNode; pad?: string }) => {
+  const Th = ({ cle, children }: { cle?: string; children: ReactNode }) => {
     const actif = !!cle && !groupe && cleTri === cle;
-    return (
-      <th style={{ padding: pad, whiteSpace: "nowrap" }} aria-sort={actif ? (desc ? "descending" : "ascending") : undefined}>
-        {cle
-          ? <button type="button" className="di-tri" data-actif={actif} title="Trier" onClick={() => maj({ groupe: "", tri: actif && !desc ? `-${cle}` : cle === "dirigeant" ? "" : cle })}>{children}<span aria-hidden="true" style={{ fontSize: 9, color: actif ? "#C9A44C" : "#C8C0AE" }}>{actif && desc ? "▼" : "▲"}</span></button>
-          : children}
-      </th>
-    );
+    return <EnTete tri={cle ? { actif, desc, onClick: () => maj({ groupe: "", tri: actif && !desc ? `-${cle}` : cle === "dirigeant" ? "" : cle }) } : undefined}>{children}</EnTete>;
   };
   const ouvrirModale = (m: NonNullable<typeof modale>) => { setFiche(null); setModale(m); };
   const fermerModale = () => { if (modale?.retour) setFiche(modale.retour); setModale(null); };
@@ -150,22 +142,22 @@ export function Dirigeants() {
       <main className="app-main" style={{ flex: "999 1 640px", minWidth: 0, padding: "28px 32px 40px 32px", boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 20 }}>
         <header className="di-up" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 16, flexWrap: "wrap" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "#8A6A1F" }}>Référentiels · Gouvernance</span>
-            <h1 style={{ margin: 0, fontSize: 34, fontWeight: 800, letterSpacing: "-0.03em" }}>Dirigeants et mandats</h1>
-            <p style={{ margin: 0, fontSize: 14, color: "#4A5568" }}>PCA, DG, gérants, comités. Chaque consultation de fiche est journalisée.</p>
+            <span style={{ fontSize: "var(--t-sm)", fontWeight: 500, color: "#6B7280" }}>Référentiels / Gouvernance</span>
+            <h1 style={{ margin: 0, fontSize: "var(--t-3xl)", fontWeight: 700, letterSpacing: "-0.022em" }}>Dirigeants et mandats</h1>
+            <p style={{ margin: 0, fontSize: "var(--t-base)", color: "#4A5568", lineHeight: 1.55 }}>PCA, DG, gérants, comités. Chaque consultation de fiche est journalisée.</p>
           </div>
-          {estAdmin && <button type="button" onClick={() => setModale({})} style={{ height: 46, padding: "0 18px", borderRadius: 14, border: "none", background: "#C9A44C", font: "inherit", fontSize: 14, fontWeight: 800, color: "#0B1424", display: "flex", alignItems: "center", gap: 8, cursor: "pointer", boxShadow: "0 10px 24px rgba(201,164,76,.35)" }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>Nouveau mandat</button>}
+          {estAdmin && <button type="button" onClick={() => setModale({})} style={{ height: 46, padding: "0 18px", borderRadius: 10, border: "none", background: "#C9A44C", font: "inherit", fontSize: "var(--t-md)", fontWeight: 700, color: "#0B1424", display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>Nouveau mandat</button>}
         </header>
 
         {/* Indicateurs ; les deux alertes filtrent la liste d'un clic. */}
         <div className="di-up" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(150px, 100%), 1fr))", gap: 14 }}>
           {kpis.map((k) => {
             const on = !!k.alerte && alerte === k.alerte;
-            const style: CSSProperties = { display: "flex", flexDirection: "column", gap: 4, padding: "16px 18px", borderRadius: 20, textAlign: "left", font: "inherit", color: "#0B1424", background: on ? "#FDF8EA" : "#FFFFFF", border: on ? "1.5px solid #C9A44C" : "1px solid #ECE5D5" };
+            const style: CSSProperties = { display: "flex", flexDirection: "column", gap: 4, padding: "16px 18px", borderRadius: 12, textAlign: "left", font: "inherit", color: "#0B1424", background: on ? "#FAFAF9" : "#FFFFFF", border: on ? "1.5px solid #C9A44C" : "1px solid #E7E5E4" };
             const contenu = (<>
-              <span style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 600, color: "#4A5568" }}><span style={{ width: 8, height: 8, borderRadius: "50%", background: k.color }} />{k.label}</span>
-              <b style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.02em" }}>{k.n === undefined ? "—" : nombre(k.n)}</b>
-              {k.alerte && <span style={{ fontSize: 12, fontWeight: 700, color: "#8A6A1F" }}>{on ? "Filtre actif — retirer" : "Afficher ces mandats →"}</span>}
+              <span style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "var(--t-sm)", fontWeight: 500, color: "#4A5568" }}><span style={{ width: 8, height: 8, borderRadius: "50%", background: k.color }} />{k.label}</span>
+              <b style={{ fontSize: "var(--t-2xl)", fontWeight: 700, letterSpacing: "-0.02em" }}>{k.n === undefined ? "—" : nombre(k.n)}</b>
+              {k.alerte && <span style={{ fontSize: "var(--t-xs)", fontWeight: 600, color: "#8A6A1F" }}>{on ? "Filtre actif — retirer" : "Afficher ces mandats →"}</span>}
             </>);
             return k.alerte
               ? <button key={k.label} type="button" className="di-kpi" aria-pressed={on} onClick={() => maj({ alerte: on ? "" : k.alerte! })} style={{ ...style, cursor: "pointer" }}>{contenu}</button>
@@ -174,7 +166,7 @@ export function Dirigeants() {
         </div>
 
         {/* Recherche et filtres */}
-        <section className="di-up d1" aria-label="Recherche et filtres" style={{ position: "relative", zIndex: 5, borderRadius: 24, background: "#FFFFFF", border: "1px solid #ECE5D5", padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+        <section className="di-up d1" aria-label="Recherche et filtres" style={{ position: "relative", zIndex: 5, borderRadius: 12, background: "#FFFFFF", border: "1px solid #E7E5E4", padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
             <div style={{ position: "relative", flex: "2 1 300px", minWidth: 0 }}>
               <span style={{ position: "absolute", left: 14, top: 14, color: "#9AA3B2", pointerEvents: "none", display: "flex" }}><Icone d={I_LOUPE} taille={18} /></span>
@@ -204,91 +196,78 @@ export function Dirigeants() {
 
         {/* Institution filtrée : rappel de son identité et accès à sa fiche */}
         {institution && (
-          <section className="di-up" style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", padding: "16px 20px", borderRadius: 20, background: "#0B1424", color: "#F4EFE3" }}>
-            <span style={{ width: 46, height: 46, flex: "none", borderRadius: 14, background: "linear-gradient(135deg, #E9D49A, #C9A44C)", color: "#0B1424", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800 }}>{initiales(institution.sigle || institution.nom)}</span>
+          <section className="di-up" style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", padding: "16px 20px", borderRadius: 12, background: "#FFFFFF", border: "1px solid #E7E5E4" }}>
+            <span style={{ width: 46, height: 46, flex: "none", borderRadius: 8, background: "#F5F5F4", color: "#44403C", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--t-sm)", fontWeight: 600 }}>{initiales(institution.sigle || institution.nom)}</span>
             <div style={{ flex: "1 1 280px", minWidth: 0 }}>
-              <b style={{ display: "block", fontSize: 16, overflowWrap: "anywhere" }}>{institution.nom}</b>
-              <span style={{ fontSize: 13, color: "#A9B3C4" }}>{[TYPE_IMF_COURT[institution.type_imf], STATUT_IMF_COURT[institution.statut_reglementaire], regionAffichee(institution.region_siege), institution.numero_agrement].filter(Boolean).join(" · ")}</span>
+              <b style={{ display: "block", fontSize: "var(--t-base)", overflowWrap: "anywhere" }}>{institution.nom}</b>
+              <span style={{ fontSize: "var(--t-sm)", color: "#6B7280" }}>{[TYPE_IMF_COURT[institution.type_imf], STATUT_IMF_COURT[institution.statut_reglementaire], regionAffichee(institution.region_siege), institution.numero_agrement].filter(Boolean).join(" · ")}</span>
             </div>
             <div style={{ display: "flex", gap: 22 }}>
-              <div><b style={{ display: "block", fontSize: 22, color: "#F3D98C" }}>{d.rows ? nombre(total) : "—"}</b><span style={{ fontSize: 12, color: "#A9B3C4" }}>mandat{total > 1 ? "s" : ""}</span></div>
-              <div><b style={{ display: "block", fontSize: 22, color: "#F3D98C" }}>{nombre(institution.nb_points_service)}</b><span style={{ fontSize: 12, color: "#A9B3C4" }}>point{institution.nb_points_service > 1 ? "s" : ""} de service</span></div>
+              <div><b style={{ display: "block", fontSize: "var(--t-xl)", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{d.rows ? nombre(total) : "—"}</b><span style={{ fontSize: "var(--t-xs)", color: "#6B7280" }}>mandat{total > 1 ? "s" : ""}</span></div>
+              <div><b style={{ display: "block", fontSize: "var(--t-xl)", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{nombre(institution.nb_points_service)}</b><span style={{ fontSize: "var(--t-xs)", color: "#6B7280" }}>point{institution.nb_points_service > 1 ? "s" : ""} de service</span></div>
             </div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {[[`/points-service?imf=${institution.id}`, "Ses points de service →"], [`/consultation?imf=${institution.id}`, "Fiche de l'institution →"]].map(([to, l]) => <Link key={to} to={to} style={{ height: 40, padding: "0 14px", borderRadius: 12, border: "1px solid rgba(243,217,140,.45)", color: "#F3D98C", fontSize: 13, fontWeight: 700, textDecoration: "none", display: "flex", alignItems: "center", boxSizing: "border-box" }}>{l}</Link>)}
+              {[[`/points-service?imf=${institution.id}`, "Ses points de service →"], [`/consultation?imf=${institution.id}`, "Fiche de l'institution →"]].map(([to, l]) => <Link key={to} to={to} style={{ height: 40, padding: "0 14px", borderRadius: 10, border: "1px solid #E7E5E4", color: "#0B1424", fontSize: "var(--t-sm)", fontWeight: 500, textDecoration: "none", display: "flex", alignItems: "center", boxSizing: "border-box" }}>{l}</Link>)}
             </div>
           </section>
         )}
 
-        <section className="di-up d1" style={{ borderRadius: 24, background: "#FFFFFF", border: "1px solid #ECE5D5", overflow: "hidden" }}>
-          {/* Résultat : compteur, filtres actifs, regroupement */}
-          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", padding: "14px 18px", borderBottom: "1px solid #F1ECE0" }}>
-            <span aria-live="polite" style={{ fontSize: 14, fontWeight: 800 }}>{d.rows ? `${nombre(total)} mandat${total > 1 ? "s" : ""}` : "Chargement…"}</span>
+        <CadreTableau className="di-up d1"
+          barre={<>
+            <span aria-live="polite" style={{ fontSize: "var(--t-md)", fontWeight: 600 }}>{d.rows ? `${nombre(total)} mandat${total > 1 ? "s" : ""}` : "Chargement…"}</span>
             {actifs.map(([libelle, retrait]) => (
-              <button key={libelle} type="button" title="Retirer ce filtre" onClick={() => { if ("q" in retrait) setSaisie(""); maj(retrait); }} style={{ display: "inline-flex", alignItems: "center", gap: 6, maxWidth: 260, padding: "5px 10px", borderRadius: 999, border: "1px solid #E9D9A8", background: "#FDF8EA", color: "#6E5416", font: "inherit", fontSize: 12, fontWeight: 700, cursor: "pointer" }}><span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{libelle}</span><span aria-hidden="true">×</span></button>
+              <button key={libelle} type="button" className="tbl-filtre" title="Retirer ce filtre" onClick={() => { if ("q" in retrait) setSaisie(""); maj(retrait); }}><span>{libelle}</span><span aria-hidden="true">×</span></button>
             ))}
-            {actifs.length > 0 && <button type="button" onClick={toutEffacer} style={{ border: "none", background: "transparent", padding: "5px 4px", font: "inherit", fontSize: 12, fontWeight: 700, color: "#4A5568", cursor: "pointer", textDecoration: "underline" }}>Tout effacer</button>}
-            <div role="radiogroup" aria-label="Regrouper les mandats" style={{ marginLeft: "auto", display: "flex", padding: 4, borderRadius: 12, background: "#F6F1E4", gap: 2 }}>
-              {([["", "Liste"], ["imf", "Par institution"], ["dirigeant", "Par dirigeant"]] as const).map(([k, l]) => <button key={k} type="button" role="radio" aria-checked={groupe === k} onClick={() => maj({ groupe: k })} style={{ ...seg(groupe === k), flex: "none", height: 34, padding: "0 12px" }}>{l}</button>)}
+            {actifs.length > 0 && <button type="button" className="tbl-effacer" onClick={toutEffacer}>Tout effacer</button>}
+            <div role="radiogroup" aria-label="Regrouper les mandats" className="tbl-segments">
+              {([["", "Liste"], ["imf", "Par institution"], ["dirigeant", "Par dirigeant"]] as const).map(([k, l]) => <button key={k} type="button" role="radio" aria-checked={groupe === k} onClick={() => maj({ groupe: k })}>{l}</button>)}
             </div>
-          </div>
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", minWidth: 980, borderCollapse: "collapse", fontSize: 14 }}>
-              <thead><tr style={{ textAlign: "left", fontSize: 11, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "#6B7280", background: "#FDFBF6" }}>
-                {colDirigeant && <Th cle="dirigeant" pad="12px 18px">Dirigeant</Th>}
-                <Th cle="fonction" pad={colDirigeant ? undefined : "12px 18px"}>Fonction</Th>
-                {colImf && <Th cle="imf">Institution</Th>}
-                <Th cle="debut">Mandat</Th><Th cle="statut">Statut</Th><Th>Justificatif</Th>
-                <th style={{ padding: "12px 18px", textAlign: "right" }}>Actions</th>
-              </tr></thead>
-              <tbody>
-                {!d.rows && <LignesSquelette colonnes={nbColonnes} />}
-                {rows.flatMap((r, i) => {
-                  const av = avancementMandat(r.date_debut, r.date_fin);
-                  const c = SB[r.statut_mandat];
-                  const ech = echeance(r.date_fin);
-                  const lien = r.fichier_justificatif || r.documents_justificatifs;
-                  const contact = [r.dirigeant_email, r.dirigeant_telephone].filter(Boolean).join(" · ");
-                  const premier = !!groupe && (i === 0 || cleGroupe(rows[i - 1]) !== cleGroupe(r));
-                  return [
-                    premier && (
-                      <tr key={`g-${r.id}`} style={{ background: "#FBF8F1", borderTop: "1px solid #ECE5D5" }}>
-                        <td colSpan={nbColonnes} style={{ padding: "10px 18px" }}>
-                          {groupe === "imf"
-                            ? <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}><span style={{ ...avatar, width: 32, height: 32, borderRadius: 10, fontSize: 11 }}>{initiales(r.imf_sigle || r.imf_nom)}</span><b style={{ fontSize: 14 }}>{r.imf_nom}</b>{r.imf_region && <span style={{ fontSize: 12, color: "#6B7280" }}>{regionAffichee(r.imf_region)}</span>}<button type="button" className="di-lien" style={{ marginLeft: "auto", fontSize: 12, color: "#8A6A1F" }} onClick={() => maj({ imf: r.imf })}>Uniquement cette institution →</button></div>
-                            : <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}><span style={{ ...avatar, width: 32, height: 32, fontSize: 11 }}>{initiales(r.dirigeant_nom_complet)}</span><b style={{ fontSize: 14 }}>{r.dirigeant_nom_complet}</b>{contact && <span style={{ fontSize: 12, color: "#6B7280" }}>{contact}</span>}<button type="button" className="di-lien" style={{ marginLeft: "auto", fontSize: 12, color: "#8A6A1F" }} onClick={() => setFiche(r.dirigeant)}>Ouvrir la fiche →</button></div>}
-                        </td>
-                      </tr>
-                    ),
-                    <tr key={r.id} className="di-row" tabIndex={0} title="Ouvrir la fiche du dirigeant" onClick={() => setFiche(r.dirigeant)} onKeyDown={(e) => e.key === "Enter" && e.target === e.currentTarget && setFiche(r.dirigeant)} style={{ borderTop: "1px solid #F6F1E4", cursor: "pointer" }}>
-                      {colDirigeant && <td style={{ padding: "13px 18px" }}><div style={{ display: "flex", alignItems: "center", gap: 12 }}><span style={avatar}>{initiales(r.dirigeant_nom_complet)}</span><div style={{ minWidth: 0 }}><div style={{ fontWeight: 800 }}>{r.dirigeant_nom_complet}</div><div style={{ fontSize: 12, color: "#6B7280", overflowWrap: "break-word", lineHeight: 1.45 }}>{r.dirigeant_email && <div>{r.dirigeant_email}</div>}{r.dirigeant_telephone && <div>{r.dirigeant_telephone}</div>}{!contact && "—"}</div></div></div></td>}
-                      <td style={{ padding: colDirigeant ? "13px 8px" : "13px 18px" }}>{CODE_FONCTION[r.fonction_mandat] && <span style={badgeFonction}>{CODE_FONCTION[r.fonction_mandat]}</span>}<span style={{ fontSize: 13, color: "#4A5568" }}>{LIBELLE_FONCTION[r.fonction_mandat] ?? r.fonction_mandat}</span></td>
-                      {colImf && <td style={{ padding: "13px 8px" }}><button type="button" className="di-lien" title="Voir tous les dirigeants de cette institution" onClick={(e) => { e.stopPropagation(); maj({ imf: r.imf }); }} style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.4 }}>{r.imf_nom}</button>{r.imf_region && <div style={{ fontSize: 12, color: "#6B7280", marginTop: 2 }}>{[r.imf_sigle, regionAffichee(r.imf_region)].filter(Boolean).join(" · ")}</div>}</td>}
-                      <td style={{ padding: "13px 8px", minWidth: 190 }}><div style={{ display: "flex", justifyContent: "space-between", gap: 8, fontSize: 12, color: "#6B7280", marginBottom: 5, whiteSpace: "nowrap" }}><span>{dateCourte(r.date_debut)}</span><span>{r.date_fin ? dateCourte(r.date_fin) : "sans échéance"}</span></div><div style={{ height: 6, borderRadius: 99, background: "#F1ECE0", overflow: "hidden" }}><div style={{ height: "100%", borderRadius: 99, background: av.color, width: `${av.prog}%` }} /></div>{ech && <div style={{ fontSize: 12, fontWeight: 800, color: ech.couleur, marginTop: 4 }}>{ech.texte}</div>}</td>
-                      <td style={{ padding: "13px 8px" }}><span style={{ fontSize: 12, fontWeight: 800, padding: "5px 10px", borderRadius: 999, whiteSpace: "nowrap", background: c?.[0], color: c?.[1] }}>{STATUT_MANDAT[r.statut_mandat] ?? r.statut_mandat}</span></td>
-                      <td style={{ padding: "13px 8px" }}>{lien
-                        ? <a href={lien} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 700, textDecoration: "none" }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6z" /><path d="M14 3v6h6" /></svg>{r.fichier_justificatif ? nomFichier(r.fichier_justificatif) : "Lien externe"}</a>
-                        : <span style={{ fontSize: 12, fontWeight: 700, color: "#B45309" }}>Manquant</span>}</td>
-                      <td style={{ padding: "13px 18px", textAlign: "right", whiteSpace: "nowrap" }}>
-                        <button type="button" className="di-act" aria-label={`Voir la fiche de ${r.dirigeant_nom_complet}`} title="Voir la fiche" onClick={(e) => { e.stopPropagation(); setFiche(r.dirigeant); }}><Icone d={I_OEIL} /></button>
-                        {peutModifier && <button type="button" className="di-act" aria-label={`Modifier le mandat de ${r.dirigeant_nom_complet}`} title="Modifier le mandat" onClick={(e) => { e.stopPropagation(); ouvrirModale({ mandat: r }); }} style={{ marginLeft: 6 }}><Icone d={I_CRAYON} /></button>}
-                      </td>
-                    </tr>,
-                  ];
-                })}
-              </tbody>
-            </table>
-          </div>
-          {d.rows && rows.length === 0 && <div style={{ padding: "44px 18px", textAlign: "center", color: "#6B7280", fontSize: 14 }}><b style={{ display: "block", fontSize: 15, color: "#0B1424", marginBottom: 4 }}>Aucun mandat ne correspond</b>{actifs.length > 0 ? <>Élargissez la recherche ou <button type="button" className="di-lien" style={{ color: "#8A6A1F" }} onClick={toutEffacer}>effacez les filtres</button>.</> : "Aucun mandat n'est encore enregistré."}</div>}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", padding: "14px 18px", borderTop: "1px solid #F1ECE0", fontSize: 13, color: "#4A5568" }}>
-            <span>{total ? `${(page - 1) * TAILLE + 1}–${(page - 1) * TAILLE + rows.length} sur ${nombre(total)} mandats` : "0 mandat"}</span>
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-              <button type="button" aria-label="Page précédente" disabled={page <= 1} onClick={() => maj({ page: String(page - 1) })} style={{ ...pageBtn(), fontWeight: 400, color: "#4A5568" }}>‹</button>
-              {numeros.map((n) => <button key={n} type="button" aria-current={n === page ? "page" : undefined} onClick={() => maj({ page: n === 1 ? "" : String(n) })} style={pageBtn(n === page)}>{n}</button>)}
-              <button type="button" aria-label="Page suivante" disabled={page >= pages} onClick={() => maj({ page: String(page + 1) })} style={{ ...pageBtn(), fontWeight: 400, color: "#4A5568" }}>›</button>
-            </div>
-          </div>
-        </section>
+          </>}
+          pied={<Pagination page={page} pages={pages} onPage={(n) => maj({ page: n === 1 ? "" : String(n) })} resume={total ? `${(page - 1) * TAILLE + 1}–${(page - 1) * TAILLE + rows.length} sur ${nombre(total)} mandats` : "0 mandat"} />}>
+          <Tableau largeurMin={980}>
+            <thead><tr>
+              {colDirigeant && <Th cle="dirigeant">Dirigeant</Th>}
+              <Th cle="fonction">Fonction</Th>
+              {colImf && <Th cle="imf">Institution</Th>}
+              <Th cle="debut">Mandat</Th><Th cle="statut">Statut</Th><Th>Justificatif</Th>
+              <EnTete><span className="sr-only">Actions</span></EnTete>
+            </tr></thead>
+            <tbody>
+              {!d.rows && <LignesChargement colonnes={nbColonnes} />}
+              {rows.flatMap((r, i) => {
+                const av = avancementMandat(r.date_debut, r.date_fin);
+                const ech = echeance(r.date_fin);
+                const lien = r.fichier_justificatif || r.documents_justificatifs;
+                const contact = [r.dirigeant_email, r.dirigeant_telephone].filter(Boolean).join(" · ");
+                const premier = !!groupe && (i === 0 || cleGroupe(rows[i - 1]) !== cleGroupe(r));
+                return [
+                  premier && (
+                    <LigneGroupe key={`g-${r.id}`} colonnes={nbColonnes}>
+                      {groupe === "imf"
+                        ? <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}><b style={{ fontWeight: 600 }}>{r.imf_nom}</b>{r.imf_region && <span style={{ color: "#6B7280" }}>{regionAffichee(r.imf_region)}</span>}<button type="button" className="di-lien" style={{ marginLeft: "auto", fontSize: "var(--t-sm)", fontWeight: 500, color: "#8A6A1F" }} onClick={() => maj({ imf: r.imf })}>Uniquement cette institution →</button></div>
+                        : <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}><b style={{ fontWeight: 600 }}>{r.dirigeant_nom_complet}</b>{contact && <span style={{ color: "#6B7280" }}>{contact}</span>}<button type="button" className="di-lien" style={{ marginLeft: "auto", fontSize: "var(--t-sm)", fontWeight: 500, color: "#8A6A1F" }} onClick={() => setFiche(r.dirigeant)}>Ouvrir la fiche →</button></div>}
+                    </LigneGroupe>
+                  ),
+                  <tr key={r.id} tabIndex={0} title="Ouvrir la fiche du dirigeant" onClick={() => setFiche(r.dirigeant)} onKeyDown={(e) => e.key === "Enter" && e.target === e.currentTarget && setFiche(r.dirigeant)}>
+                    {colDirigeant && <td className="principal"><div style={{ display: "flex", alignItems: "center", gap: 12 }}><span style={avatar}>{initiales(r.dirigeant_nom_complet)}</span><div style={{ minWidth: 0 }}><div style={{ fontWeight: 600 }}>{r.dirigeant_nom_complet}</div><span className="muet" style={{ overflowWrap: "break-word" }}>{contact || "—"}</span></div></div></td>}
+                    <td data-label="Fonction" className={colDirigeant ? undefined : "principal"}><div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>{CODE_FONCTION[r.fonction_mandat] && <span style={badgeFonction}>{CODE_FONCTION[r.fonction_mandat]}</span>}<span style={{ fontSize: "var(--t-sm)", color: "#4A5568" }}>{LIBELLE_FONCTION[r.fonction_mandat] ?? r.fonction_mandat}</span></div></td>
+                    {colImf && <td data-label="Institution"><button type="button" className="di-lien" title="Voir tous les dirigeants de cette institution" onClick={(e) => { e.stopPropagation(); maj({ imf: r.imf }); }} style={{ fontSize: "var(--t-sm)", fontWeight: 500, lineHeight: 1.4, textAlign: "inherit" }}>{r.imf_nom}</button>{r.imf_region && <span className="muet">{[r.imf_sigle, regionAffichee(r.imf_region)].filter(Boolean).join(" · ")}</span>}</td>}
+                    <td data-label="Mandat" style={{ minWidth: 180 }}><div style={{ display: "flex", justifyContent: "space-between", gap: 8, fontSize: "var(--t-sm)", color: "#4A5568", marginBottom: 6, whiteSpace: "nowrap" }}><span>{dateCourte(r.date_debut)}</span><span>{r.date_fin ? dateCourte(r.date_fin) : "sans échéance"}</span></div><div className="tbl-jauge"><div style={{ background: av.color, width: `${av.prog}%` }} /></div>{ech && <div style={{ fontSize: "var(--t-xs)", fontWeight: 600, color: ech.couleur, marginTop: 4 }}>{ech.texte}</div>}</td>
+                    <td data-label="Statut"><Badge ton={TON_STATUT[r.statut_mandat]}>{STATUT_MANDAT[r.statut_mandat] ?? r.statut_mandat}</Badge></td>
+                    <td data-label="Justificatif">{lien
+                      ? <a href={lien} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: "var(--t-sm)", fontWeight: 500, textDecoration: "none" }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6z" /><path d="M14 3v6h6" /></svg>{r.fichier_justificatif ? nomFichier(r.fichier_justificatif) : "Lien externe"}</a>
+                      : <Badge ton="alerte">Manquant</Badge>}</td>
+                    <CelluleActions>
+                      <BoutonIcone libelle={`Voir la fiche de ${r.dirigeant_nom_complet}`} onClick={(e) => { e.stopPropagation(); setFiche(r.dirigeant); }}><Icone d={I_OEIL} /></BoutonIcone>
+                      {peutModifier && <BoutonIcone libelle={`Modifier le mandat de ${r.dirigeant_nom_complet}`} onClick={(e) => { e.stopPropagation(); ouvrirModale({ mandat: r }); }}><Icone d={I_CRAYON} /></BoutonIcone>}
+                    </CelluleActions>
+                  </tr>,
+                ];
+              })}
+            </tbody>
+          </Tableau>
+          {d.rows && rows.length === 0 && <EtatVide titre="Aucun mandat ne correspond">{actifs.length > 0 ? <>Élargissez la recherche ou <button type="button" className="di-lien" style={{ color: "#8A6A1F" }} onClick={toutEffacer}>effacez les filtres</button>.</> : "Aucun mandat n'est encore enregistré."}</EtatVide>}
+        </CadreTableau>
       </main>
       {fiche && <FicheDirigeant key={fiche} id={fiche} onClose={() => setFiche(null)}
         onModifierMandat={(m) => ouvrirModale({ mandat: m, retour: fiche })}
@@ -388,7 +367,7 @@ function ModaleMandat({ mandat, dirigeant, onClose, onSaved }: { mandat?: Mandat
       </>}>
       <form onSubmit={(e) => { e.preventDefault(); if (step === 1) continuer(); else enregistrer(); }} style={{ padding: "4px 26px 22px 26px", display: "flex", flexDirection: "column", gap: 16 }}>
         {step === 1 && (<>
-          <div role="radiogroup" style={{ display: "flex", padding: 4, borderRadius: 12, background: "#F6F1E4", gap: 2 }}>
+          <div role="radiogroup" style={{ display: "flex", padding: 4, borderRadius: 10, background: "#F5F5F4", gap: 2 }}>
             {([["existing", "Dirigeant existant"], ["new", "Nouveau dirigeant"]] as const).map(([k, l]) => <button key={k} type="button" role="radio" aria-checked={mode === k} onClick={() => setMode(k)} style={seg(mode === k)}>{l}</button>)}
           </div>
           {mode === "existing" && (<>
@@ -397,10 +376,10 @@ function ModaleMandat({ mandat, dirigeant, onClose, onSaved }: { mandat?: Mandat
               {trouves.map((t) => {
                 const on = choisi?.id === t.id;
                 return (
-                  <button key={t.id} type="button" role="radio" aria-checked={on} onClick={() => setChoisi(t)} style={{ display: "flex", alignItems: "center", gap: 12, padding: 12, borderRadius: 14, font: "inherit", color: "#0B1424", cursor: "pointer", textAlign: "left", ...(on ? { border: "1.5px solid #C9A44C", background: "#FDF8EA" } : { border: "1.5px solid #E2DCCD", background: "#FFFFFF" }) }}>
-                    <span style={{ width: 38, height: 38, flex: "none", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, ...(on ? { background: "#0B1424", color: "#F3D98C" } : { background: "#F1ECE0", color: "#6E5416" }) }}>{initiales(t.nom_complet)}</span>
-                    <span style={{ flex: 1 }}><b style={{ display: "block", fontSize: 14 }}>{t.nom_complet}</b><span style={{ fontSize: 12, color: "#6B7280" }}>{t.nb_mandats} mandat{t.nb_mandats > 1 ? "s" : ""}{t.email_professionnel ? ` · ${t.email_professionnel}` : ""}</span></span>
-                    <span style={{ width: 18, height: 18, flex: "none", borderRadius: "50%", boxSizing: "border-box", ...(on ? { border: "5px solid #C9A44C" } : { border: "2px solid #D3C9B2" }) }} />
+                  <button key={t.id} type="button" role="radio" aria-checked={on} onClick={() => setChoisi(t)} style={{ display: "flex", alignItems: "center", gap: 12, padding: 12, borderRadius: 10, font: "inherit", color: "#0B1424", cursor: "pointer", textAlign: "left", ...(on ? { border: "1.5px solid #C9A44C", background: "#FAFAF9" } : { border: "1.5px solid #D6D3D1", background: "#FFFFFF" }) }}>
+                    <span style={{ width: 38, height: 38, flex: "none", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--t-xs)", fontWeight: 700, ...(on ? { background: "#0B1424", color: "#FFFFFF" } : { background: "#F5F5F4", color: "#44403C" }) }}>{initiales(t.nom_complet)}</span>
+                    <span style={{ flex: 1 }}><b style={{ display: "block", fontSize: "var(--t-md)" }}>{t.nom_complet}</b><span style={{ fontSize: "var(--t-xs)", color: "#6B7280" }}>{t.nb_mandats} mandat{t.nb_mandats > 1 ? "s" : ""}{t.email_professionnel ? ` · ${t.email_professionnel}` : ""}</span></span>
+                    <span style={{ width: 18, height: 18, flex: "none", borderRadius: "50%", boxSizing: "border-box", ...(on ? { border: "5px solid #C9A44C" } : { border: "2px solid #A8A29E" }) }} />
                   </button>
                 );
               })}
@@ -414,16 +393,16 @@ function ModaleMandat({ mandat, dirigeant, onClose, onSaved }: { mandat?: Mandat
               <div style={champ}><Label htmlFor="di-nom" requis>Nom</Label><input id="di-nom" className={cls(err1.nom)} value={p.nom} onChange={(e) => setP({ ...p, nom: e.target.value })} /><Erreur>{err1.nom}</Erreur></div>
               <div style={champ}><Label htmlFor="di-tel">Téléphone</Label><input id="di-tel" className={cls(erreurs.telephone)} value={p.tel} onChange={(e) => setP({ ...p, tel: e.target.value })} placeholder="+221 77 000 00 00" inputMode="tel" /></div>
               <div style={champ}><Label htmlFor="di-mail">Email professionnel</Label><input id="di-mail" type="email" className={cls(err1.email)} value={p.email} onChange={(e) => setP({ ...p, email: e.target.value })} placeholder="prenom.nom@imf.sn" /><Erreur>{err1.email}</Erreur></div>
-              <div style={{ ...champ, gridColumn: "span 2" }} className="ps-plein"><label className="fi-label" htmlFor="di-mail2">Email secondaire <span style={{ fontWeight: 600, color: "#6B7280" }}>(optionnel)</span></label><input id="di-mail2" type="email" className={cls(err1.email2)} value={p.email2} onChange={(e) => setP({ ...p, email2: e.target.value })} placeholder="adresse personnelle" /><Erreur>{err1.email2}</Erreur></div>
+              <div style={{ ...champ, gridColumn: "span 2" }} className="ps-plein"><label className="fi-label" htmlFor="di-mail2">Email secondaire <span style={{ fontWeight: 500, color: "#6B7280" }}>(optionnel)</span></label><input id="di-mail2" type="email" className={cls(err1.email2)} value={p.email2} onChange={(e) => setP({ ...p, email2: e.target.value })} placeholder="adresse personnelle" /><Erreur>{err1.email2}</Erreur></div>
             </div>
           )}
         </>)}
 
         {step === 2 && (<>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 14, background: "#0B1424", color: "#F4EFE3" }}>
-            <span style={{ width: 36, height: 36, flex: "none", borderRadius: "50%", background: "#C9A44C", color: "#0B1424", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800 }}>{initiales(nomComplet)}</span>
-            <div style={{ flex: 1 }}><b style={{ fontSize: 14 }}>{nomComplet}</b><div style={{ fontSize: 12, color: "#A9B3C4" }}>{edition || mode === "existing" ? "Dirigeant existant" : "Nouveau dirigeant"}</div></div>
-            {!edition && <button type="button" onClick={() => setStep(1)} style={{ border: "none", background: "transparent", color: "#F3D98C", font: "inherit", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Modifier</button>}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 10, background: "#FFFFFF", border: "1px solid #E7E5E4" }}>
+            <span style={{ width: 36, height: 36, flex: "none", borderRadius: "50%", background: "#F5F5F4", color: "#44403C", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--t-xs)", fontWeight: 600 }}>{initiales(nomComplet)}</span>
+            <div style={{ flex: 1 }}><b style={{ fontSize: "var(--t-md)" }}>{nomComplet}</b><div style={{ fontSize: "var(--t-xs)", color: "#6B7280" }}>{edition || mode === "existing" ? "Dirigeant existant" : "Nouveau dirigeant"}</div></div>
+            {!edition && <button type="button" onClick={() => setStep(1)} style={{ border: "none", background: "transparent", color: "#8A6A1F", font: "inherit", fontSize: "var(--t-sm)", fontWeight: 600, cursor: "pointer" }}>Modifier</button>}
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 14 }} className="ps-grille2">
             <div style={champ}><Label htmlFor="di-imf" requis>Institution</Label><select id="di-imf" className={cls(err2.imf)} value={m.imf} onChange={(e) => setM({ ...m, imf: e.target.value })}><option value="">Choisir…</option>{(r.imfs ?? []).map((i) => <option key={i.id} value={i.id}>{i.nom}{i.sigle ? ` (${i.sigle})` : ""}</option>)}</select><Erreur>{err2.imf}</Erreur></div>
@@ -433,7 +412,7 @@ function ModaleMandat({ mandat, dirigeant, onClose, onSaved }: { mandat?: Mandat
           </div>
           <fieldset style={{ border: "none", margin: 0, padding: 0 }}>
             <legend className="fi-label" style={{ marginBottom: 8 }}>Statut du mandat</legend>
-            <div role="radiogroup" style={{ display: "flex", padding: 4, borderRadius: 12, background: "#F6F1E4", gap: 2 }}>
+            <div role="radiogroup" style={{ display: "flex", padding: 4, borderRadius: 10, background: "#F5F5F4", gap: 2 }}>
               {STATUTS.map(([k, l, c]) => <button key={k} type="button" role="radio" aria-checked={m.statut === k} onClick={() => setM({ ...m, statut: k })} style={seg(m.statut === k)}><span style={{ width: 8, height: 8, borderRadius: "50%", background: c }} />{l}</button>)}
             </div>
           </fieldset>

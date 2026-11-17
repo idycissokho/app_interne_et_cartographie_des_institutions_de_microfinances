@@ -1,8 +1,6 @@
-import "@fontsource/plus-jakarta-sans/400.css";
-import "@fontsource/plus-jakarta-sans/500.css";
-import "@fontsource/plus-jakarta-sans/600.css";
-import "@fontsource/plus-jakarta-sans/700.css";
-import "@fontsource/plus-jakarta-sans/800.css";
+// Inter, police variable auto-hébergée (aucun appel à Internet : compatible intranet).
+// « opsz » : le dessin s'adapte à la taille (plus ouvert en petit, plus serré en titre).
+import "@fontsource-variable/inter/opsz.css";
 import "./styles/global.css";
 
 import { StrictMode } from "react";

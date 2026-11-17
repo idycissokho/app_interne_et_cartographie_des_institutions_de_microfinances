@@ -16,10 +16,10 @@ import { useDonnees } from "../lib/useDonnees";
 interface MandatEcheance { id: string; fonction_mandat: string; dirigeant_nom_complet: string; imf_sigle: string; imf_nom: string; imf_region: string | null; date_fin: string }
 interface EntreeAudit { id: string; action: string; role: string; date_action: string; utilisateur_email: string | null; details: { libelle?: string } }
 
-const carte: CSSProperties = { background: "#FFFFFF", border: "1px solid #ECE5D5", borderRadius: 20, padding: 20, display: "flex", flexDirection: "column", gap: 14 };
-const icone: CSSProperties = { width: 38, height: 38, borderRadius: 12, background: "#F3ECDC", color: "#8A6A1F", display: "flex", alignItems: "center", justifyContent: "center" };
-const bloc: CSSProperties = { minWidth: 0, background: "#FFFFFF", border: "1px solid #ECE5D5", borderRadius: 22, padding: 22, display: "flex", flexDirection: "column" };
-const h2: CSSProperties = { margin: 0, fontSize: 18, fontWeight: 800 };
+const carte: CSSProperties = { background: "#FFFFFF", border: "1px solid #E7E5E4", borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", gap: 14 };
+const icone: CSSProperties = { width: 32, height: 32, borderRadius: 8, color: "#8A6A1F", display: "flex", alignItems: "center", justifyContent: "center" };
+const bloc: CSSProperties = { minWidth: 0, background: "#FFFFFF", border: "1px solid #E7E5E4", borderRadius: 12, padding: 22, display: "flex", flexDirection: "column" };
+const h2: CSSProperties = { margin: 0, fontSize: "var(--t-lg)", fontWeight: 700 };
 
 const svg = (enfants: ReactNode, sw = "2") => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{enfants}</svg>
@@ -90,86 +90,83 @@ export function TableauDeBord() {
       <main className="app-main" style={{ flex: "999 1 640px", minWidth: 0, padding: "28px 36px 48px 36px", boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 24 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
           <form onSubmit={(e) => { e.preventDefault(); const q = recherche.current?.value.trim(); naviguer(`/consultation${q ? `?q=${encodeURIComponent(q)}` : ""}`); }}
-            style={{ flex: "1 1 320px", display: "flex", alignItems: "center", gap: 10, height: 48, padding: "0 16px", borderRadius: 14, background: "#FFFFFF", border: "1px solid #ECE5D5", color: "#6B7280", boxSizing: "border-box" }}>
+            style={{ flex: "1 1 320px", display: "flex", alignItems: "center", gap: 10, height: 48, padding: "0 16px", borderRadius: 10, background: "#FFFFFF", border: "1px solid #E7E5E4", color: "#6B7280", boxSizing: "border-box" }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
-            <input ref={recherche} type="search" aria-label="Recherche globale" placeholder="Rechercher une IMF, un dirigeant, une commune…" style={{ border: "none", outline: "none", background: "transparent", font: "inherit", fontSize: 14, flex: 1, minWidth: 0, color: "#0B1424" }} />
-            <span style={{ fontSize: 12, fontWeight: 700, color: "#8A6A1F", background: "#F3ECDC", padding: "4px 8px", borderRadius: 8 }}>⌘ K</span>
+            <input ref={recherche} type="search" aria-label="Recherche globale" placeholder="Rechercher une IMF, un dirigeant, une commune…" style={{ border: "none", outline: "none", background: "transparent", font: "inherit", fontSize: "var(--t-md)", flex: 1, minWidth: 0, color: "#0B1424" }} />
+            <kbd style={{ fontFamily: "inherit", fontSize: "var(--t-xs)", fontWeight: 500, color: "#6B7280", border: "1px solid #E7E5E4", padding: "2px 6px", borderRadius: 6 }}>⌘ K</kbd>
           </form>
           {estAdmin && (
-            <button type="button" onClick={() => naviguer("/donnees?onglet=export")} style={{ height: 48, padding: "0 18px", borderRadius: 14, border: "1px solid #ECE5D5", background: "#FFFFFF", font: "inherit", fontSize: 14, fontWeight: 700, color: "#0B1424", display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+            <button type="button" onClick={() => naviguer("/donnees?onglet=export")} style={{ height: 48, padding: "0 18px", borderRadius: 10, border: "1px solid #E7E5E4", background: "#FFFFFF", font: "inherit", fontSize: "var(--t-md)", fontWeight: 600, color: "#0B1424", display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 21h16" /></svg>Exporter
             </button>
           )}
           {estAdmin && (
-            <button type="button" onClick={() => naviguer("/imf/nouveau")} style={{ height: 48, padding: "0 18px", borderRadius: 14, border: "none", background: "#0B1424", font: "inherit", fontSize: 14, fontWeight: 700, color: "#F3D98C", display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+            <button type="button" onClick={() => naviguer("/imf/nouveau")} style={{ height: 48, padding: "0 18px", borderRadius: 10, border: "none", background: "#C9A44C", font: "inherit", fontSize: "var(--t-md)", fontWeight: 600, color: "#0B1424", display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>Nouvelle IMF
             </button>
           )}
-          <button type="button" aria-label="Notifications" title={urgent ? "Des mandats expirent sous 30 jours" : "Aucune alerte"} onClick={() => naviguer("/dirigeants?alerte=echeance")} style={{ width: 48, height: 48, borderRadius: 14, border: "1px solid #ECE5D5", background: "#FFFFFF", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", cursor: "pointer", color: "#0B1424" }}>
+          <button type="button" aria-label="Notifications" title={urgent ? "Des mandats expirent sous 30 jours" : "Aucune alerte"} onClick={() => naviguer("/dirigeants?alerte=echeance")} style={{ width: 48, height: 48, borderRadius: 10, border: "1px solid #E7E5E4", background: "#FFFFFF", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", cursor: "pointer", color: "#0B1424" }}>
             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8M10 20a2 2 0 0 0 4 0" /></svg>
             {urgent && <span style={{ position: "absolute", top: 11, right: 12, width: 8, height: 8, borderRadius: "50%", background: "#C2410C" }} />}
           </button>
         </div>
 
-        <section className="tb-up" style={{ position: "relative", overflow: "hidden", borderRadius: 24, background: "#0B1424", color: "#F4EFE3", padding: "30px 32px", display: "flex", flexWrap: "wrap", alignItems: "flex-end", justifyContent: "space-between", gap: 20 }}>
-          <svg aria-hidden="true" width="100%" height="100%" style={{ position: "absolute", inset: 0, opacity: 0.5 }}><defs><pattern id="tbDots" width="14" height="14" patternUnits="userSpaceOnUse"><circle cx="7" cy="7" r="1.2" fill="#C9A44C" fillOpacity=".35" /></pattern></defs><rect width="100%" height="100%" fill="url(#tbDots)" /></svg>
-          <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: 8 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "#F3D98C" }}>{dateLongue(auj)}</span>
-            <h1 style={{ margin: 0, fontSize: 36, fontWeight: 800, letterSpacing: "-0.02em" }}>Bonjour, {utilisateur?.prenom}</h1>
-            <p style={{ margin: 0, fontSize: 15, color: "#B9C2D0" }}>Voici l'état du secteur de la microfinance aujourd'hui.</p>
-          </div>
-        </section>
+        <header className="tb-up" style={{ display: "flex", flexDirection: "column", gap: 6, padding: "8px 0 4px 0" }}>
+          <span style={{ fontSize: "var(--t-sm)", fontWeight: 500, color: "#6B7280", textTransform: "capitalize" }}>{dateLongue(auj)}</span>
+          <h1 style={{ margin: 0, fontSize: "var(--t-3xl)", fontWeight: 700, letterSpacing: "-0.022em" }}>Bonjour, {utilisateur?.prenom}</h1>
+          <p style={{ margin: 0, fontSize: "var(--t-base)", color: "#4A5568", lineHeight: 1.55 }}>Voici l'état du secteur de la microfinance aujourd'hui.</p>
+        </header>
 
         <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(220px, 100%), 1fr))", gap: 16 }}>
           <article className="tb-card tb-up d1" style={carte}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><span style={{ fontSize: 13, fontWeight: 700, color: "#4A5568" }}>IMF agréées</span><span style={icone}>{svg(<path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6" />)}</span></div>
-            <div style={{ fontSize: 38, fontWeight: 800, letterSpacing: "-0.03em" }}>{st ? nombre(st.imf.agreees) : <Squelette largeur={96} hauteur={38} />}</div>
-            <div style={{ fontSize: 13, color: "#15803D", fontWeight: 700 }}>+{nombre((st?.imf.agreees_depuis_janvier ?? 0))} <span style={{ color: "#6B7280", fontWeight: 500 }}>depuis janvier</span></div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><span style={{ fontSize: "var(--t-sm)", fontWeight: 600, color: "#4A5568" }}>IMF agréées</span><span style={icone}>{svg(<path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6" />)}</span></div>
+            <div style={{ fontSize: "var(--t-3xl)", fontWeight: 700, letterSpacing: "-0.022em" }}>{st ? nombre(st.imf.agreees) : <Squelette largeur={96} hauteur={38} />}</div>
+            <div style={{ fontSize: "var(--t-sm)", color: "#15803D", fontWeight: 600 }}>+{nombre((st?.imf.agreees_depuis_janvier ?? 0))} <span style={{ color: "#6B7280", fontWeight: 500 }}>depuis janvier</span></div>
           </article>
           <article className="tb-card tb-up d2" style={carte}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><span style={{ fontSize: 13, fontWeight: 700, color: "#4A5568" }}>Points de service</span><span style={icone}>{svg(<><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z" /><circle cx="12" cy="9.5" r="2.5" /></>)}</span></div>
-            <div style={{ fontSize: 38, fontWeight: 800, letterSpacing: "-0.03em" }}>{st ? nombre(totalPoints) : <Squelette largeur={96} hauteur={38} />}</div>
-            <div style={{ fontSize: 13, color: "#6B7280" }}>dont <b style={{ color: "#0B1424" }}>{pourcent(geoloc)}</b> géolocalisés</div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><span style={{ fontSize: "var(--t-sm)", fontWeight: 600, color: "#4A5568" }}>Points de service</span><span style={icone}>{svg(<><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z" /><circle cx="12" cy="9.5" r="2.5" /></>)}</span></div>
+            <div style={{ fontSize: "var(--t-3xl)", fontWeight: 700, letterSpacing: "-0.022em" }}>{st ? nombre(totalPoints) : <Squelette largeur={96} hauteur={38} />}</div>
+            <div style={{ fontSize: "var(--t-sm)", color: "#6B7280" }}>dont <b style={{ color: "#0B1424" }}>{pourcent(geoloc)}</b> géolocalisés</div>
           </article>
           <article className="tb-card tb-up d3" style={carte}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><span style={{ fontSize: 13, fontWeight: 700, color: "#4A5568" }}>Dirigeants en fonction</span><span style={icone}>{svg(<><circle cx="12" cy="8" r="3.5" /><path d="M5 20c.8-3.5 3.6-5.5 7-5.5s6.2 2 7 5.5" /></>)}</span></div>
-            <div style={{ fontSize: 38, fontWeight: 800, letterSpacing: "-0.03em" }}>{st ? nombre(st.dirigeants.en_fonction) : <Squelette largeur={96} hauteur={38} />}</div>
-            <div style={{ fontSize: 13, color: "#B45309", fontWeight: 700 }}>{nombre(d.echeances?.count ?? 0)} mandats <span style={{ color: "#6B7280", fontWeight: 500 }}>expirent sous 90 j</span></div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><span style={{ fontSize: "var(--t-sm)", fontWeight: 600, color: "#4A5568" }}>Dirigeants en fonction</span><span style={icone}>{svg(<><circle cx="12" cy="8" r="3.5" /><path d="M5 20c.8-3.5 3.6-5.5 7-5.5s6.2 2 7 5.5" /></>)}</span></div>
+            <div style={{ fontSize: "var(--t-3xl)", fontWeight: 700, letterSpacing: "-0.022em" }}>{st ? nombre(st.dirigeants.en_fonction) : <Squelette largeur={96} hauteur={38} />}</div>
+            <div style={{ fontSize: "var(--t-sm)", color: "#B45309", fontWeight: 600 }}>{nombre(d.echeances?.count ?? 0)} mandats <span style={{ color: "#6B7280", fontWeight: 500 }}>expirent sous 90 j</span></div>
           </article>
           <article className="tb-card tb-up d4" style={carte}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><span style={{ fontSize: 13, fontWeight: 700, color: "#4A5568" }}>Communes couvertes</span><span style={icone}>{svg(<path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z" />)}</span></div>
-            <div style={{ fontSize: 38, fontWeight: 800, letterSpacing: "-0.03em" }}>{nombre(couvertes)} <span style={{ fontSize: 18, color: "#6B7280", fontWeight: 600 }}>/ {nombre(totalCommunes)}</span></div>
-            <div style={{ height: 6, borderRadius: 99, background: "#F1ECE0", overflow: "hidden" }}><div className="tb-bar" style={{ width: `${totalCommunes ? Math.round((100 * couvertes) / totalCommunes) : 0}%`, height: "100%", borderRadius: 99, background: "linear-gradient(90deg, #C9A44C, #E9C76A)" }} /></div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><span style={{ fontSize: "var(--t-sm)", fontWeight: 600, color: "#4A5568" }}>Communes couvertes</span><span style={icone}>{svg(<path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z" />)}</span></div>
+            <div style={{ fontSize: "var(--t-3xl)", fontWeight: 700, letterSpacing: "-0.022em" }}>{nombre(couvertes)} <span style={{ fontSize: "var(--t-lg)", color: "#6B7280", fontWeight: 500 }}>/ {nombre(totalCommunes)}</span></div>
+            <div style={{ height: 6, borderRadius: 99, background: "#F0EFED", overflow: "hidden" }}><div className="tb-bar" style={{ width: `${totalCommunes ? Math.round((100 * couvertes) / totalCommunes) : 0}%`, height: "100%", borderRadius: 99, background: "#C9A44C" }} /></div>
           </article>
         </section>
 
         <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(340px, 100%), 1fr))", gap: 16 }}>
-          <article className="tb-up d2 tb-presence" style={{ gridColumn: "span 2", minWidth: 0, background: "#0E1A2D", color: "#F4EFE3", borderRadius: 22, padding: 22, display: "flex", flexDirection: "column", gap: 12 }}>
+          <article className="tb-up d2 tb-presence" style={{ ...bloc, gridColumn: "span 2", gap: 12 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-              <div><h2 style={h2}>Présence territoriale</h2><p style={{ margin: "4px 0 0 0", fontSize: 13, color: "#A9B3C4" }}>Points de service par région</p></div>
-              <Link to="/carte/macro" style={{ fontSize: 13, fontWeight: 700, color: "#F3D98C", textDecoration: "none", display: "flex", alignItems: "center", gap: 6 }}>Ouvrir la carte macro <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg></Link>
+              <div><h2 style={h2}>Présence territoriale</h2><p style={{ margin: "4px 0 0 0", fontSize: "var(--t-sm)", color: "#6B7280" }}>Points de service par région</p></div>
+              <Link to="/carte/macro" style={{ fontSize: "var(--t-sm)", fontWeight: 600, color: "#8A6A1F", textDecoration: "none", display: "flex", alignItems: "center", gap: 6 }}>Ouvrir la carte macro <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg></Link>
             </div>
             <div className="tb-carte" style={{ height: 400 }}>
-              <SenegalMap theme="dark" fillMode="choro" indicator="pts" flow showLabels={false} stats={statsParRegion(d.regions)} onPick={() => naviguer("/carte/macro")} />
+              <SenegalMap theme="light" fillMode="choro" indicator="pts" flow showLabels={false} stats={statsParRegion(d.regions)} onPick={() => naviguer("/carte/macro")} />
             </div>
           </article>
 
           <article className="tb-up d3" style={{ ...bloc, gap: 14 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><h2 style={h2}>Mandats à renouveler</h2><span style={{ fontSize: 12, fontWeight: 700, color: "#B45309", background: "#FEF3C7", padding: "5px 10px", borderRadius: 999 }}>90 jours</span></div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><h2 style={h2}>Mandats à renouveler</h2><span className="badge sans-point">90 jours</span></div>
             <div style={{ display: "flex", flexDirection: "column" }}>
               {echeances.map((m, i) => {
                 const j = joursAvant(m.date_fin);
                 return (
-                  <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 0", borderBottom: i < echeances.length - 1 ? "1px solid #F1ECE0" : undefined }}>
-                    <div style={{ width: 40, height: 40, borderRadius: 12, background: "#0B1424", color: "#F3D98C", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800 }}>{CODE_FONCTION[m.fonction_mandat] ?? m.fonction_mandat}</div>
-                    <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: 14, fontWeight: 700 }}>{m.dirigeant_nom_complet}</div><div style={{ fontSize: 12, color: "#6B7280" }}>{m.imf_sigle || m.imf_nom}{m.imf_region ? ` · ${m.imf_region}` : ""}</div></div>
-                    <span style={{ fontSize: 12, fontWeight: 800, color: j <= 30 ? "#B91C1C" : j <= 60 ? "#B45309" : "#4A5568" }}>{j} j</span>
+                  <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 0", borderBottom: i < echeances.length - 1 ? "1px solid #F0EFED" : undefined }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 8, background: "#F5F5F4", color: "#44403C", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--t-xs)", fontWeight: 700 }}>{CODE_FONCTION[m.fonction_mandat] ?? m.fonction_mandat}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: "var(--t-md)", fontWeight: 600 }}>{m.dirigeant_nom_complet}</div><div style={{ fontSize: "var(--t-xs)", color: "#6B7280" }}>{m.imf_sigle || m.imf_nom}{m.imf_region ? ` · ${m.imf_region}` : ""}</div></div>
+                    <span style={{ fontSize: "var(--t-xs)", fontWeight: 700, color: j <= 30 ? "#B91C1C" : j <= 60 ? "#B45309" : "#4A5568" }}>{j} j</span>
                   </div>
                 );
               })}
-              {d.echeances && echeances.length === 0 && <div style={{ fontSize: 13, color: "#6B7280", padding: "12px 0" }}>Aucun mandat n'expire dans les 90 jours.</div>}
+              {d.echeances && echeances.length === 0 && <div style={{ fontSize: "var(--t-sm)", color: "#6B7280", padding: "12px 0" }}>Aucun mandat n'expire dans les 90 jours.</div>}
             </div>
-            <Link to="/dirigeants" style={{ marginTop: "auto", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>Voir tous les mandats →</Link>
+            <Link to="/dirigeants" style={{ marginTop: "auto", fontSize: "var(--t-sm)", fontWeight: 600, textDecoration: "none" }}>Voir tous les mandats →</Link>
           </article>
         </section>
 
@@ -178,7 +175,7 @@ export function TableauDeBord() {
             <h2 style={h2}>IMF par type</h2>
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               {types.map((t) => (
-                <div key={t.label}><div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 6 }}><span style={{ fontWeight: 600 }}>{t.label}</span><b>{nombre(t.v)}</b></div><div style={{ height: 10, borderRadius: 99, background: "#F1ECE0" }}><div className="tb-bar" style={{ width: `${Math.round((100 * t.v) / totalImf)}%`, height: "100%", borderRadius: 99, background: "#0B1424" }} /></div></div>
+                <div key={t.label}><div style={{ display: "flex", justifyContent: "space-between", fontSize: "var(--t-sm)", marginBottom: 6 }}><span style={{ fontWeight: 500 }}>{t.label}</span><b>{nombre(t.v)}</b></div><div style={{ height: 10, borderRadius: 99, background: "#F0EFED" }}><div className="tb-bar" style={{ width: `${Math.round((100 * t.v) / totalImf)}%`, height: "100%", borderRadius: 99, background: "#0B1424" }} /></div></div>
               ))}
             </div>
           </article>
@@ -188,7 +185,7 @@ export function TableauDeBord() {
             <div style={{ display: "flex", height: 16, borderRadius: 99, overflow: "hidden", gap: 3 }}>
               {statuts.map((s) => <div key={s.label} className="tb-bar" style={{ flex: s.v, background: s.c }} />)}
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12, fontSize: 14 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, fontSize: "var(--t-md)" }}>
               {statuts.map((s) => (
                 <div key={s.label} style={{ display: "flex", alignItems: "center", gap: 10 }}><span style={{ width: 10, height: 10, borderRadius: 3, background: s.c }} /><span style={{ flex: 1 }}>{s.label}</span><b>{pourcent((100 * s.v) / totalImf)}</b></div>
               ))}
@@ -197,13 +194,13 @@ export function TableauDeBord() {
 
           <article className="tb-up d4" style={{ ...bloc, gap: 14 }}>
             <h2 style={h2}>Activité récente</h2>
-            <div style={{ display: "flex", flexDirection: "column", gap: 14, fontSize: 13 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14, fontSize: "var(--t-sm)" }}>
               {activite.map((a) => (
                 <div key={a.id} style={{ display: "flex", gap: 12 }}><span style={{ width: 9, height: 9, borderRadius: "50%", background: a.dot, marginTop: 5, flex: "none" }} /><div><b>{a.titre}</b>{a.detail && ` · ${a.detail}`}<div style={{ color: "#6B7280", marginTop: 2 }}>{a.meta}</div></div></div>
               ))}
               {activite.length === 0 && <div style={{ color: "#6B7280" }}>Aucune activité récente.</div>}
             </div>
-            {estAdmin && <Link to="/audit" style={{ marginTop: "auto", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>Journal d'audit complet →</Link>}
+            {estAdmin && <Link to="/audit" style={{ marginTop: "auto", fontSize: "var(--t-sm)", fontWeight: 600, textDecoration: "none" }}>Journal d'audit complet →</Link>}
           </article>
         </section>
       </main>

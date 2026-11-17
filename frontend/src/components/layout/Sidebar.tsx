@@ -38,10 +38,11 @@ export function Sidebar({ active, role, nomComplet, onDeconnexion }: Props) {
   const mk = (k: CleMenu, label: string, href: string, badge?: string) => {
     const on = k === active;
     const style: CSSProperties = {
-      display: "flex", alignItems: "center", gap: 12, padding: "11px 12px", borderRadius: 12, fontSize: 14, textDecoration: "none",
+      display: "flex", alignItems: "center", gap: 12, padding: "9px 12px", borderRadius: 8, fontSize: "var(--t-md)", textDecoration: "none",
+      // Élément actif : texte en gras, icône dorée et barre fine à gauche, sans bloc coloré.
       ...(on
-        ? { background: "rgba(201,164,76,.16)", color: "#F3D98C", fontWeight: 700, boxShadow: "inset 3px 0 0 #C9A44C" }
-        : { color: "#DCE2EC", fontWeight: 600 }),
+        ? { color: "#FFFFFF", fontWeight: 600, boxShadow: "inset 2px 0 0 #C9A44C" }
+        : { color: "#B4BDCB", fontWeight: 400 }),
     };
     return { k, label, href, icon: I[k], badge, style, on };
   };
@@ -75,28 +76,28 @@ export function Sidebar({ active, role, nomComplet, onDeconnexion }: Props) {
   const initials = role === "consultant" ? "CO" : role === "admin" ? "AD" : "SU";
 
   return (
-    <nav className="app-nav" aria-label="Navigation principale" style={{ width: "100%", height: "100%", minHeight: 900, boxSizing: "border-box", background: "#0B1424", color: "#DCE2EC", padding: "24px 16px", display: "flex", flexDirection: "column", gap: 4, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+    <nav className="app-nav" aria-label="Navigation principale" style={{ width: "100%", height: "100%", minHeight: 900, boxSizing: "border-box", background: "#0B1424", color: "#DCE2EC", padding: "24px 16px", display: "flex", flexDirection: "column", gap: 4, fontFamily: "var(--police)" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "4px 10px 22px 10px" }}>
-        <div style={{ width: 38, height: 38, borderRadius: 11, background: "linear-gradient(135deg, #E9D49A, #C9A44C)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ width: 34, height: 34, borderRadius: 8, background: "#C9A44C", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0B1424" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z" /><circle cx="12" cy="9.5" r="2.5" /></svg>
         </div>
-        <div><div style={{ fontWeight: 800, fontSize: 17, color: "#F4EFE3" }}>Carto IMF</div><div style={{ fontSize: 11, color: "#8E99AB" }}>DRS-SFD</div></div>
+        <div><div style={{ fontWeight: 700, fontSize: "var(--t-lg)", color: "#F4EFE3" }}>Carto IMF</div><div style={{ fontSize: "var(--t-2xs)", color: "#8E99AB" }}>DRS-SFD</div></div>
       </div>
       {groups.map((g) => (
         <div key={g.title} style={{ display: "contents" }}>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "#6F7C91", padding: "14px 12px 6px 12px" }}>{g.title}</div>
+          <div style={{ fontSize: "var(--t-xs)", fontWeight: 500, color: "#7C889B", padding: "18px 12px 6px 12px" }}>{g.title}</div>
           {g.items.map((it) => (
-            <Link key={it.k} to={it.href} style={it.style} aria-current={it.on ? "page" : undefined} onMouseEnter={() => prechargerPage(it.href)} onFocus={() => prechargerPage(it.href)}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={it.icon} /></svg>
+            <Link key={it.k} to={it.href} className="nav-lien" style={it.style} aria-current={it.on ? "page" : undefined} onMouseEnter={() => prechargerPage(it.href)} onFocus={() => prechargerPage(it.href)}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={it.on ? "#C9A44C" : "currentColor"} strokeWidth={it.on ? 2 : 1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={it.icon} /></svg>
               <span style={{ flex: 1 }}>{it.label}</span>
-              {it.badge && <span style={{ fontSize: 11, fontWeight: 800, color: "#0B1424", background: "#F3D98C", borderRadius: 999, padding: "2px 8px" }}>{it.badge}</span>}
+              {it.badge && <span style={{ fontSize: "var(--t-2xs)", fontWeight: 700, color: "#0B1424", background: "#F3D98C", borderRadius: 999, padding: "2px 8px" }}>{it.badge}</span>}
             </Link>
           ))}
         </div>
       ))}
-      <div style={{ marginTop: "auto", padding: 14, borderRadius: 16, background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.08)", display: "flex", alignItems: "center", gap: 12 }}>
-        <div style={{ width: 40, height: 40, borderRadius: "50%", background: "#C9A44C", color: "#0B1424", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 13 }}>{initials}</div>
-        <div style={{ minWidth: 0, flex: 1 }}><div style={{ fontWeight: 700, fontSize: 14, color: "#F4EFE3" }}>{nomComplet}</div><div style={{ fontSize: 12, color: "#F3D98C" }}>{RL[role]}</div></div>
+      <div style={{ marginTop: "auto", padding: "16px 12px 4px 12px", borderTop: "1px solid rgba(255,255,255,.08)", display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ width: 36, height: 36, flex: "none", borderRadius: "50%", background: "rgba(255,255,255,.08)", color: "#F4EFE3", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 600, fontSize: "var(--t-xs)" }}>{initials}</div>
+        <div style={{ minWidth: 0, flex: 1 }}><div style={{ fontWeight: 600, fontSize: "var(--t-md)", color: "#F4EFE3" }}>{nomComplet}</div><div style={{ fontSize: "var(--t-xs)", color: "#7C889B" }}>{RL[role]}</div></div>
         <button type="button" onClick={onDeconnexion} aria-label="Se déconnecter" title="Se déconnecter" style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex" }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8E99AB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>
         </button>
