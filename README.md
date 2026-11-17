@@ -103,6 +103,27 @@ docker compose -f infra/docker-compose.yml exec backend python manage.py migrate
 docker compose -f infra/docker-compose.yml exec backend python manage.py createsuperuser
 ```
 
+### 5. Charger les données de référence (annuaire DRS-SFD)
+
+Le dépôt ne contient aucune donnée réelle. Déposez l'export Excel de l'annuaire (`.xlsx`) dans
+`backend/donnees_initiales/`, puis lancez une fois :
+
+```bash
+docker compose -f infra/docker-compose.yml exec backend python manage.py initialiser_donnees
+```
+
+La commande :
+
+1. charge les régions et départements ;
+2. vérifie le classeur (lisible, colonnes obligatoires présentes) — s'il n'est pas conforme, elle s'arrête sans rien enregistrer ;
+3. importe les institutions, puis les points de service, puis les dirigeants et mandats : chaque ligne
+   conforme aux règles de la base est enregistrée, chaque ligne non conforme est écartée ;
+4. affiche le bilan et écrit dans le même dossier un rapport `rapport_import_AAAAMMJJ_HHMMSS.csv` des lignes écartées.
+
+Options : un chemin en argument pour un autre classeur ; `--forcer` pour recharger une base qui
+contient déjà des institutions (sans cette option, la commande refuse, pour éviter les doublons).
+Le dossier `backend/donnees_initiales/` n'est jamais versionné, sauf son `LISEZMOI.md`.
+
 ---
 
 ## Variables d'environnement
