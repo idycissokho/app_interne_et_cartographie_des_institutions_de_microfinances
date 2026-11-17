@@ -40,6 +40,7 @@ urlpatterns = [
     path(f"{API_V1}cartographie/", include("apps.cartographie.urls")),
     path(f"{API_V1}importation/", include("apps.importation.urls")),
     path(f"{API_V1}audit/", include("apps.audit.urls")),
+    path(f"{API_V1}itineraires/", include("apps.itineraires.urls")),
 
 ]
 

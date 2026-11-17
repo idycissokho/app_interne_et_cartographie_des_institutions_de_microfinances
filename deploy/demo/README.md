@@ -96,6 +96,7 @@ reportez-la dans `DJANGO_ALLOWED_HOSTS`, `DJANGO_CSRF_TRUSTED_ORIGINS` **et** `f
 | `DJANGO_DONNEES_FICTIVES` | `true` (déjà dans `render.yaml`) |
 | `DJANGO_SERVIR_MEDIAS` | `false` (déjà dans `render.yaml`, voir § 6) |
 | `WEB_CONCURRENCY` | `1` (déjà dans `render.yaml`) |
+| `ROUTING_URL` | `https://valhalla1.openstreetmap.de` (déjà dans `render.yaml`) : moteur d'itinéraire public, usage modéré, voir `docs/itineraire.md`. Sur l'intranet : le Valhalla interne. |
 
 **Vercel** : `VITE_DEMO` = `true`.
 

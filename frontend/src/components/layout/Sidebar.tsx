@@ -10,7 +10,7 @@ import { prechargerPage } from "../../lib/pages";
 
 export type CleMenu =
   | "dashboard" | "micro" | "macro" | "imf" | "points" | "dirigeants"
-  | "supervision" | "consultation" | "import" | "audit";
+  | "supervision" | "consultation" | "import" | "audit" | "itineraire";
 export type RoleMaquette = "superviseur" | "consultant" | "admin";
 
 const I: Record<CleMenu, string> = {
@@ -24,6 +24,7 @@ const I: Record<CleMenu, string> = {
   consultation: "M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6 3 3 0 1 0 0-6",
   import: "M12 3v12M7 10l5 5 5-5M4 21h16",
   audit: "M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01",
+  itineraire: "M6 16.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 1 0 0-5M18 2.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 1 0 0-5M8.5 19H15a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h6.5",
 };
 
 const RL: Record<RoleMaquette, string> = { superviseur: "Superviseur", consultant: "Consultation", admin: "Administrateur" };
@@ -59,6 +60,8 @@ export function Sidebar({ active, role, nomComplet, onDeconnexion }: Props) {
         ...(role === "admin" ? [mk("consultation", "Espace consultation", "/consultation")] : []),
         mk("micro", "Carte micro", "/carte/micro"),
         mk("macro", "Carte macro", "/carte/macro"),
+        // Itinéraire vers une IMF ou un point de service : superviseurs (terrain) et administrateurs.
+        ...(role !== "consultant" ? [mk("itineraire", "Itinéraire", "/itineraire")] : []),
       ],
     },
     {
