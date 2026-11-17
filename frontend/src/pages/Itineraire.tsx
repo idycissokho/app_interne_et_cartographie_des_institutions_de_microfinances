@@ -1,6 +1,6 @@
 /**
- * Section « Itinéraire » — chemin le plus rapide entre la position du superviseur et une IMF
- * ou un point de service (SUPERVISEUR et ADMIN ; route protégée dans App.tsx, API en 403 sinon).
+ * Section « Itinéraire » — chemin le plus rapide entre la position de l'utilisateur et une IMF
+ * ou un point de service (tous les utilisateurs connectés).
  *
  * - Bureau : panneau à gauche, carte à droite. Téléphone : carte plein écran et panneau en bas
  *   que l'on fait glisser (replié / mi-hauteur / plein).

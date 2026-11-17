@@ -72,19 +72,21 @@ def simuler(**par_mode):
 
 # ── Droits ──────────────────────────────────────────────────────────────────
 @VALHALLA
-@pytest.mark.parametrize("role", ["client_superviseur", "client_admin"])
-def test_superviseur_et_admin_calculent(request, role, point):
+@pytest.mark.parametrize("role", ["client_consultant", "client_superviseur", "client_admin"])
+def test_tous_les_roles_calculent(request, role, point):
     with simuler():
         reponse = request.getfixturevalue(role).post(URL_CALCUL, corps(point), format="json")
     assert reponse.status_code == 200, reponse.data
 
 
 @pytest.mark.parametrize("url", [URL_CALCUL, URL_RECHERCHE + "?q=Mu", "destinations/"])
-def test_consultant_refuse(client_consultant, point, url):
+def test_consultant_autorise(client_consultant, point, url):
+    """La section Itinéraire est ouverte à tous les utilisateurs connectés."""
     if url == "destinations/":
         url = f"{URL_RECHERCHE}point_service/{point.pk}/"
-    appel = client_consultant.post(url, corps(point), format="json") if url == URL_CALCUL else client_consultant.get(url)
-    assert appel.status_code == 403
+    with simuler():
+        appel = client_consultant.post(url, corps(point), format="json") if url == URL_CALCUL else client_consultant.get(url)
+    assert appel.status_code == 200, appel.data
 
 
 def test_anonyme_refuse(client, point):
@@ -194,8 +196,8 @@ def test_siege_social_signale(client_superviseur, imf):
     assert fiche["sous_titre"] == "Siège social · MT"
 
 
-def test_carte_refusee_au_consultant(client_consultant):
-    assert client_consultant.get(URL_CARTE).status_code == 403
+def test_carte_ouverte_au_consultant(client_consultant):
+    assert client_consultant.get(URL_CARTE).status_code == 200
 
 
 def test_recherche_trop_courte(client_superviseur, point):
