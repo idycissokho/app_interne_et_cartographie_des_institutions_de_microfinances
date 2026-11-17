@@ -80,6 +80,8 @@ interface Props {
   infos?: Indicateur[];
   /** Cadre la carte sur la région sélectionnée (sinon : le pays entier). */
   zoomSelection?: boolean;
+  /** Un clic sur une épingle zoome jusqu'au bâtiment (niveau rue). */
+  zoomPoint?: boolean;
   /** Zoom à la molette sans Ctrl : à réserver aux cartes plein cadre (sinon la page ne défile plus). */
   molette?: boolean;
   /** Rayon des coins du cadre, en px. */
@@ -274,7 +276,7 @@ function installer(carte: Carte, style: StyleSpecification, geo: { regions: Coll
 export function SenegalMap({
   theme = "light", fillMode = "regions", indicator = "pts", stats = {}, selected = "",
   flow = true, showPoints = false, showLabels = true, points = [], pointFilter = {},
-  selectedPoint = null, onPick, onPickPoint, infos, zoomSelection = false, molette = false, rayon = 18, agrandir = "",
+  selectedPoint = null, onPick, onPickPoint, infos, zoomSelection = false, zoomPoint = false, molette = false, rayon = 18, agrandir = "",
 }: Props) {
   const dark = theme === "dark";
   const cadre = useRef<HTMLDivElement>(null);
@@ -288,8 +290,8 @@ export function SenegalMap({
   const [survol, setSurvol] = useState("");
 
   // Dernières valeurs des rappels et des points, lues par les écouteurs de la carte.
-  const rappels = useRef({ onPick, onPickPoint });
-  rappels.current = { onPick, onPickPoint };
+  const rappels = useRef({ onPick, onPickPoint, zoomPoint });
+  rappels.current = { onPick, onPickPoint, zoomPoint };
   const parId = useRef(new Map<string, PointCarte>());
   const recadrer = useRef<(duree: number) => void>(() => {});
   const avecAgrandir = agrandir !== false;
@@ -428,6 +430,10 @@ export function SenegalMap({
         c.on("click", "points", (e) => {
           const p = parId.current.get(String(e.features?.[0]?.properties?.id));
           if (p) rappels.current.onPickPoint?.(p);
+          // Zoom jusqu'au bâtiment, l'épingle au centre.
+          if (p && rappels.current.zoomPoint) {
+            c.flyTo({ center: lonLat(p), zoom: 17, duration: mouvementReduit() ? 0 : 1400, essential: true });
+          }
         });
         c.on("mouseenter", "points", () => { if (rappels.current.onPickPoint) c.getCanvas().style.cursor = "pointer"; });
         carteRef.current = c;
