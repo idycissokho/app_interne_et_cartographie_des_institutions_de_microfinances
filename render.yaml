@@ -44,3 +44,5 @@ services:
         value: "false"
       - key: WEB_CONCURRENCY                  # un seul processus : 512 Mo de mémoire, cache cohérent
         value: "1"
+      - key: ROUTING_URL                      # section « Itinéraire » : Valhalla public (FOSSGIS), usage modéré
+        value: "https://valhalla1.openstreetmap.de"

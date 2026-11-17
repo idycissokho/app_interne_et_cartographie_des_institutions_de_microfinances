@@ -18,6 +18,7 @@ export const PAGES = {
   dirigeants: () => import("../pages/Dirigeants").then((m) => ({ default: m.Dirigeants })),
   donnees: () => import("../pages/Donnees").then((m) => ({ default: m.Donnees })),
   audit: () => import("../pages/Audit").then((m) => ({ default: m.Audit })),
+  itineraire: () => import("../pages/Itineraire").then((m) => ({ default: m.Itineraire })),
 };
 
 /** Lien du menu -> code de la page et données stables (identiques quel que soit le filtre). */
@@ -32,6 +33,7 @@ const AU_SURVOL: Record<string, { page: () => Promise<unknown>; donnees: string[
   "/dirigeants": { page: PAGES.dirigeants, donnees: [] },
   "/donnees": { page: PAGES.donnees, donnees: [URL_STATISTIQUES] },
   "/audit": { page: PAGES.audit, donnees: [] },
+  "/itineraire": { page: PAGES.itineraire, donnees: ["/points-service/geojson/"] },
 };
 
 /** À appeler au survol (ou au focus clavier) d'un lien : la page s'ouvrira sans attente. */

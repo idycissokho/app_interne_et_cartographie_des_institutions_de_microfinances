@@ -1,0 +1,105 @@
+/*
+ * Section « Itinéraire » — styles propres à la page (préfixe .it-), chargés uniquement avec elle.
+ * Thème « Or & Nuit » et échelle typographique --t-* de global.css ; rien d'existant n'est redéfini.
+ */
+
+/* Bureau : panneau à gauche, carte à droite, sur toute la hauteur de l'écran. */
+.it-page{flex:999 1 640px;min-width:0;position:sticky;top:0;height:100vh;height:100dvh;display:grid;grid-template-columns:minmax(340px,410px) minmax(0,1fr);background:#FFFFFF}
+.it-panneau{min-height:0;overflow-y:auto;overscroll-behavior:contain;border-right:1px solid #E7E5E4;background:#FFFFFF;padding:24px 22px 28px;display:flex;flex-direction:column;gap:20px;box-sizing:border-box}
+.it-carte{position:relative;min-width:0;min-height:0}
+.it-carte-cadre{position:absolute;inset:0}
+.it-poignee{display:none}
+
+.it-entete{display:flex;flex-direction:column;gap:4px}
+.it-surtitre{font-size:var(--t-xs);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#8A6A1F}
+.it-h1{margin:0;font-size:var(--t-3xl);font-weight:700;letter-spacing:-.02em;line-height:1.15;color:#0B1424}
+.it-section{display:flex;flex-direction:column;gap:10px}
+.it-titre{margin:0;font-size:var(--t-base);font-weight:700;color:#0B1424}
+.it-aide{margin:0;font-size:var(--t-sm);color:#4A5568;line-height:1.5}
+.it-lien{background:none;border:none;padding:4px 2px;font:inherit;font-size:var(--t-sm);font-weight:600;color:#8A6A1F;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.it-panneau button:focus-visible,.it-popup button:focus-visible,.it-fiche a:focus-visible{outline:2px solid #C9A44C;outline-offset:2px}
+.it-panneau button[aria-pressed="true"]{border-color:#C9A44C !important;box-shadow:inset 0 0 0 1px #C9A44C}
+.it-panneau button:disabled{opacity:.6;cursor:progress}
+
+/* Avis (erreurs, conseils) */
+.it-avis{display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-radius:10px;font-size:var(--t-sm);line-height:1.5;border:1px solid}
+.it-avis b{font-weight:600;font-size:var(--t-md)}
+.it-avis>button{align-self:flex-start;margin-top:4px}
+.it-avis-info{background:#F8F6F1;border-color:#E7E1D3;color:#3F3A2E}
+.it-avis-alerte{background:#FFFBEB;border-color:#FDE68A;color:#78350F}
+.it-avis-danger{background:#FEF2F2;border-color:#FECACA;color:#7F1D1D}
+
+/* Recherche avec autocomplétion */
+.it-recherche{position:relative;display:flex;flex-direction:column;gap:8px}
+.it-champ{position:relative}
+.it-champ>svg{position:absolute;left:14px;top:15px;color:#6B7280;pointer-events:none}
+.it-champ>.fi-input{padding-left:42px}
+.it-suggestions{position:absolute;z-index:5;top:100%;left:0;right:0;margin:6px 0 0;padding:6px;list-style:none;background:#FFFFFF;border:1px solid #E7E5E4;border-radius:12px;box-shadow:0 12px 32px rgba(11,20,36,.14);max-height:min(360px,55vh);overflow-y:auto}
+.it-suggestions li[role="option"]{display:flex;gap:12px;align-items:center;padding:10px;border-radius:8px;cursor:pointer}
+.it-suggestions li[aria-selected="true"]{background:#F8F3E6}
+.it-sugg-vide{padding:12px 10px;font-size:var(--t-sm);color:#6B7280}
+.it-sugg-nom{display:block;font-size:var(--t-md);font-weight:600;color:#0B1424;overflow-wrap:anywhere}
+.it-sugg-sous{display:block;font-size:var(--t-sm);color:#6B7280;overflow-wrap:anywhere}
+.it-icone{flex:none;width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center}
+.it-icone-institution{background:#0B1424;color:#F3D98C}
+.it-icone-point_service{background:#F3ECDC;color:#8A6A1F}
+.it-choix{display:flex;gap:12px;align-items:center;padding:10px 12px;border:1.5px solid #C9A44C;border-radius:12px;background:#FFFFFF}
+
+/* Onglets des modes */
+.it-onglets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.it-onglet{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:12px 10px 10px;border-radius:10px;border:1.5px solid #E7E5E4;background:#FFFFFF;font:inherit;color:#0B1424;cursor:pointer;text-align:left;min-width:0}
+.it-onglet[aria-selected="true"]{background:#0B1424;border-color:#0B1424;color:#FFFFFF}
+.it-onglet-mode{font-size:var(--t-xs);font-weight:600;color:inherit;opacity:.8}
+.it-onglet-duree{font-size:var(--t-lg);font-weight:700;letter-spacing:-.01em;white-space:nowrap}
+.it-onglet-dist{font-size:var(--t-sm);opacity:.75}
+.it-rapide{margin-top:4px;font-size:var(--t-2xs);font-weight:700;padding:2px 7px;border-radius:999px;background:#F3D98C;color:#0B1424;white-space:nowrap}
+.it-onglet[data-rapide]:not([aria-selected="true"]){border-color:#C9A44C}
+
+/* Étapes */
+.it-etapes{margin:0;padding:0;list-style:none;display:flex;flex-direction:column}
+.it-etapes li{display:grid;grid-template-columns:26px minmax(0,1fr);column-gap:10px;padding:10px 0;border-bottom:1px solid #F0EFED}
+.it-etapes li:last-child{border-bottom:none}
+.it-etape-num{grid-row:span 2;width:24px;height:24px;border-radius:50%;background:#F3ECDC;color:#8A6A1F;font-size:var(--t-2xs);font-weight:700;display:flex;align-items:center;justify-content:center}
+.it-etape-texte{font-size:var(--t-md);color:#0B1424;line-height:1.45}
+.it-etape-mesure{font-size:var(--t-sm);color:#6B7280}
+
+/* Fiche de la destination */
+.it-fiche{display:flex;flex-direction:column;gap:14px;padding:16px;border:1px solid #E7E5E4;border-radius:12px;background:#FFFFFF}
+.it-fiche-nom{font-size:var(--t-lg);font-weight:700;color:#0B1424;line-height:1.25;overflow-wrap:anywhere}
+.it-fiche-sous{font-size:var(--t-sm);color:#6B7280}
+.it-fiche-infos{margin:0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 14px;font-size:var(--t-sm)}
+.it-fiche-infos dt{color:#6B7280}
+.it-fiche-infos dd{margin:0;color:#0B1424;font-weight:500;overflow-wrap:anywhere}
+.it-fiche-infos a{color:#8A6A1F;font-weight:600}
+
+/* Repère du point de départ (déplaçable) */
+.it-depart{width:22px;height:22px;border-radius:50%;background:#0B1424;border:3px solid #FFFFFF;box-shadow:0 0 0 3px #C9A44C,0 2px 8px rgba(11,20,36,.4);cursor:grab;box-sizing:border-box}
+.it-depart:active{cursor:grabbing}
+
+/* Fiche d'une épingle cliquée */
+.it-popup{position:absolute;z-index:3;top:12px;left:12px;width:min(320px,calc(100% - 72px));display:flex;flex-direction:column;gap:8px;padding:14px;border-radius:12px;background:#FFFFFF;border:1px solid #E7E5E4;box-shadow:0 12px 32px rgba(11,20,36,.18)}
+.it-popup-fermer{position:absolute;top:6px;right:6px;width:32px;height:32px;border:none;border-radius:8px;background:transparent;font-size:22px;line-height:1;color:#4A5568;cursor:pointer}
+.it-popup-fermer:hover{background:#F5F5F4}
+
+/* Téléphone : carte plein écran, panneau glissant en bas (replié / mi-hauteur / plein). */
+@media (max-width: 760px){
+  .it-page{display:block;position:relative;flex-basis:100%;height:100dvh;overflow:hidden}
+  .it-carte{position:absolute;inset:0}
+  .it-panneau{position:absolute;z-index:4;left:0;right:0;bottom:0;border-right:none;border-radius:18px 18px 0 0;box-shadow:0 -8px 28px rgba(11,20,36,.18);padding:4px 16px 20px;gap:16px;transition:height .25s cubic-bezier(.2,.7,.2,1)}
+  .it-panneau[data-cran="replie"]{height:92px;overflow:hidden}
+  .it-panneau[data-cran="moyen"]{height:46dvh}
+  .it-panneau[data-cran="plein"]{height:88dvh}
+  .it-panneau[data-glisse]{transition:none}
+  .it-poignee{display:flex;justify-content:center;align-items:center;flex:none;width:100%;height:28px;margin:0;padding:0;border:none;background:transparent;cursor:grab;touch-action:none;position:sticky;top:0;z-index:1}
+  .it-poignee>span{width:44px;height:5px;border-radius:999px;background:#D6D3D1}
+  .it-entete{flex-direction:row;align-items:baseline;gap:10px}
+  .it-h1{font-size:var(--t-xl)}
+  .it-popup{top:auto;bottom:calc(46dvh + 12px);left:12px;right:12px;width:auto}
+}
+@media (prefers-reduced-motion: reduce){.it-panneau{transition:none}}
+
+/* Départ connu (ligne compacte) et résumé du trajet dans le panneau replié */
+.it-choix-depart{border-color:#E7E5E4}
+.it-icone-depart{background:#0B1424;color:#FFFFFF}
+.it-choix .it-lien{white-space:nowrap}
+.it-resume{margin-left:auto;font-size:var(--t-sm);font-weight:600;color:#0B1424;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}

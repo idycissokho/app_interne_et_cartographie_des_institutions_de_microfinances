@@ -152,7 +152,7 @@ const parRegion = <T extends string | number>(valeurs: Map<string, T>, defaut: T
 
 /* ---------- Épingles ---------- */
 
-function dessinerEpingle(couleur: string, bord: string, coeur: string) {
+export function dessinerEpingle(couleur: string, bord: string, coeur: string) {
   const r = 2;
   const c = document.createElement("canvas");
   c.width = 30 * r;
@@ -187,7 +187,7 @@ const LISERE: number[][] = Array.from({ length: PERIODE }, (_, o) =>
   o <= VIDE_TIRET ? [0, o, TIRET, VIDE_TIRET - o] : [o - VIDE_TIRET, VIDE_TIRET, PERIODE - o, 0],
 );
 
-const FR = {
+export const FR = {
   "Map.Title": "Carte du Sénégal",
   "NavigationControl.ZoomIn": "Zoom avant",
   "NavigationControl.ZoomOut": "Zoom arrière",
@@ -200,7 +200,7 @@ const FR = {
 const ICONE_AGRANDIR = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>';
 const ICONE_REDUIRE = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>';
 
-const mouvementReduit = () => typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+export const mouvementReduit = () => typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /* ---------- Calques posés sur le fond de carte ---------- */
 

@@ -3,9 +3,10 @@
  * (maquette-carto-imf/ecrans/06-espace-consultation.dc.html).
  */
 import { useEffect, useState, type CSSProperties } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 import type { Page } from "../api/types";
+import { useAuth } from "../auth/AuthContext";
 import { SenegalMap } from "../components/carto/SenegalMap";
 import { AppLayout } from "../components/layout/AppLayout";
 import { Badge, PAR_PAGE, Pagination, TON_STATUT } from "../components/tableau/Tableau";
@@ -19,7 +20,7 @@ import { useDonnees } from "../lib/useDonnees";
 
 interface ImfLigne { id: string; nom: string; sigle: string; type_imf: string; statut_reglementaire: string; region_siege: string | null; nb_points_service: number }
 const VIDE: ImfLigne[] = [];
-interface ImfFiche extends ImfLigne { adresse_siege: string; telephone: string; email: string; site_web: string; nb_regions_couvertes: number; nb_dirigeants_en_fonction: number; nb_membres_total: number | null; numero_agrement: string; type_sfd: string; affiliation: string; forme_juridique: string; annee_creation: number | null; ninea: string; capital: string | null; nb_beneficiaires: number | null; situation: string; nb_membres_ca: number | null; nb_membres_cs: number | null; nb_membres_cc: number | null; url_fiche: string; bailleurs_detail: { id: string; nom: string; sigle: string }[] }
+interface ImfFiche extends ImfLigne { adresse_siege: string; telephone: string; email: string; site_web: string; nb_regions_couvertes: number; nb_dirigeants_en_fonction: number; nb_membres_total: number | null; numero_agrement: string; type_sfd: string; affiliation: string; forme_juridique: string; annee_creation: number | null; ninea: string; capital: string | null; nb_beneficiaires: number | null; situation: string; nb_membres_ca: number | null; nb_membres_cs: number | null; nb_membres_cc: number | null; url_fiche: string; bailleurs_detail: { id: string; nom: string; sigle: string }[]; localisation_siege: unknown }
 interface PointLigne { id: string; nom: string; type_point: string; statut_point: string; region_nom: string | null }
 interface MandatLigne { id: string; dirigeant_nom_complet: string; fonction_mandat: string; statut_mandat: string; date_debut: string; date_fin: string | null; fichier_justificatif: string | null; documents_justificatifs: string }
 
@@ -31,6 +32,8 @@ const CHIPS: [string, string][] = [["", "Toutes"], ["MUTUELLE", "Mutuelle"], ["C
 const DCHIPS = ["Tous", "Gouvernance", "Direction", "Comités", "Contrôle"];
 
 export function Consultation() {
+  // Bouton « Itinéraire » : mêmes rôles que la section (SUPERVISEUR, ADMIN).
+  const { peutModifier } = useAuth();
   const [params] = useSearchParams();
   const [q, setQ] = useState(params.get("q") ?? "");
   const [type, setType] = useState("");
@@ -115,6 +118,7 @@ export function Consultation() {
                     <div style={{ fontSize: "var(--t-2xl)", fontWeight: 700, letterSpacing: "-0.02em" }}>{cur.nom}</div>
                     <div style={{ fontSize: "var(--t-sm)", color: "#6B7280", marginTop: 2 }}>Siège : {cur.adresse_siege}{cur.region_siege ? `, ${regionAffichee(cur.region_siege)}` : ""}</div>
                   </div>
+                  {peutModifier && cur.localisation_siege != null && <Link to={`/itineraire?type=institution&id=${cur.id}`} style={{ height: 44, padding: "0 16px", borderRadius: 10, border: "1px solid #E7E5E4", background: "#FFFFFF", fontSize: "var(--t-sm)", fontWeight: 600, color: "#0B1424", display: "inline-flex", alignItems: "center", gap: 8, textDecoration: "none", boxSizing: "border-box" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 16.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 1 0 0-5M18 2.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 1 0 0-5M8.5 19H15a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h6.5" /></svg>Itinéraire</Link>}
                   <button type="button" onClick={() => window.print()} style={{ height: 44, padding: "0 16px", borderRadius: 10, border: "1px solid #E7E5E4", background: "#FFFFFF", font: "inherit", fontSize: "var(--t-sm)", fontWeight: 600, color: "#0B1424", display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 21h16" /></svg>Fiche PDF</button>
                 </div>
                 <div role="tablist" aria-label="Sections de la fiche IMF" style={{ position: "relative", display: "flex", gap: 4, marginTop: 22, flexWrap: "wrap" }}>
