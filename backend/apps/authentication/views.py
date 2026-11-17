@@ -1,8 +1,12 @@
 import logging
+import time
 
+from django.conf import settings
 from rest_framework import status
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -21,23 +25,32 @@ class LoginView(APIView):
     """
 
     permission_classes = [AllowAny]
+    # Au plus LIMITE_CONNEXION tentatives par adresse IP (10/min par défaut) : frein à la force brute.
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "connexion"
 
     def post(self, request):
+        ip = request.META.get("HTTP_X_FORWARDED_FOR", request.META.get("REMOTE_ADDR"))
+        if ip:
+            ip = ip.split(",")[0].strip()
+
         serializer = LoginSerializer(data=request.data, context={"request": request})
-        serializer.is_valid(raise_exception=True)
+        if not serializer.is_valid():
+            # Échec tracé dans le journal applicatif (sans le mot de passe).
+            audit_logger.warning("LOGIN_ECHEC email=%s ip=%s", request.data.get("email", ""), ip)
+            raise ValidationError(serializer.errors)
 
         user = serializer.validated_data["user"]
 
         # Enregistrement de l'IP de dernière connexion
-        ip = request.META.get("HTTP_X_FORWARDED_FOR", request.META.get("REMOTE_ADDR"))
-        if ip:
-            ip = ip.split(",")[0].strip()
         user.derniere_connexion_ip = ip
         user.save(update_fields=["derniere_connexion_ip"])
 
         refresh = RefreshToken.for_user(user)
         refresh["role"] = user.role
         refresh["nom_complet"] = user.nom_complet
+        # Heure de connexion : conservée à chaque rotation, elle borne la durée de la session.
+        refresh["debut_session"] = int(time.time())
 
         audit_logger.info("LOGIN user=%s ip=%s", user.email, ip)
         JournalAudit.enregistrer(
@@ -49,6 +62,11 @@ class LoginView(APIView):
                 "access": str(refresh.access_token),
                 "refresh": str(refresh),
                 "utilisateur": UtilisateurSerializer(user).data,
+                # Règles de session appliquées aussi par l'interface (déconnexion pour inactivité).
+                "session": {
+                    "inactivite_minutes": settings.SESSION_INACTIVITE_MINUTES,
+                    "duree_max_heures": settings.SESSION_DUREE_MAX_HEURES,
+                },
             },
             status=status.HTTP_200_OK,
         )

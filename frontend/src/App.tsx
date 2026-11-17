@@ -4,6 +4,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import type { Role } from "./api/types";
 import { AuthProvider, useAuth } from "./auth/AuthContext";
 import { AvisReveil, BandeauDemo } from "./components/AvisSysteme";
+import { GardeSession } from "./components/GardeSession";
 import { EcranSquelette } from "./components/Squelette";
 import { PAGES } from "./lib/pages";
 
@@ -20,6 +21,7 @@ const PointsService = lazy(PAGES.pointsService);
 const Dirigeants = lazy(PAGES.dirigeants);
 const Donnees = lazy(PAGES.donnees);
 const Audit = lazy(PAGES.audit);
+const Itineraire = lazy(PAGES.itineraire);
 
 /** Connexion requise, et éventuellement un ensemble de rôles autorisés. */
 function Protege({ children, roles }: { children: ReactNode; roles?: Role[] }) {
@@ -54,11 +56,13 @@ export function App() {
           <Route path="/dirigeants" element={<Protege><Dirigeants /></Protege>} />
           <Route path="/donnees" element={<Protege roles={ADMIN}><Donnees /></Protege>} />
           <Route path="/audit" element={<Protege roles={ADMIN}><Audit /></Protege>} />
+          <Route path="/itineraire" element={<Protege roles={GESTION}><Itineraire /></Protege>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         </Suspense>
       </BrowserRouter>
       <AvisReveil />
+      <GardeSession />
       <BandeauDemo />
     </AuthProvider>
   );

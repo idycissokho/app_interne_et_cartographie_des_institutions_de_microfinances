@@ -515,3 +515,4 @@ select.fi-input.bad,select.ps-input.bad,select.di-input.bad{border-color:#DC2626
   .app-nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:8px;border:2px solid #0B1424}
   .app-nav::-webkit-scrollbar-track{background:transparent}
 }
+.ci-input:disabled{opacity:.7;cursor:progress}

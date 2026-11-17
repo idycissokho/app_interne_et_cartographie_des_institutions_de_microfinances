@@ -3,13 +3,14 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { api, evenementDeconnexion, jetons } from "../api/client";
 import { cacheRequetes, requeteApi } from "../api/cache";
 import type { Utilisateur } from "../api/types";
+import { canalSession, session, type MotifDeconnexion, type ReglesSession } from "./session";
 
 interface ContexteAuth {
   utilisateur: Utilisateur | null;
   chargement: boolean;
   connecter: (email: string, motDePasse: string, resterConnecte?: boolean) => Promise<void>;
-  deconnecter: () => Promise<void>;
-  /** SUPERVISEUR ou ADMIN : droits d'écriture sur les référentiels. */
+  /** Déconnexion volontaire, ou automatique avec un motif (inactivité, durée maximale). */
+  deconnecter: (motif?: MotifDeconnexion) => Promise<void>;
   /** Diagramme de cas d'utilisation : modifier IMF / point de service / mandat (SUPERVISEUR, ADMIN). */
   peutModifier: boolean;
   /** Créer, désactiver, Import / Export Excel, journal d'audit (ADMIN uniquement). */
@@ -17,6 +18,13 @@ interface ContexteAuth {
 }
 
 const Contexte = createContext<ContexteAuth | null>(null);
+
+/** Efface tout ce qui reste de la session dans ce navigateur. */
+function nettoyer() {
+  jetons.effacer();
+  session.effacer();
+  cacheRequetes.clear();
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [utilisateur, setUtilisateur] = useState<Utilisateur | null>(null);
@@ -27,11 +35,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setChargement(false);
       return;
     }
+    // Session restée ouverte trop longtemps (onglet fermé puis rouvert, poste laissé allumé) :
+    // on ne la reprend pas, il faut se reconnecter.
+    const motif = session.active() ? session.motifExpiration() : "expiree";
+    if (motif) {
+      const refresh = jetons.refresh();
+      if (refresh) void api.post("/auth/logout/", { refresh }).catch(() => undefined);
+      nettoyer();
+      session.memoriserMotif(motif);
+      setChargement(false);
+      return;
+    }
     // fetchQuery : un seul appel même si l'effet est monté deux fois (mode strict de React).
     cacheRequetes
       .fetchQuery({ ...requeteApi<Utilisateur>("/auth/profil/"), staleTime: 0 })
       .then(setUtilisateur)
-      .catch(() => jetons.effacer())
+      .catch(() => nettoyer())
       .finally(() => setChargement(false));
   }, []);
 
@@ -41,27 +60,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUtilisateur(null);
     };
     evenementDeconnexion.addEventListener("deconnexion", surDeconnexion);
-    return () => evenementDeconnexion.removeEventListener("deconnexion", surDeconnexion);
+    // Déconnexion dans un autre onglet : celui-ci se ferme aussi.
+    const surMessage = (e: MessageEvent) => {
+      if (e.data?.type !== "deconnexion") return;
+      if (e.data.motif) session.memoriserMotif(e.data.motif);
+      nettoyer();
+      setUtilisateur(null);
+    };
+    canalSession?.addEventListener("message", surMessage);
+    return () => {
+      evenementDeconnexion.removeEventListener("deconnexion", surDeconnexion);
+      canalSession?.removeEventListener("message", surMessage);
+    };
   }, []);
 
   const connecter = useCallback(async (email: string, motDePasse: string, resterConnecte = false) => {
-    const res = await api.post<{ access: string; refresh: string; utilisateur: Utilisateur }>("/auth/login/", {
+    const res = await api.post<{ access: string; refresh: string; utilisateur: Utilisateur; session?: ReglesSession }>("/auth/login/", {
       email,
       password: motDePasse,
     });
-    jetons.effacer();
-    cacheRequetes.clear(); // les données dépendent du rôle : rien de l'ancienne session ne doit rester
+    nettoyer(); // les données dépendent du rôle : rien de l'ancienne session ne doit rester
     jetons.enregistrer(res.access, res.refresh, resterConnecte);
+    session.demarrer(res.session);
     setUtilisateur(res.utilisateur);
   }, []);
 
-  const deconnecter = useCallback(async () => {
+  const deconnecter = useCallback(async (motif?: MotifDeconnexion) => {
     const refresh = jetons.refresh();
+    if (motif) session.memoriserMotif(motif);
+    canalSession?.postMessage({ type: "deconnexion", motif });
     try {
       if (refresh) await api.post("/auth/logout/", { refresh });
+    } catch {
+      /* jeton déjà expiré : la session est de toute façon terminée */
     } finally {
-      jetons.effacer();
-      cacheRequetes.clear();
+      nettoyer();
       setUtilisateur(null);
     }
   }, []);
