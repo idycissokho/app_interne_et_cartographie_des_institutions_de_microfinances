@@ -106,3 +106,30 @@ class ZoneGeographique(models.Model):
         zones = cls.objects.filter(is_active=True, geometrie__covers=point)
         trouve = {CHAMP_POINT_PAR_TYPE[z.type_zone]: z for z in zones}
         return {champ: trouve.get(champ) for champ in CHAMP_POINT_PAR_TYPE.values()}
+
+    @classmethod
+    def zones_a_completer(cls, point, actuelles: dict) -> tuple[dict, bool]:
+        """Zones à remplir d'après le GPS, pour les seuls champs vides : ({champ: zone}, incoherent).
+
+        `actuelles` donne l'identifiant déjà enregistré de chaque niveau (ou None).
+        - Position non fiable (sans GPS, position par défaut, hors du Sénégal) : rien n'est déduit.
+        - Hiérarchie respectée : un département n'est retenu que s'il appartient à la région connue
+          (une commune à son département). Sinon `incoherent` est vrai : la zone enregistrée et la
+          position GPS se contredisent, et on s'arrête là.
+        """
+        from .positions import raison_position_non_fiable
+
+        if raison_position_non_fiable(point):
+            return {}, False
+        a_remplir, parent = {}, None
+        for champ, zone in cls.localiser(point).items():
+            if actuelles.get(champ) is not None:
+                parent = actuelles[champ]
+                continue
+            if zone is None:
+                break
+            if parent is not None and zone.parent_id != parent:
+                return a_remplir, True
+            a_remplir[champ] = zone
+            parent = zone.pk
+        return a_remplir, False

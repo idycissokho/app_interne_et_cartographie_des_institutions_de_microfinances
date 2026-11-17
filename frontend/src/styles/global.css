@@ -358,7 +358,7 @@ html.cs-fige{overflow:hidden}
   .mi-zone { display: flex; flex-direction: column; gap: 12px; padding: 16px 12px; }
   .mi-carte-pos { position: relative !important; inset: auto !important; height: 300px; }
   .mi-sheet { position: relative !important; top: auto !important; right: auto !important; width: 100% !important; max-width: none !important; order: 3; }
-  .mi-legende { position: relative !important; left: auto !important; bottom: auto !important; margin-right: 0 !important; order: 2; }
+  .mi-legende { position: relative !important; left: auto !important; top: auto !important; bottom: auto !important; max-width: none !important; margin-right: 0 !important; order: 0; }
 }
 @media (max-width: 760px) { .su-carte { height: 260px !important; flex-basis: 100% !important; } }
 @media (max-width: 760px) {

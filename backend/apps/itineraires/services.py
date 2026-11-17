@@ -17,20 +17,15 @@ from dataclasses import asdict, dataclass
 from django.db.models import Q
 from django.http import Http404
 
+from apps.cartographie.positions import raison_position_non_fiable
 from apps.imf.models import IMF
 from apps.points_service.models import PointService
 from config.cache_donnees import en_cache
 
 from .fournisseurs import MODES, ErreurFournisseur, ResultatMode, obtenir_fournisseur
 
-#: Emprise du Sénégal (longitude min, latitude min, longitude max, latitude max),
-#: identique à dansLeSenegal() du frontend (data/projection.ts).
-EMPRISE_SENEGAL = (-17.56, 12.28, -11.34, 16.71)
 #: Marge autour du Sénégal tolérée pour le point de départ, en degrés (≈ 55 km).
 MARGE_ORIGINE = 0.5
-#: Position attribuée par défaut dans les fichiers sources quand le GPS est inconnu.
-POSITION_PAR_DEFAUT = (14.75, -17.33333)
-TOLERANCE_DEFAUT = 0.0001
 #: Pas d'arrondi de l'origine : 0,0005° ≈ 55 m.
 PAS_ORIGINE = 0.0005
 DUREE_CACHE = 600
@@ -39,23 +34,6 @@ TYPES = ("institution", "point_service")
 
 class DestinationSansPosition(Exception):
     """La destination existe mais n'a pas de position GPS fiable."""
-
-
-def dans_le_senegal(lat: float, lon: float, marge: float = 0) -> bool:
-    lon_min, lat_min, lon_max, lat_max = EMPRISE_SENEGAL
-    return (lat_min - marge) <= lat <= (lat_max + marge) and (lon_min - marge) <= lon <= (lon_max + marge)
-
-
-def raison_position_non_fiable(point) -> str | None:
-    """None si la position est fiable, sinon la raison (texte affichable)."""
-    if point is None:
-        return "aucune coordonnée GPS n'est enregistrée"
-    lat, lon = point.y, point.x
-    if abs(lat - POSITION_PAR_DEFAUT[0]) < TOLERANCE_DEFAUT and abs(lon - POSITION_PAR_DEFAUT[1]) < TOLERANCE_DEFAUT:
-        return "les coordonnées enregistrées sont la position par défaut du fichier source"
-    if not dans_le_senegal(lat, lon):
-        return "les coordonnées enregistrées sont hors du Sénégal"
-    return None
 
 
 def arrondir_origine(lat: float, lon: float) -> tuple[float, float]:
@@ -95,7 +73,7 @@ def _depuis_imf(imf: IMF) -> Destination:
 def _depuis_point(point: PointService) -> Destination:
     return Destination(
         type="point_service", id=str(point.pk), nom=point.nom,
-        sous_titre=f"{point.get_type_point_display()} · {point.imf.sigle or point.imf.nom}",
+        sous_titre=f"{'Siège social' if point.est_siege else point.get_type_point_display()} · {point.imf.sigle or point.imf.nom}",
         adresse=point.adresse or point.lieu_dit, telephone=point.telephone,
         region=point.region.nom if point.region_id else None,
         lat=round(point.localisation.y, 6), lon=round(point.localisation.x, 6),
@@ -164,17 +142,17 @@ def destinations_carte() -> list[dict]:
         )
         points = PointService.objects.filter(
             is_active=True, imf__is_active=True, localisation__isnull=False
-        ).values_list("id", "nom", "type_point", "statut_point", "imf__nom", "imf__sigle", "localisation")
+        ).values_list("id", "nom", "type_point", "est_siege", "statut_point", "imf__nom", "imf__sigle", "localisation")
         resultat = [
             {"type": "institution", "id": str(i), "nom": nom, "sous_titre": sigle or "Institution",
-             "type_point": "IMF", "statut": "", "lat": round(pos.y, 5), "lon": round(pos.x, 5)}
+             "type_point": "IMF", "siege": False, "statut": "", "lat": round(pos.y, 5), "lon": round(pos.x, 5)}
             for i, nom, sigle, pos in imfs
             if raison_position_non_fiable(pos) is None
         ]
         resultat += [
             {"type": "point_service", "id": str(i), "nom": nom, "sous_titre": imf_sigle or imf_nom,
-             "type_point": type_point, "statut": statut, "lat": round(pos.y, 5), "lon": round(pos.x, 5)}
-            for i, nom, type_point, statut, imf_nom, imf_sigle, pos in points
+             "type_point": type_point, "siege": est_siege, "statut": statut, "lat": round(pos.y, 5), "lon": round(pos.x, 5)}
+            for i, nom, type_point, est_siege, statut, imf_nom, imf_sigle, pos in points
             if raison_position_non_fiable(pos) is None
         ]
         return resultat
