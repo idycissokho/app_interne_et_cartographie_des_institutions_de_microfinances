@@ -62,12 +62,12 @@ export function ChoiceCards({ options, value, onChange, minWidth = 190 }: { opti
         const on = t.value === value;
         return (
           <button key={t.value} type="button" className="fi-choice" role="radio" aria-checked={on} onClick={() => onChange(t.value)}
-            style={{ display: "flex", alignItems: "center", gap: 12, padding: 14, borderRadius: 16, font: "inherit", color: "#0B1424", cursor: "pointer", ...(on ? { background: "#FDF8EA", border: "1.5px solid #C9A44C", boxShadow: "0 0 0 4px rgba(201,164,76,.14)" } : { background: "#FFFFFF", border: "1.5px solid #E2DCCD" }) }}>
-            <span style={{ width: 40, height: 40, flex: "none", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", ...(on ? { background: "#0B1424", color: "#F3D98C" } : { background: "#F6F1E4", color: "#8A6A1F" }) }}>
+            style={{ display: "flex", alignItems: "center", gap: 12, padding: 14, borderRadius: 12, font: "inherit", color: "#0B1424", cursor: "pointer", ...(on ? { background: "#FAFAF9", border: "1.5px solid #C9A44C", boxShadow: "0 0 0 4px rgba(201,164,76,.14)" } : { background: "#FFFFFF", border: "1.5px solid #D6D3D1" }) }}>
+            <span style={{ width: 40, height: 40, flex: "none", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", ...(on ? { background: "#F5F5F4", color: "#0B1424" } : { background: "#F5F5F4", color: "#8A6A1F" }) }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={t.icon} /></svg>
             </span>
-            <span style={{ display: "flex", flexDirection: "column", gap: 2, textAlign: "left" }}><b style={{ fontSize: 14 }}>{t.label}</b><span style={{ fontSize: 12, color: "#6B7280", fontWeight: 500 }}>{t.desc}</span></span>
-            <span style={{ marginLeft: "auto", width: 18, height: 18, flex: "none", borderRadius: "50%", boxSizing: "border-box", ...(on ? { border: "5px solid #C9A44C", background: "#FFFFFF" } : { border: "2px solid #D3C9B2" }) }} />
+            <span style={{ display: "flex", flexDirection: "column", gap: 2, textAlign: "left" }}><b style={{ fontSize: "var(--t-md)" }}>{t.label}</b><span style={{ fontSize: "var(--t-xs)", color: "#6B7280", fontWeight: 500 }}>{t.desc}</span></span>
+            <span style={{ marginLeft: "auto", width: 18, height: 18, flex: "none", borderRadius: "50%", boxSizing: "border-box", ...(on ? { border: "5px solid #C9A44C", background: "#FFFFFF" } : { border: "2px solid #A8A29E" }) }} />
           </button>
         );
       })}
@@ -78,12 +78,12 @@ export function ChoiceCards({ options, value, onChange, minWidth = 190 }: { opti
 /** Contrôle segmenté avec pastille de couleur (statut réglementaire, statut de point / de mandat). */
 export function Segmented({ options, value, onChange, label, hauteur = 44, base = "160px" }: { options: { value: string; label: string; color?: string }[]; value: string; onChange: (v: string) => void; label: string; hauteur?: number; base?: string }) {
   return (
-    <div role="radiogroup" aria-label={label} style={{ display: "flex", padding: 5, borderRadius: 14, background: "#F6F1E4", gap: 4, flexWrap: "wrap" }}>
+    <div role="radiogroup" aria-label={label} style={{ display: "flex", padding: 5, borderRadius: 10, background: "#F5F5F4", gap: 4, flexWrap: "wrap" }}>
       {options.map((s) => {
         const on = s.value === value;
         return (
           <button key={s.value} type="button" role="radio" aria-checked={on} onClick={() => onChange(s.value)}
-            style={{ flex: `1 1 ${base}`, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, height: hauteur, border: "none", borderRadius: 11, font: "inherit", fontSize: 14, fontWeight: 700, cursor: "pointer", ...(on ? { background: "#FFFFFF", color: "#0B1424", boxShadow: "0 2px 10px rgba(11,20,36,.10)" } : { background: "transparent", color: "#6B7280" }) }}>
+            style={{ flex: `1 1 ${base}`, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, height: hauteur, border: "none", borderRadius: 10, font: "inherit", fontSize: "var(--t-md)", fontWeight: 600, cursor: "pointer", ...(on ? { background: "#FFFFFF", color: "#0B1424", boxShadow: "0 2px 10px rgba(11,20,36,.10)" } : { background: "transparent", color: "#6B7280" }) }}>
             {s.color && <span style={{ width: 8, height: 8, borderRadius: "50%", background: s.color }} />}{s.label}
           </button>
         );
@@ -100,8 +100,8 @@ export function ToggleChips({ options, valeurs, onToggle }: { options: [string, 
         const on = valeurs.includes(v);
         return (
           <button key={v} type="button" role="checkbox" aria-checked={on} onClick={() => onToggle(v)}
-            style={{ display: "flex", alignItems: "center", gap: 10, height: 44, padding: "0 16px 0 12px", borderRadius: 12, font: "inherit", fontSize: 14, fontWeight: 700, cursor: "pointer", ...(on ? { background: "#0B1424", color: "#F4EFE3", border: "1.5px solid #0B1424" } : { background: "#FFFFFF", color: "#1A2333", border: "1.5px solid #E2DCCD" }) }}>
-            <span style={{ width: 20, height: 20, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 900, boxSizing: "border-box", ...(on ? { background: "#C9A44C", color: "#0B1424" } : { border: "2px solid #D3C9B2" }) }}>{on ? "✓" : ""}</span>{l}
+            style={{ display: "flex", alignItems: "center", gap: 10, height: 44, padding: "0 16px 0 12px", borderRadius: 10, font: "inherit", fontSize: "var(--t-md)", fontWeight: 600, cursor: "pointer", ...(on ? { background: "#0B1424", color: "#F4EFE3", border: "1.5px solid #0B1424" } : { background: "#FFFFFF", color: "#1A2333", border: "1.5px solid #D6D3D1" }) }}>
+            <span style={{ width: 20, height: 20, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--t-xs)", fontWeight: 700, boxSizing: "border-box", ...(on ? { background: "#C9A44C", color: "#0B1424" } : { border: "2px solid #A8A29E" }) }}>{on ? "✓" : ""}</span>{l}
           </button>
         );
       })}
@@ -112,9 +112,9 @@ export function ToggleChips({ options, valeurs, onToggle }: { options: [string, 
 /** Toast de confirmation / d'erreur (écran 08). */
 export function Toast({ ton, titre, texte, bas = 96 }: { ton: "ok" | "ko"; titre: string; texte: ReactNode; bas?: number }) {
   return (
-    <div className="fi-toast" role="status" style={{ position: "fixed", right: 28, bottom: bas, zIndex: 60, display: "flex", gap: 12, alignItems: "center", padding: "14px 18px", borderRadius: 16, background: ton === "ko" ? "#7F1D1D" : "#0B1424", color: "#F4EFE3", boxShadow: "0 20px 50px rgba(11,20,36,.35)", maxWidth: 380 }}>
-      <span style={{ width: 32, height: 32, flex: "none", borderRadius: 10, background: ton === "ko" ? "#FCA5A5" : "#C9A44C", color: "#0B1424", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800 }}>{ton === "ko" ? "!" : "✓"}</span>
-      <div style={{ fontSize: 13, lineHeight: 1.45 }}><b style={{ display: "block", fontSize: 14 }}>{titre}</b>{texte}</div>
+    <div className="fi-toast" role="status" style={{ position: "fixed", right: 28, bottom: bas, zIndex: 60, display: "flex", gap: 12, alignItems: "center", padding: "14px 18px", borderRadius: 12, background: ton === "ko" ? "#7F1D1D" : "#0B1424", color: "#F4EFE3", boxShadow: "0 20px 50px rgba(11,20,36,.35)", maxWidth: 380 }}>
+      <span style={{ width: 32, height: 32, flex: "none", borderRadius: 10, background: ton === "ko" ? "#FCA5A5" : "#C9A44C", color: "#0B1424", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700 }}>{ton === "ko" ? "!" : "✓"}</span>
+      <div style={{ fontSize: "var(--t-sm)", lineHeight: 1.45 }}><b style={{ display: "block", fontSize: "var(--t-md)" }}>{titre}</b>{texte}</div>
     </div>
   );
 }
@@ -123,8 +123,8 @@ export function Toast({ ton, titre, texte, bas = 96 }: { ton: "ok" | "ko"; titre
 export function EnteteSection({ n, titre, sousTitre, extra }: { n: number; titre: ReactNode; sousTitre: string; extra?: ReactNode }) {
   return (
     <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
-      <span style={{ width: 36, height: 36, flex: "none", borderRadius: 11, background: "#0B1424", color: "#F3D98C", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 14 }}>{n}</span>
-      <div><h2 style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>{titre}{extra}</h2><p style={{ margin: "2px 0 0 0", fontSize: 13, color: "#6B7280" }}>{sousTitre}</p></div>
+      <span style={{ width: 36, height: 36, flex: "none", borderRadius: 10, background: "#F5F5F4", color: "#0B1424", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "var(--t-md)" }}>{n}</span>
+      <div><h2 style={{ margin: 0, fontSize: "var(--t-lg)", fontWeight: 700 }}>{titre}{extra}</h2><p style={{ margin: "2px 0 0 0", fontSize: "var(--t-sm)", color: "#6B7280" }}>{sousTitre}</p></div>
     </div>
   );
 }
@@ -137,19 +137,19 @@ export function Drawer({ surTitre, titre, onClose, children, pied }: { surTitre:
     <>
       <div className="ps-fade" onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(11,20,36,.38)", backdropFilter: "blur(2px)", zIndex: 40 }} />
       <aside className="ps-drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-titre" style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: 560, maxWidth: "100%", zIndex: 41, background: "#FFFFFF", boxShadow: "-30px 0 60px rgba(11,20,36,.22)", display: "flex", flexDirection: "column" }}>
-        <div style={{ padding: "22px 26px", borderBottom: "1px solid #F1ECE0", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
-          <div><span style={{ fontSize: 12, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "#8A6A1F" }}>{surTitre}</span><h2 id="drawer-titre" style={{ margin: "4px 0 0 0", fontSize: 24, fontWeight: 800, letterSpacing: "-0.02em" }}>{titre}</h2></div>
-          <button type="button" aria-label="Fermer" onClick={onClose} style={{ width: 40, height: 40, flex: "none", borderRadius: 12, border: "1px solid #ECE5D5", background: "#FFFFFF", color: "#0B1424", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg></button>
+        <div style={{ padding: "22px 26px", borderBottom: "1px solid #F0EFED", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+          <div><span style={{ fontSize: "var(--t-sm)", fontWeight: 500, color: "#6B7280" }}>{surTitre}</span><h2 id="drawer-titre" style={{ margin: "4px 0 0 0", fontSize: "var(--t-xl)", fontWeight: 700, letterSpacing: "-0.02em" }}>{titre}</h2></div>
+          <button type="button" aria-label="Fermer" onClick={onClose} style={{ width: 40, height: 40, flex: "none", borderRadius: 10, border: "1px solid #E7E5E4", background: "#FFFFFF", color: "#0B1424", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg></button>
         </div>
         {children}
-        <div style={{ padding: "16px 26px", borderTop: "1px solid #F1ECE0", display: "flex", justifyContent: "flex-end", gap: 10, background: "#FDFBF6", flexWrap: "wrap" }}>{pied}</div>
+        <div style={{ padding: "16px 26px", borderTop: "1px solid #F0EFED", display: "flex", justifyContent: "flex-end", gap: 10, background: "#FFFFFF", flexWrap: "wrap" }}>{pied}</div>
       </aside>
     </>
   );
 }
 
-export const btnSecondaire: CSSProperties = { height: 48, padding: "0 18px", borderRadius: 14, border: "1px solid #ECE5D5", background: "#FFFFFF", font: "inherit", fontSize: 14, fontWeight: 700, color: "#0B1424", cursor: "pointer" };
-export const btnPrimaire: CSSProperties = { height: 48, padding: "0 22px", borderRadius: 14, border: "none", background: "#C9A44C", font: "inherit", fontSize: 14, fontWeight: 800, color: "#0B1424", cursor: "pointer", boxShadow: "0 10px 24px rgba(201,164,76,.35)" };
+export const btnSecondaire: CSSProperties = { height: 48, padding: "0 18px", borderRadius: 10, border: "1px solid #E7E5E4", background: "#FFFFFF", font: "inherit", fontSize: "var(--t-md)", fontWeight: 600, color: "#0B1424", cursor: "pointer" };
+export const btnPrimaire: CSSProperties = { height: 48, padding: "0 22px", borderRadius: 10, border: "none", background: "#C9A44C", font: "inherit", fontSize: "var(--t-md)", fontWeight: 700, color: "#0B1424", cursor: "pointer" };
 
 /** Fenêtre modale (écran 10) : voile flouté, carte centrée de 680 px, pied d'actions. */
 export function Modal({ titre, sousTitre, onClose, children, pied, entete }: { titre: string; sousTitre: string; onClose: () => void; children: ReactNode; pied: ReactNode; entete?: ReactNode }) {
@@ -157,14 +157,14 @@ export function Modal({ titre, sousTitre, onClose, children, pied, entete }: { t
     <>
       <div className="di-fade" onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(11,20,36,.42)", backdropFilter: "blur(3px)", zIndex: 40 }} />
       <div style={{ position: "fixed", inset: 0, zIndex: 41, display: "flex", alignItems: "center", justifyContent: "center", padding: 24, boxSizing: "border-box", pointerEvents: "none" }}>
-        <div className="di-modal" role="dialog" aria-modal="true" aria-labelledby="modal-titre" style={{ pointerEvents: "auto", width: 680, maxWidth: "100%", maxHeight: "100%", overflow: "auto", borderRadius: 26, background: "#FFFFFF", boxShadow: "0 40px 90px rgba(11,20,36,.35)" }}>
+        <div className="di-modal" role="dialog" aria-modal="true" aria-labelledby="modal-titre" style={{ pointerEvents: "auto", width: 680, maxWidth: "100%", maxHeight: "100%", overflow: "auto", borderRadius: 12, background: "#FFFFFF", boxShadow: "0 40px 90px rgba(11,20,36,.35)" }}>
           <div style={{ padding: "22px 26px 18px 26px", display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start" }}>
-            <div><h2 id="modal-titre" style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: "-0.02em" }}>{titre}</h2><p style={{ margin: "4px 0 0 0", fontSize: 13, color: "#6B7280" }}>{sousTitre}</p></div>
-            <button type="button" aria-label="Fermer" onClick={onClose} style={{ width: 40, height: 40, flex: "none", borderRadius: 12, border: "1px solid #ECE5D5", background: "#FFFFFF", color: "#0B1424", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg></button>
+            <div><h2 id="modal-titre" style={{ margin: 0, fontSize: "var(--t-xl)", fontWeight: 700, letterSpacing: "-0.02em" }}>{titre}</h2><p style={{ margin: "4px 0 0 0", fontSize: "var(--t-sm)", color: "#6B7280" }}>{sousTitre}</p></div>
+            <button type="button" aria-label="Fermer" onClick={onClose} style={{ width: 40, height: 40, flex: "none", borderRadius: 10, border: "1px solid #E7E5E4", background: "#FFFFFF", color: "#0B1424", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg></button>
           </div>
           {entete}
           {children}
-          <div style={{ padding: "16px 26px", borderTop: "1px solid #F1ECE0", display: "flex", justifyContent: "space-between", gap: 10, background: "#FDFBF6", borderRadius: "0 0 26px 26px" }}>{pied}</div>
+          <div style={{ padding: "16px 26px", borderTop: "1px solid #F0EFED", display: "flex", justifyContent: "space-between", gap: 10, background: "#FFFFFF", borderRadius: "0 0 26px 26px" }}>{pied}</div>
         </div>
       </div>
     </>
@@ -179,9 +179,9 @@ export function Etapes({ etapes, courante }: { etapes: string[]; courante: numbe
         const n = i + 1, done = courante > n, cur = courante === n;
         return (
           <li key={l} style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8, minWidth: 0 }} aria-current={cur ? "step" : undefined}>
-            <div style={{ height: 4, borderRadius: 99, background: done || cur ? "#C9A44C" : "#ECE5D5" }} />
-            <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 700, color: cur || done ? "#0B1424" : "#9AA3B2" }}>
-              <span style={{ width: 22, height: 22, flex: "none", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, ...(done ? { background: "#15803D", color: "#FFFFFF" } : cur ? { background: "#0B1424", color: "#F3D98C" } : { background: "#F1ECE0", color: "#6B7280" }) }}>{done ? "✓" : n}</span>{l}
+            <div style={{ height: 4, borderRadius: 99, background: done || cur ? "#C9A44C" : "#E7E5E4" }} />
+            <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "var(--t-sm)", fontWeight: 600, color: cur || done ? "#0B1424" : "#9AA3B2" }}>
+              <span style={{ width: 22, height: 22, flex: "none", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--t-2xs)", fontWeight: 700, ...(done ? { background: "#15803D", color: "#FFFFFF" } : cur ? { background: "#0B1424", color: "#F3D98C" } : { background: "#F0EFED", color: "#6B7280" }) }}>{done ? "✓" : n}</span>{l}
             </div>
           </li>
         );
@@ -199,17 +199,17 @@ export function FileDrop({ id, accept, titre, formats, fichier, onFichier, detai
   return (
     <>
       <label className="di-drop" htmlFor={id} onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); onFichier(e.dataTransfer.files[0] ?? null); }}
-        style={{ position: "relative", display: "flex", alignItems: "center", gap: 14, padding: 18, borderRadius: 16, border: "1.5px dashed #D3C9B2", background: "#FDFBF6", cursor: "pointer", transition: "border-color .15s ease, background .15s ease" }}>
-        <span style={{ width: 44, height: 44, flex: "none", borderRadius: 14, background: "#0B1424", color: "#F3D98C", display: "flex", alignItems: "center", justifyContent: "center" }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5M4 21h16" /></svg></span>
-        <span style={{ flex: 1 }}><b style={{ display: "block", fontSize: 14 }}>{titre}</b><span style={{ fontSize: 12, color: "#6B7280" }}>{formats} · ou <span style={{ color: "#8A6A1F", fontWeight: 700 }}>parcourir vos fichiers</span></span></span>
+        style={{ position: "relative", display: "flex", alignItems: "center", gap: 14, padding: 18, borderRadius: 12, border: "1.5px dashed #A8A29E", background: "#FFFFFF", cursor: "pointer", transition: "border-color .15s ease, background .15s ease" }}>
+        <span style={{ width: 44, height: 44, flex: "none", borderRadius: 10, background: "#F5F5F4", color: "#0B1424", display: "flex", alignItems: "center", justifyContent: "center" }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5M4 21h16" /></svg></span>
+        <span style={{ flex: 1 }}><b style={{ display: "block", fontSize: "var(--t-md)" }}>{titre}</b><span style={{ fontSize: "var(--t-xs)", color: "#6B7280" }}>{formats} · ou <span style={{ color: "#8A6A1F", fontWeight: 600 }}>parcourir vos fichiers</span></span></span>
         <input id={id} type="file" accept={accept} onChange={(e) => onFichier(e.target.files?.[0] ?? null)} style={{ position: "absolute", width: 1, height: 1, opacity: 0 }} />
       </label>
       {fichier && (
-        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 12, border: "1px solid #ECE5D5" }}>
-          <span style={{ fontSize: 11, fontWeight: 800, color: "#FFFFFF", background: COULEUR_EXT[ext] ?? "#4A5568", padding: "4px 6px", borderRadius: 6 }}>{ext}</span>
-          <span style={{ flex: 1, minWidth: 0, fontSize: 13, fontWeight: 600, overflowWrap: "anywhere" }}>{fichier.name} <span style={{ color: "#6B7280", fontWeight: 500 }}>· {tailleFichier(fichier.size)}{detail ? ` · ${detail}` : ""}</span></span>
-          <span style={{ fontSize: 12, fontWeight: 800, color: "#15803D" }}>✓ Prêt</span>
-          <button type="button" aria-label="Retirer le fichier" onClick={() => onFichier(null)} style={{ border: "none", background: "transparent", cursor: "pointer", color: "#6B7280", fontSize: 16 }}>×</button>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 10, border: "1px solid #E7E5E4" }}>
+          <span style={{ fontSize: "var(--t-2xs)", fontWeight: 700, color: "#FFFFFF", background: COULEUR_EXT[ext] ?? "#4A5568", padding: "4px 6px", borderRadius: 6 }}>{ext}</span>
+          <span style={{ flex: 1, minWidth: 0, fontSize: "var(--t-sm)", fontWeight: 500, overflowWrap: "anywhere" }}>{fichier.name} <span style={{ color: "#6B7280", fontWeight: 500 }}>· {tailleFichier(fichier.size)}{detail ? ` · ${detail}` : ""}</span></span>
+          <span style={{ fontSize: "var(--t-xs)", fontWeight: 700, color: "#15803D" }}>✓ Prêt</span>
+          <button type="button" aria-label="Retirer le fichier" onClick={() => onFichier(null)} style={{ border: "none", background: "transparent", cursor: "pointer", color: "#6B7280", fontSize: "var(--t-base)" }}>×</button>
         </div>
       )}
     </>

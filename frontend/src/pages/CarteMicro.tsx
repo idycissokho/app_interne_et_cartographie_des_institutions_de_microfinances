@@ -9,6 +9,7 @@ import { api } from "../api/client";
 import type { Page } from "../api/types";
 import { SenegalMap, type PointCarte, type StatutPoint, type TypePoint } from "../components/carto/SenegalMap";
 import { AppLayout } from "../components/layout/AppLayout";
+import { Badge, TON_STATUT } from "../components/tableau/Tableau";
 import { projeter } from "../data/projection";
 import { SENEGAL_REGIONS, cleRegion } from "../data/senegalRegions";
 import { URL_IMF_OPTIONS, type ImfOption } from "../lib/stats";
@@ -23,13 +24,12 @@ interface PointMicro extends PointCarte { p: FeaturePoint["properties"]; lat: nu
 
 const TYPES: [TypePoint, string][] = [["SIEGE", "Siège social"], ["AGENCE", "Agence"], ["GUICHET", "Guichet"], ["BUREAU", "Bureau de représentation"]];
 const STATUTS: [StatutPoint, string][] = [["OUVERT", "Ouvert"], ["SUSPENDU", "Suspendu"], ["FERME", "Fermé"]];
-const SB: Record<StatutPoint, [string, string]> = { OUVERT: ["#DCFCE7", "#166534"], SUSPENDU: ["#FEF3C7", "#92400E"], FERME: ["#E5E7EB", "#374151"] };
 const REGION_PAR_CLE = new Map(SENEGAL_REGIONS.map((r) => [cleRegion(r.id), r.id]));
 const VIDE = { imf: "", region: "", type: "", statut: "", bailleur: "" };
 
-const selectStyle: CSSProperties = { width: "100%", height: 44, borderRadius: 12, border: "1.5px solid #ECE5D5", background: "#FFFFFF", padding: "0 36px 0 14px", font: "inherit", fontSize: 14, fontWeight: 600, color: "#0B1424", cursor: "pointer" };
-const tuile: CSSProperties = { padding: "10px 12px", borderRadius: 12, background: "#FAF7F0" };
-const tuileLabel: CSSProperties = { fontSize: 11, color: "#6B7280", fontWeight: 700 };
+const selectStyle: CSSProperties = { width: "100%", height: 44, borderRadius: 10, border: "1.5px solid #E7E5E4", background: "#FFFFFF", padding: "0 36px 0 14px", font: "inherit", fontSize: "var(--t-md)", fontWeight: 500, color: "#0B1424", cursor: "pointer" };
+const tuile: CSSProperties = { padding: "10px 12px", borderRadius: 10, border: "1px solid #E7E5E4" };
+const tuileLabel: CSSProperties = { fontSize: "var(--t-2xs)", color: "#6B7280", fontWeight: 600 };
 const point = (bg: string, extra: CSSProperties = {}): CSSProperties => ({ width: 10, height: 10, borderRadius: "50%", background: bg, ...extra });
 
 export function CarteMicro() {
@@ -77,7 +77,6 @@ export function CarteMicro() {
     { id: "mi-stat", label: "Statut", value: f.statut, change: set("statut"), options: [["", "Tous"], ...STATUTS] },
     { id: "mi-bail", label: "Bailleur (option)", value: f.bailleur, change: set("bailleur"), options: [["", "Tous"], ...(d.bailleurs?.results ?? []).map((b): [string, string] => [b.id, b.sigle || b.nom])] },
   ];
-  const sb = pt ? SB[pt.statut] : SB.OUVERT;
   const typeLabel = (t: TypePoint) => TYPES.find((x) => x[0] === t)![1];
   const statutLabel = (s: StatutPoint) => STATUTS.find((x) => x[0] === s)![1];
 
@@ -86,22 +85,22 @@ export function CarteMicro() {
       <main className="app-main" style={{ flex: "999 1 640px", minWidth: 0, padding: "28px 32px 32px 32px", boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 18 }}>
         <header className="mi-in" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 16, flexWrap: "wrap" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "#8A6A1F" }}>Pilotage · Points de service</span>
-            <h1 style={{ margin: 0, fontSize: 34, fontWeight: 800, letterSpacing: "-0.03em" }}>Carte micro</h1>
-            <p style={{ margin: 0, fontSize: 14, color: "#4A5568" }}>Sièges, agences, guichets et bureaux de représentation géolocalisés.</p>
+            <span style={{ fontSize: "var(--t-sm)", fontWeight: 500, color: "#6B7280" }}>Pilotage / Points de service</span>
+            <h1 style={{ margin: 0, fontSize: "var(--t-3xl)", fontWeight: 700, letterSpacing: "-0.022em" }}>Carte micro</h1>
+            <p style={{ margin: 0, fontSize: "var(--t-base)", color: "#4A5568", lineHeight: 1.55 }}>Sièges, agences, guichets et bureaux de représentation géolocalisés.</p>
           </div>
           <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-            <span style={{ fontSize: 14, color: "#4A5568" }}><b style={{ fontSize: 22, color: "#0B1424", letterSpacing: "-0.02em" }}>{vis.length}</b> points affichés</span>
-            <button type="button" onClick={() => { setF(VIDE); setPt(null); }} style={{ height: 44, padding: "0 16px", borderRadius: 12, border: "1px solid #ECE5D5", background: "#FFFFFF", font: "inherit", fontSize: 13, fontWeight: 700, color: "#0B1424", cursor: "pointer" }}>Réinitialiser les filtres</button>
+            <span style={{ fontSize: "var(--t-md)", color: "#4A5568" }}><b style={{ fontSize: "var(--t-xl)", color: "#0B1424", letterSpacing: "-0.02em" }}>{vis.length}</b> points affichés</span>
+            <button type="button" onClick={() => { setF(VIDE); setPt(null); }} style={{ height: 44, padding: "0 16px", borderRadius: 10, border: "1px solid #E7E5E4", background: "#FFFFFF", font: "inherit", fontSize: "var(--t-sm)", fontWeight: 600, color: "#0B1424", cursor: "pointer" }}>Réinitialiser les filtres</button>
           </div>
         </header>
 
-        <section className="mi-in d1 mi-cadre" style={{ position: "relative", flex: "1 1 auto", minHeight: 780, borderRadius: 28, background: "#FFFFFF", border: "1px solid #ECE5D5", boxShadow: "0 30px 60px -30px rgba(11,20,36,.25)", overflow: "hidden", display: "flex", flexWrap: "wrap" }}>
-          <aside style={{ flex: "1 1 260px", maxWidth: 290, minWidth: 0, padding: 20, boxSizing: "border-box", borderRight: "1px solid #F1ECE0", display: "flex", flexDirection: "column", gap: 14, background: "#FDFBF6" }} className="mi-filtres">
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8A6A1F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 5h18l-7 8v6l-4 2v-8L3 5z" /></svg><h2 style={{ margin: 0, fontSize: 16, fontWeight: 800 }}>Filtres</h2></div>
+        <section className="mi-in d1 mi-cadre" style={{ position: "relative", flex: "1 1 auto", minHeight: 780, borderRadius: 12, background: "#FFFFFF", border: "1px solid #E7E5E4", overflow: "hidden", display: "flex", flexWrap: "wrap" }}>
+          <aside style={{ flex: "1 1 260px", maxWidth: 290, minWidth: 0, padding: 20, boxSizing: "border-box", borderRight: "1px solid #F0EFED", display: "flex", flexDirection: "column", gap: 14, background: "#FFFFFF" }} className="mi-filtres">
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8A6A1F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 5h18l-7 8v6l-4 2v-8L3 5z" /></svg><h2 style={{ margin: 0, fontSize: "var(--t-base)", fontWeight: 700 }}>Filtres</h2></div>
             {filtres.map((fl) => (
               <div key={fl.id} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <label htmlFor={fl.id} style={{ fontSize: 12, fontWeight: 700, color: "#4A5568" }}>{fl.label}</label>
+                <label htmlFor={fl.id} style={{ fontSize: "var(--t-xs)", fontWeight: 600, color: "#4A5568" }}>{fl.label}</label>
                 <div style={{ position: "relative" }}>
                   <select id={fl.id} className="mi-sel" value={fl.value} onChange={(e) => fl.change(e.target.value)} style={selectStyle}>
                     {fl.options.map(([v, l]) => <option key={v || "tous"} value={v}>{l}</option>)}
@@ -110,10 +109,10 @@ export function CarteMicro() {
                 </div>
               </div>
             ))}
-            <div style={{ marginTop: 6, padding: 14, borderRadius: 16, background: "#0B1424", color: "#F4EFE3", display: "flex", flexDirection: "column", gap: 10 }}>
-              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "#F3D98C" }}>Répartition par statut</span>
+            <div style={{ marginTop: 6, padding: 14, borderRadius: 12, border: "1px solid #E7E5E4", display: "flex", flexDirection: "column", gap: 10 }}>
+              <span style={{ fontSize: "var(--t-xs)", fontWeight: 500, color: "#6B7280" }}>Répartition par statut</span>
               <div style={{ display: "flex", height: 8, borderRadius: 99, overflow: "hidden", gap: 2 }}><span style={{ flex: cnt("OUVERT"), background: "#22A05A" }} /><span style={{ flex: cnt("SUSPENDU"), background: "#E0A33A" }} /><span style={{ flex: cnt("FERME"), background: "#9AA3B2" }} /></div>
-              <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: "4px 10px", fontSize: 12, color: "#C8D0DC", whiteSpace: "nowrap" }}><span>Ouverts <b style={{ color: "#FFFFFF" }}>{cnt("OUVERT")}</b></span><span>Suspendus <b style={{ color: "#FFFFFF" }}>{cnt("SUSPENDU")}</b></span><span>Fermés <b style={{ color: "#FFFFFF" }}>{cnt("FERME")}</b></span></div>
+              <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: "4px 10px", fontSize: "var(--t-xs)", color: "#6B7280", whiteSpace: "nowrap" }}><span>Ouverts <b style={{ color: "#0B1424" }}>{cnt("OUVERT")}</b></span><span>Suspendus <b style={{ color: "#0B1424" }}>{cnt("SUSPENDU")}</b></span><span>Fermés <b style={{ color: "#0B1424" }}>{cnt("FERME")}</b></span></div>
             </div>
           </aside>
 
@@ -123,7 +122,7 @@ export function CarteMicro() {
                 onPickPoint={(p) => setPt(p as PointMicro)} onPick={(id) => { setF({ ...f, region: id }); setPt(null); }} />
             </div>
 
-            <div className="mi-legende" style={{ position: "absolute", left: 20, bottom: 18, display: "flex", gap: 14, flexWrap: "wrap", padding: "10px 14px", borderRadius: 14, background: "rgba(255,255,255,.92)", border: "1px solid #ECE5D5", backdropFilter: "blur(10px)", boxShadow: "0 10px 24px -12px rgba(11,20,36,.35)", fontSize: 12, fontWeight: 600, color: "#1A2333", marginRight: 76, zIndex: 3 }}>
+            <div className="mi-legende" style={{ position: "absolute", left: 20, bottom: 18, display: "flex", gap: 14, flexWrap: "wrap", padding: "10px 14px", borderRadius: 10, background: "rgba(255,255,255,.92)", border: "1px solid #E7E5E4", backdropFilter: "blur(10px)", fontSize: "var(--t-xs)", fontWeight: 500, color: "#1A2333", marginRight: 76, zIndex: 3 }}>
               <span style={{ display: "flex", alignItems: "center", gap: 6 }}><span style={{ width: 12, height: 12, borderRadius: "50%", background: "#C9A44C", border: "2px solid #FFFFFF", boxShadow: "0 0 0 1px #C9A44C", boxSizing: "content-box" }} />Siège social</span>
               <span style={{ display: "flex", alignItems: "center", gap: 6 }}><span style={point("#1F4E79")} />Agence</span>
               <span style={{ display: "flex", alignItems: "center", gap: 6 }}><span style={point("#2E7D6B")} />Bureau de représentation</span>
@@ -132,25 +131,25 @@ export function CarteMicro() {
             </div>
 
             {pt && (
-              <article key={pt.id} className="mi-sheet" style={{ position: "absolute", top: 20, right: 20, zIndex: 5, width: 330, maxWidth: "calc(100% - 40px)", boxSizing: "border-box", borderRadius: 22, background: "#FFFFFF", border: "1px solid #ECE5D5", boxShadow: "0 30px 70px -20px rgba(11,20,36,.35)", overflow: "hidden" }}>
-                <div style={{ padding: "18px 18px 16px 18px", background: "#0B1424", color: "#F4EFE3", display: "flex", flexDirection: "column", gap: 10, position: "relative" }}>
-                  <button type="button" aria-label="Fermer la fiche" onClick={() => setPt(null)} style={{ position: "absolute", right: 12, top: 12, width: 34, height: 34, borderRadius: 10, border: "none", background: "rgba(255,255,255,.08)", color: "#F4EFE3", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg></button>
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}><span style={{ fontSize: 11, fontWeight: 800, color: "#0B1424", background: "#F3D98C", padding: "4px 10px", borderRadius: 999 }}>{typeLabel(pt.type)}</span><span style={{ fontSize: 11, fontWeight: 800, padding: "4px 10px", borderRadius: 999, background: sb[0], color: sb[1] }}>{statutLabel(pt.statut)}</span></div>
-                  <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.01em", paddingRight: 30 }}>{pt.p.nom}</div>
-                  <div style={{ fontSize: 13, color: "#A9B3C4" }}>{pt.p.imf_nom}{pt.region ? ` · Région de ${pt.region}` : ""}</div>
+              <article key={pt.id} className="mi-sheet" style={{ position: "absolute", top: 20, right: 20, zIndex: 5, width: 330, maxWidth: "calc(100% - 40px)", boxSizing: "border-box", borderRadius: 12, background: "#FFFFFF", border: "1px solid #E7E5E4", boxShadow: "0 30px 70px -20px rgba(11,20,36,.35)", overflow: "hidden" }}>
+                <div style={{ padding: "18px 18px 16px 18px", borderBottom: "1px solid #E7E5E4", display: "flex", flexDirection: "column", gap: 10, position: "relative" }}>
+                  <button type="button" aria-label="Fermer la fiche" onClick={() => setPt(null)} style={{ position: "absolute", right: 12, top: 12, width: 34, height: 34, borderRadius: 10, border: "none", background: "#F5F5F4", color: "#0B1424", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg></button>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}><Badge point={false}>{typeLabel(pt.type)}</Badge><Badge ton={TON_STATUT[pt.statut === "SUSPENDU" ? "SUSPENDU_POINT" : pt.statut]}>{statutLabel(pt.statut)}</Badge></div>
+                  <div style={{ fontSize: "var(--t-lg)", fontWeight: 700, letterSpacing: "-0.01em", paddingRight: 30 }}>{pt.p.nom}</div>
+                  <div style={{ fontSize: "var(--t-sm)", color: "#6B7280" }}>{pt.p.imf_nom}{pt.region ? ` · Région de ${pt.region}` : ""}</div>
                 </div>
-                <div style={{ padding: "16px 18px 18px 18px", display: "flex", flexDirection: "column", gap: 12, fontSize: 13 }}>
+                <div style={{ padding: "16px 18px 18px 18px", display: "flex", flexDirection: "column", gap: 12, fontSize: "var(--t-sm)" }}>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10 }}>
-                    <div style={tuile}><div style={tuileLabel}>Département</div><div style={{ fontWeight: 700 }}>{pt.p.departement_nom ?? "—"}</div></div>
-                    <div style={tuile}><div style={tuileLabel}>Commune</div><div style={{ fontWeight: 700 }}>{pt.p.commune_nom ?? "—"}</div></div>
-                    <div style={tuile}><div style={tuileLabel}>Ouverture</div><div style={{ fontWeight: 700 }}>{detail?.date_ouverture ? new Date(detail.date_ouverture).toLocaleDateString("fr-FR") : "—"}</div></div>
-                    <div style={tuile}><div style={tuileLabel}>Membres</div><div style={{ fontWeight: 700 }}>{detail?.nombre_membres != null ? detail.nombre_membres.toLocaleString("fr-FR") : "—"}</div></div>
+                    <div style={tuile}><div style={tuileLabel}>Département</div><div style={{ fontWeight: 600 }}>{pt.p.departement_nom ?? "—"}</div></div>
+                    <div style={tuile}><div style={tuileLabel}>Commune</div><div style={{ fontWeight: 600 }}>{pt.p.commune_nom ?? "—"}</div></div>
+                    <div style={tuile}><div style={tuileLabel}>Ouverture</div><div style={{ fontWeight: 600 }}>{detail?.date_ouverture ? new Date(detail.date_ouverture).toLocaleDateString("fr-FR") : "—"}</div></div>
+                    <div style={tuile}><div style={tuileLabel}>Membres</div><div style={{ fontWeight: 600 }}>{detail?.nombre_membres != null ? detail.nombre_membres.toLocaleString("fr-FR") : "—"}</div></div>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, color: "#4A5568" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A6A1F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z" /></svg>{pt.p.telephone || "—"}</div>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, color: "#4A5568" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A6A1F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>{pt.p.email || "—"}</div>
                   <div style={{ display: "flex", gap: 8 }}>
-                    <Link to={`/consultation?imf=${pt.p.imf}`} style={{ flex: 1, height: 42, borderRadius: 12, background: "#0B1424", color: "#F3D98C", fontSize: 13, fontWeight: 800, textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center" }}>Ouvrir la fiche IMF</Link>
-                    <a href={`https://www.openstreetmap.org/directions?to=${pt.lat}%2C${pt.lon}`} target="_blank" rel="noreferrer" style={{ height: 42, padding: "0 14px", borderRadius: 12, border: "1px solid #ECE5D5", background: "#FFFFFF", fontSize: 13, fontWeight: 700, color: "#0B1424", textDecoration: "none", display: "flex", alignItems: "center", boxSizing: "border-box" }}>Itinéraire</a>
+                    <Link to={`/consultation?imf=${pt.p.imf}`} style={{ flex: 1, height: 42, borderRadius: 10, background: "#C9A44C", color: "#0B1424", fontSize: "var(--t-sm)", fontWeight: 600, textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center" }}>Ouvrir la fiche IMF</Link>
+                    <a href={`https://www.openstreetmap.org/directions?to=${pt.lat}%2C${pt.lon}`} target="_blank" rel="noreferrer" style={{ height: 42, padding: "0 14px", borderRadius: 10, border: "1px solid #E7E5E4", background: "#FFFFFF", fontSize: "var(--t-sm)", fontWeight: 600, color: "#0B1424", textDecoration: "none", display: "flex", alignItems: "center", boxSizing: "border-box" }}>Itinéraire</a>
                   </div>
                 </div>
               </article>

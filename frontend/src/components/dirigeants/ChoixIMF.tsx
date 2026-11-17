@@ -25,10 +25,10 @@ export function ChoixIMF({ imfs, valeur, onChange }: { imfs: ImfOption[]; valeur
 
   if (choisie) {
     return (
-      <div style={{ height: 46, boxSizing: "border-box", display: "flex", alignItems: "center", gap: 10, padding: "0 8px 0 12px", borderRadius: 12, border: "1.5px solid #C9A44C", background: "#FDF8EA", minWidth: 0 }}>
+      <div style={{ height: 46, boxSizing: "border-box", display: "flex", alignItems: "center", gap: 10, padding: "0 8px 0 12px", borderRadius: 10, border: "1.5px solid #C9A44C", background: "#FAFAF9", minWidth: 0 }}>
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#8A6A1F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flex: "none" }}><path d={ICONE} /></svg>
-        <span title={choisie.nom} style={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{choisie.sigle || choisie.nom}</span>
-        <button type="button" aria-label="Retirer le filtre institution" onClick={() => onChange("")} style={{ width: 30, height: 30, flex: "none", borderRadius: 9, border: "none", background: "transparent", color: "#6E5416", cursor: "pointer", fontSize: 18, lineHeight: 1 }}>×</button>
+        <span title={choisie.nom} style={{ flex: 1, minWidth: 0, fontSize: "var(--t-md)", fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{choisie.sigle || choisie.nom}</span>
+        <button type="button" aria-label="Retirer le filtre institution" onClick={() => onChange("")} style={{ width: 30, height: 30, flex: "none", borderRadius: 9, border: "none", background: "transparent", color: "#6E5416", cursor: "pointer", fontSize: "var(--t-lg)", lineHeight: 1 }}>×</button>
       </div>
     );
   }
@@ -40,17 +40,17 @@ export function ChoixIMF({ imfs, valeur, onChange }: { imfs: ImfOption[]; valeur
         onKeyDown={(e) => { if (e.key === "Escape") setOuvert(false); if (e.key === "Enter" && trouvees[0]) { e.preventDefault(); choisir(trouvees[0].id); } }}
         style={{ paddingLeft: 40 }} />
       {ouvert && (
-        <div id="di-imf-liste" role="listbox" className="di-fade" style={{ position: "absolute", zIndex: 20, top: 52, left: 0, right: 0, minWidth: 300, maxHeight: 380, overflowY: "auto", borderRadius: 16, background: "#FFFFFF", border: "1px solid #ECE5D5", boxShadow: "0 24px 50px rgba(11,20,36,.18)", padding: 6 }}>
+        <div id="di-imf-liste" role="listbox" className="di-fade" style={{ position: "absolute", zIndex: 20, top: 52, left: 0, right: 0, minWidth: 300, maxHeight: 380, overflowY: "auto", borderRadius: 12, background: "#FFFFFF", border: "1px solid #E7E5E4", boxShadow: "0 24px 50px rgba(11,20,36,.18)", padding: 6 }}>
           {trouvees.slice(0, MAX).map((i) => (
             // onMouseDown : choisir avant que le champ perde le focus (qui ferme la liste).
             <button key={i.id} type="button" role="option" aria-selected={false} className="di-opt" onMouseDown={(e) => { e.preventDefault(); choisir(i.id); }}
-              style={{ display: "block", width: "100%", textAlign: "left", padding: "9px 12px", borderRadius: 11, border: "none", background: "transparent", font: "inherit", color: "#0B1424", cursor: "pointer" }}>
-              <b style={{ display: "block", fontSize: 13, lineHeight: 1.35 }}>{i.sigle ? `${i.sigle} — ` : ""}{i.nom}</b>
-              <span style={{ fontSize: 12, color: "#6B7280" }}>{[regionAffichee(i.region_siege), i.numero_agrement, `${i.nb_points_service} point${i.nb_points_service > 1 ? "s" : ""} de service`].filter(Boolean).join(" · ")}</span>
+              style={{ display: "block", width: "100%", textAlign: "left", padding: "9px 12px", borderRadius: 10, border: "none", background: "transparent", font: "inherit", color: "#0B1424", cursor: "pointer" }}>
+              <b style={{ display: "block", fontSize: "var(--t-sm)", lineHeight: 1.35 }}>{i.sigle ? `${i.sigle} — ` : ""}{i.nom}</b>
+              <span style={{ fontSize: "var(--t-xs)", color: "#6B7280" }}>{[regionAffichee(i.region_siege), i.numero_agrement, `${i.nb_points_service} point${i.nb_points_service > 1 ? "s" : ""} de service`].filter(Boolean).join(" · ")}</span>
             </button>
           ))}
-          {trouvees.length === 0 && <div style={{ padding: "12px", fontSize: 13, color: "#6B7280" }}>Aucune institution trouvée.</div>}
-          {trouvees.length > MAX && <div style={{ padding: "8px 12px", fontSize: 12, color: "#6B7280", borderTop: "1px solid #F1ECE0" }}>{trouvees.length - MAX} autres institutions — précisez la recherche.</div>}
+          {trouvees.length === 0 && <div style={{ padding: "12px", fontSize: "var(--t-sm)", color: "#6B7280" }}>Aucune institution trouvée.</div>}
+          {trouvees.length > MAX && <div style={{ padding: "8px 12px", fontSize: "var(--t-xs)", color: "#6B7280", borderTop: "1px solid #F0EFED" }}>{trouvees.length - MAX} autres institutions — précisez la recherche.</div>}
         </div>
       )}
     </div>
