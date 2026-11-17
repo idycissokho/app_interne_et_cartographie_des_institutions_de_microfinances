@@ -35,7 +35,7 @@ class PointServiceListSerializer(serializers.ModelSerializer):
     class Meta:
         model = PointService
         fields = [
-            "id", "nom", "imf", "imf_nom", "imf_sigle", "type_point", "statut_point",
+            "id", "nom", "imf", "imf_nom", "imf_sigle", "type_point", "est_siege", "statut_point",
             "statut_reglementaire", "region", "region_nom", "departement_nom", "commune_nom",
             "adresse", "lieu_dit", "telephone",
             "nombre_membres", "encours", "depots", "a_gps", "is_active",
@@ -63,7 +63,7 @@ class PointServiceDetailSerializer(serializers.ModelSerializer):
         model = PointService
         fields = [
             "id", "imf", "imf_nom", "imf_sigle", "nom", "reference_externe",
-            "type_point", "statut_point", "statut_reglementaire",
+            "type_point", "est_siege", "statut_point", "statut_reglementaire",
             "adresse", "region", "departement", "commune",
             "region_nom", "departement_nom", "commune_nom", "telephone", "email",
             "localisation", "date_ouverture", "encours", "depots", "nombre_membres",
@@ -90,6 +90,6 @@ class PointServiceGeoSerializer(GeoFeatureModelSerializer):
         model = PointService
         geo_field = "localisation"
         fields = [
-            "id", "nom", "imf", "imf_nom", "type_point", "statut_point",
+            "id", "nom", "imf", "imf_nom", "type_point", "est_siege", "statut_point",
             "region_nom", "departement_nom", "commune_nom", "telephone", "email",
         ]

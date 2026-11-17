@@ -18,20 +18,19 @@ class PointService(models.Model):
     """Point de service physique d'une IMF sur le territoire sénégalais."""
 
     class TypePoint(models.TextChoices):
-        SIEGE = "SIEGE", "Siège social"
         AGENCE = "AGENCE", "Agence"
         GUICHET = "GUICHET", "Guichet"
-        BUREAU = "BUREAU", "Bureau de représentation"
 
     class StatutPoint(models.TextChoices):
         OUVERT = "OUVERT", "Ouvert"
         FERME = "FERME", "Fermé"
-        SUSPENDU = "SUSPENDU", "Suspendu"
 
     class StatutReglementaire(models.TextChoices):
-        AGREE = "AGREE", "Agréé"
-        EN_COURS = "EN_COURS", "En cours d'agrément"
-        RADIE = "RADIE", "Radié"
+        """Mêmes statuts que l'IMF de rattachement."""
+
+        EN_ACTIVITE = "EN_ACTIVITE", "En activité"
+        OPR = "OPR", "OPR"
+        RETRAIT_AGREMENT = "RETRAIT_AGREMENT", "Retrait d'agrément"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     imf = models.ForeignKey(IMF, on_delete=models.PROTECT, related_name="points_service")
@@ -46,8 +45,11 @@ class PointService(models.Model):
     statut_reglementaire = models.CharField(
         max_length=20,
         choices=StatutReglementaire.choices,
-        default=StatutReglementaire.EN_COURS,
+        default=StatutReglementaire.EN_ACTIVITE,
     )
+    # Agence qui abrite le siège social de l'IMF (une par IMF) : sert à situer l'IMF
+    # (région du siège) ; ce n'est pas un type de point à part.
+    est_siege = models.BooleanField(default=False, db_index=True, verbose_name="Siège social de l'IMF")
     adresse = models.CharField(max_length=500, blank=True)
     region = models.ForeignKey(
         "cartographie.ZoneGeographique",
@@ -107,9 +109,10 @@ class PointService(models.Model):
         if self.localisation and not (self.region_id and self.departement_id and self.commune_id):
             from apps.cartographie.models import ZoneGeographique
 
-            for champ, zone in ZoneGeographique.localiser(self.localisation).items():
-                if zone is not None and getattr(self, f"{champ}_id") is None:
-                    setattr(self, champ, zone)
+            # Champs vides seulement, jamais d'après une position non fiable (voir zones_a_completer).
+            actuelles = {champ: getattr(self, f"{champ}_id") for champ in ("region", "departement", "commune")}
+            for champ, zone in ZoneGeographique.zones_a_completer(self.localisation, actuelles)[0].items():
+                setattr(self, champ, zone)
             if kwargs.get("update_fields") is not None:
                 kwargs["update_fields"] = {*kwargs["update_fields"], "region", "departement", "commune"}
         super().save(*args, **kwargs)

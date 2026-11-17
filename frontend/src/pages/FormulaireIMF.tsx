@@ -19,9 +19,9 @@ const TY = [
   { value: "SA", label: "Société Anonyme", desc: "Société de capitaux", icon: "M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6" },
   { value: "ASSOCIATION", label: "Association", desc: "Association de microfinance", icon: "M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10z" },
 ];
-const ST = [{ value: "AGREE", label: "Agréée", color: "#15803D" }, { value: "EN_COURS", label: "En cours d'agrément", color: "#D97706" }, { value: "RADIEE", label: "Radiée", color: "#B91C1C" }];
+const ST = [{ value: "EN_ACTIVITE", label: "En activité", color: "#15803D" }, { value: "OPR", label: "OPR", color: "#D97706" }, { value: "RETRAIT_AGREMENT", label: "Retrait d'agrément", color: "#B91C1C" }];
 const SECT: [string, string][] = [["identite", "Identité"], ["statut", "Statut"], ["siege", "Siège & GPS"], ["contacts", "Contacts"], ["bailleurs", "Bailleurs"]];
-const VIDE = { nom: "", sigle: "", type: "MUTUELLE", statut: "EN_COURS", adresse: "", lat: "", lon: "", tel: "", email: "", web: "", bailleurs: [] as string[] };
+const VIDE = { nom: "", sigle: "", type: "MUTUELLE", statut: "EN_ACTIVITE", adresse: "", lat: "", lon: "", tel: "", email: "", web: "", bailleurs: [] as string[] };
 const carte: CSSProperties = { borderRadius: 12, background: "#FFFFFF", border: "1px solid #E7E5E4", padding: 24, display: "flex", flexDirection: "column" };
 
 interface ImfApi { nom: string; sigle: string; type_imf: string; statut_reglementaire: string; adresse_siege: string; localisation_siege: { coordinates: [number, number] } | null; telephone: string; email: string; site_web: string; bailleurs: string[] }
@@ -131,7 +131,7 @@ export function FormulaireIMF() {
             <section id="statut" className="fi-up d2" style={{ ...carte, gap: 18 }}>
               <EnteteSection n={2} titre={<>Statut réglementaire <span className="fi-req">*</span></>} sousTitre="Situation de l'institution vis-à-vis de l'agrément." />
               <Segmented label="Statut réglementaire" options={ST} value={f.statut} onChange={(v) => setF({ ...f, statut: v })} />
-              {f.statut === "RADIEE" && <div style={{ display: "flex", gap: 10, padding: "12px 14px", borderRadius: 10, background: "#FDECEC", color: "#991B1B", fontSize: "var(--t-sm)", lineHeight: 1.5 }}><span><b>Attention :</b> une IMF radiée n'apparaît plus sur les cartes publiques. Ses points de service restent consultables dans l'historique.</span></div>}
+              {f.statut === "RETRAIT_AGREMENT" && <div style={{ display: "flex", gap: 10, padding: "12px 14px", borderRadius: 10, background: "#FDECEC", color: "#991B1B", fontSize: "var(--t-sm)", lineHeight: 1.5 }}><span><b>Attention :</b> une IMF en retrait d'agrément n'apparaît plus sur les cartes publiques. Ses points de service restent consultables dans l'historique.</span></div>}
             </section>
 
             <section id="siege" className="fi-up d3" style={{ ...carte, gap: 18 }}>

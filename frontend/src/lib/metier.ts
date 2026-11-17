@@ -3,10 +3,15 @@ import { SENEGAL_REGIONS, cleRegion } from "../data/senegalRegions";
 
 export const TYPE_IMF_COURT: Record<string, string> = { MUTUELLE: "Mutuelle", COOPERATIVE: "Coopérative", SA: "SA", ASSOCIATION: "Association" };
 export const TYPE_IMF_LONG: Record<string, string> = { MUTUELLE: "Mutuelle", COOPERATIVE: "Coopérative", SA: "Société Anonyme", ASSOCIATION: "Association" };
-export const STATUT_IMF_COURT: Record<string, string> = { AGREE: "Agréée", EN_COURS: "En cours", RADIEE: "Radiée" };
-export const STATUT_IMF_LONG: Record<string, string> = { AGREE: "Agréée", EN_COURS: "En cours d'agrément", RADIEE: "Radiée" };
-export const TYPE_POINT: Record<string, string> = { SIEGE: "Siège social", AGENCE: "Agence", GUICHET: "Guichet", BUREAU: "Bureau de représentation" };
-export const STATUT_POINT: Record<string, string> = { OUVERT: "Ouvert", SUSPENDU: "Suspendu", FERME: "Fermé" };
+/** Statut réglementaire (IMF et points de service) : trois valeurs, dans cet ordre. */
+export const STATUTS_REGLEMENTAIRES: [string, string][] = [["EN_ACTIVITE", "En activité"], ["OPR", "OPR"], ["RETRAIT_AGREMENT", "Retrait d'agrément"]];
+export const STATUT_IMF_COURT: Record<string, string> = Object.fromEntries(STATUTS_REGLEMENTAIRES);
+export const STATUT_IMF_LONG: Record<string, string> = STATUT_IMF_COURT;
+/** Types de point de service : agence ou guichet (le siège social est une agence marquée « est_siege »). */
+export const TYPES_POINT: [string, string][] = [["AGENCE", "Agence"], ["GUICHET", "Guichet"]];
+export const TYPE_POINT: Record<string, string> = Object.fromEntries(TYPES_POINT);
+export const STATUTS_POINT: [string, string][] = [["OUVERT", "Ouvert"], ["FERME", "Fermé"]];
+export const STATUT_POINT: Record<string, string> = Object.fromEntries(STATUTS_POINT);
 export const STATUT_MANDAT: Record<string, string> = { EN_FONCTION: "En fonction", INTERIM: "Intérim", SUSPENDU: "Suspendu" };
 
 export const FONCTIONS: [string, string][] = [
@@ -42,8 +47,8 @@ export const FAMILLE_FONCTION: Record<string, "Gouvernance" | "Direction" | "Com
 
 /** Pastilles de statut : [fond, texte] (renderVals() de la maquette). */
 export const SB: Record<string, [string, string]> = {
-  AGREE: ["#DCFCE7", "#166534"], EN_COURS: ["#FEF3C7", "#92400E"], RADIEE: ["#FDECEC", "#991B1B"],
-  OUVERT: ["#DCFCE7", "#166534"], SUSPENDU_POINT: ["#FEF3C7", "#92400E"], FERME: ["#E5E7EB", "#374151"],
+  EN_ACTIVITE: ["#DCFCE7", "#166534"], OPR: ["#FEF3C7", "#92400E"], RETRAIT_AGREMENT: ["#FDECEC", "#991B1B"],
+  OUVERT: ["#DCFCE7", "#166534"], FERME: ["#E5E7EB", "#374151"],
   EN_FONCTION: ["#DCFCE7", "#166534"], INTERIM: ["#FEF3C7", "#92400E"], SUSPENDU: ["#FDECEC", "#991B1B"],
 };
 

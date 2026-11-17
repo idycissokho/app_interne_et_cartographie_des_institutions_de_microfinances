@@ -132,7 +132,7 @@ def _region_imf():
 
     return Subquery(
         PointService.objects.filter(
-            imf=OuterRef("imf"), type_point="SIEGE", is_active=True, region__isnull=False
+            imf=OuterRef("imf"), est_siege=True, is_active=True, region__isnull=False
         ).values("region__nom")[:1]
     )
 

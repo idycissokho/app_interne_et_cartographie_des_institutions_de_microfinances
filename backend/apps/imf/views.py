@@ -60,7 +60,7 @@ def _imf_queryset():
 
     # Région du siège : celle de l'IMF, sinon celle de son point de service « Siège ».
     region_point_siege = PointService.objects.filter(
-        imf=OuterRef("pk"), type_point="SIEGE", is_active=True, region__isnull=False
+        imf=OuterRef("pk"), est_siege=True, is_active=True, region__isnull=False
     ).values("region__nom")[:1]
     return (
         IMF.objects.filter(is_active=True)

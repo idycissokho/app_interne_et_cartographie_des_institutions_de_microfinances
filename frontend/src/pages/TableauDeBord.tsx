@@ -73,9 +73,9 @@ export function TableauDeBord() {
   ];
   types.push({ label: "Autres", v: Math.max(0, (st?.imf.total ?? 0) - types.reduce((a, t) => a + t.v, 0)) });
   const statuts = [
-    { label: "Agréées", v: st?.imf.agreees ?? 0, c: "#15803D" },
-    { label: "En cours d'agrément", v: st?.imf.en_cours ?? 0, c: "#D97706" },
-    { label: "Retraits / radiations", v: st?.imf.radiees ?? 0, c: "#B91C1C" },
+    { label: "En activité", v: st?.imf.en_activite ?? 0, c: "#15803D" },
+    { label: "OPR", v: st?.imf.opr ?? 0, c: "#D97706" },
+    { label: "Retrait d'agrément", v: st?.imf.retrait_agrement ?? 0, c: "#B91C1C" },
   ];
   const echeances = d.echeances?.results ?? [];
   const urgent = echeances.some((m) => joursAvant(m.date_fin) <= 30);
@@ -119,9 +119,9 @@ export function TableauDeBord() {
 
         <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(220px, 100%), 1fr))", gap: 16 }}>
           <article className="tb-card tb-up d1" style={carte}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><span style={{ fontSize: "var(--t-sm)", fontWeight: 600, color: "#4A5568" }}>IMF agréées</span><span style={icone}>{svg(<path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6" />)}</span></div>
-            <div style={{ fontSize: "var(--t-3xl)", fontWeight: 700, letterSpacing: "-0.022em" }}>{st ? nombre(st.imf.agreees) : <Squelette largeur={96} hauteur={38} />}</div>
-            <div style={{ fontSize: "var(--t-sm)", color: "#15803D", fontWeight: 600 }}>+{nombre((st?.imf.agreees_depuis_janvier ?? 0))} <span style={{ color: "#6B7280", fontWeight: 500 }}>depuis janvier</span></div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><span style={{ fontSize: "var(--t-sm)", fontWeight: 600, color: "#4A5568" }}>IMF en activité</span><span style={icone}>{svg(<path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6" />)}</span></div>
+            <div style={{ fontSize: "var(--t-3xl)", fontWeight: 700, letterSpacing: "-0.022em" }}>{st ? nombre(st.imf.en_activite) : <Squelette largeur={96} hauteur={38} />}</div>
+            <div style={{ fontSize: "var(--t-sm)", color: "#15803D", fontWeight: 600 }}>+{nombre((st?.imf.en_activite_depuis_janvier ?? 0))} <span style={{ color: "#6B7280", fontWeight: 500 }}>depuis janvier</span></div>
           </article>
           <article className="tb-card tb-up d2" style={carte}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><span style={{ fontSize: "var(--t-sm)", fontWeight: 600, color: "#4A5568" }}>Points de service</span><span style={icone}>{svg(<><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z" /><circle cx="12" cy="9.5" r="2.5" /></>)}</span></div>

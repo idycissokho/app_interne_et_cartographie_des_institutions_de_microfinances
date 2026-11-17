@@ -27,12 +27,10 @@ export const EASE = "cubic-bezier(.2,.7,.2,1)";
 
 /** Pastilles de statut (couple fond / texte), reprises des renderVals() de la maquette. */
 export const BADGES: Record<string, [string, string]> = {
-  AGREE: ["#DCFCE7", "#166534"],
-  EN_COURS: ["#FEF3C7", "#92400E"],
-  RADIEE: ["#FDECEC", "#991B1B"],
-  RADIE: ["#FDECEC", "#991B1B"],
+  EN_ACTIVITE: ["#DCFCE7", "#166534"],
+  OPR: ["#FEF3C7", "#92400E"],
+  RETRAIT_AGREMENT: ["#FDECEC", "#991B1B"],
   OUVERT: ["#DCFCE7", "#166534"],
-  SUSPENDU_POINT: ["#FEF3C7", "#92400E"],
   FERME: ["#E5E7EB", "#374151"],
   EN_FONCTION: ["#DCFCE7", "#166534"],
   INTERIM: ["#FEF3C7", "#92400E"],
@@ -41,8 +39,8 @@ export const BADGES: Record<string, [string, string]> = {
 
 /** Couleur par type de point (écran 09). */
 export const COULEUR_TYPE_POINT: Record<string, string> = {
-  SIEGE: "#C9A44C",
   AGENCE: "#1F4E79",
   GUICHET: "#B5763A",
-  BUREAU: "#2E7D6B",
 };
+/** Agence abritant le siège social d'une IMF : épingle dorée, plus grande, sur les cartes. */
+export const COULEUR_SIEGE = "#C9A44C";

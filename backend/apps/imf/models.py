@@ -45,9 +45,9 @@ class IMF(models.Model):
     class StatutReglementaire(models.TextChoices):
         """Statut réglementaire de l'IMF vis-à-vis de la DRS-SFD."""
 
-        AGREE = "AGREE", "Agréée"
-        EN_COURS = "EN_COURS", "En cours d'agrément"
-        RADIEE = "RADIEE", "Radiée"
+        EN_ACTIVITE = "EN_ACTIVITE", "En activité"
+        OPR = "OPR", "OPR"
+        RETRAIT_AGREMENT = "RETRAIT_AGREMENT", "Retrait d'agrément"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     nom = models.CharField(max_length=255, verbose_name="Dénomination sociale")
@@ -61,7 +61,7 @@ class IMF(models.Model):
     statut_reglementaire = models.CharField(
         max_length=20,
         choices=StatutReglementaire.choices,
-        default=StatutReglementaire.EN_COURS,
+        default=StatutReglementaire.EN_ACTIVITE,
         verbose_name="Statut réglementaire",
     )
     adresse_siege = models.CharField(max_length=500, verbose_name="Adresse du siège")
@@ -130,7 +130,8 @@ class IMF(models.Model):
         if self.localisation_siege and not self.region_id:
             from apps.cartographie.models import ZoneGeographique
 
-            self.region = ZoneGeographique.localiser(self.localisation_siege)["region"]
+            # Jamais d'après une position non fiable (voir zones_a_completer).
+            self.region = ZoneGeographique.zones_a_completer(self.localisation_siege, {})[0].get("region")
             if kwargs.get("update_fields") is not None:
                 kwargs["update_fields"] = {*kwargs["update_fields"], "region"}
         super().save(*args, **kwargs)
@@ -140,8 +141,8 @@ class IMF(models.Model):
         return self.points_service.filter(is_active=True).count()
 
     def verifier_statut_actif(self) -> bool:
-        """Retourne True si l'IMF est agréée et non désactivée."""
-        return self.statut_reglementaire == self.StatutReglementaire.AGREE and self.is_active
+        """Retourne True si l'IMF est en activité et non désactivée."""
+        return self.statut_reglementaire == self.StatutReglementaire.EN_ACTIVITE and self.is_active
 
     def obtenir_coordonnees_gps(self) -> dict | None:
         """Retourne {"latitude", "longitude"} du siège, ou None si non renseigné."""

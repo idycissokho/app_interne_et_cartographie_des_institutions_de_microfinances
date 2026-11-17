@@ -202,7 +202,7 @@ export function Consultation() {
                     <div style={{ minWidth: 520 }}>
                       <div style={{ display: "grid", gridTemplateColumns: "1.4fr 0.8fr 1fr 0.8fr", gap: 12, padding: "0 10px 10px 10px", fontSize: "var(--t-xs)", fontWeight: 500, color: "#6B7280", borderBottom: "1px solid #F0EFED" }}><span>Point</span><span>Type</span><span>Région</span><span>Statut</span></div>
                       {tranche(pts, pagePts).map((p) => (
-                        <div key={p.id} style={{ display: "grid", gridTemplateColumns: "1.4fr 0.8fr 1fr 0.8fr", gap: 12, alignItems: "center", padding: "12px 10px", borderBottom: "1px solid #F5F5F4", fontSize: "var(--t-sm)" }}><b>{p.nom}</b><span>{TYPE_POINT[p.type_point]}</span><span style={{ color: "#4A5568" }}>{regionAffichee(p.region_nom) ?? "—"}</span><span style={{ justifySelf: "start" }}><Badge ton={TON_STATUT[p.statut_point === "SUSPENDU" ? "SUSPENDU_POINT" : p.statut_point]}>{STATUT_POINT[p.statut_point]}</Badge></span></div>
+                        <div key={p.id} style={{ display: "grid", gridTemplateColumns: "1.4fr 0.8fr 1fr 0.8fr", gap: 12, alignItems: "center", padding: "12px 10px", borderBottom: "1px solid #F5F5F4", fontSize: "var(--t-sm)" }}><b>{p.nom}</b><span>{TYPE_POINT[p.type_point]}</span><span style={{ color: "#4A5568" }}>{regionAffichee(p.region_nom) ?? "—"}</span><span style={{ justifySelf: "start" }}><Badge ton={TON_STATUT[p.statut_point]}>{STATUT_POINT[p.statut_point]}</Badge></span></div>
                       ))}
                       {f.pts && f.pts.results.length === 0 && <div style={{ fontSize: "var(--t-sm)", color: "#6B7280", padding: "12px 10px" }}>Aucun point de service.</div>}
                     </div>

@@ -17,21 +17,21 @@ import { AppLayout } from "../components/layout/AppLayout";
 import { FichePoint } from "../components/points/FichePoint";
 import { dansLeSenegal } from "../data/projection";
 import { montantCourt, nombre } from "../lib/format";
-import { STATUT_IMF_COURT, STATUT_POINT, TYPE_IMF_COURT, TYPE_POINT, initiales, regionAffichee } from "../lib/metier";
+import { STATUTS_REGLEMENTAIRES, STATUT_IMF_COURT, STATUT_POINT, TYPE_IMF_COURT, TYPE_POINT, initiales, regionAffichee } from "../lib/metier";
 import { nombreFr, regionProche } from "../lib/region";
 import { URL_IMF_OPTIONS, URL_STATISTIQUES, type ImfOption, type Statistiques } from "../lib/stats";
 import { Badge, BoutonIcone, CadreTableau, CelluleActions, EnTete, EtatVide, LigneGroupe, LignesChargement, Pagination, TON_STATUT, Tableau, PAR_PAGE } from "../components/tableau/Tableau";
 import { useDonnees } from "../lib/useDonnees";
 import { COULEUR_TYPE_POINT } from "../styles/tokens";
 
-interface Ligne { id: string; nom: string; imf: string; imf_nom: string; imf_sigle: string; type_point: string; statut_point: string; region: string | null; region_nom: string | null; departement_nom: string | null; commune_nom: string | null; adresse: string; lieu_dit: string; telephone: string; nombre_membres: number | null; encours: string; a_gps: boolean }
+interface Ligne { id: string; nom: string; imf: string; imf_nom: string; imf_sigle: string; type_point: string; est_siege: boolean; statut_point: string; region: string | null; region_nom: string | null; departement_nom: string | null; commune_nom: string | null; adresse: string; lieu_dit: string; telephone: string; nombre_membres: number | null; encours: string; a_gps: boolean }
 interface Detail { imf: string; nom: string; type_point: string; statut_point: string; statut_reglementaire: string; adresse: string; localisation: { coordinates: [number, number] } | null; region: string | null; departement: string | null; commune: string | null; telephone: string; email: string; date_ouverture: string | null; nombre_membres: number | null; encours: string; depots: string | null }
 interface Zone { id: string; nom: string; parent: string | null }
 
 const TAILLE = PAR_PAGE;
 const TYPES = Object.entries(TYPE_POINT);
 const STATUTS = Object.entries(STATUT_POINT);
-const REGL: [string, string][] = [["EN_COURS", "En cours d'agrément"], ["AGREE", "Agréé"], ["RADIE", "Radié"]];
+const REGL = STATUTS_REGLEMENTAIRES;
 const GPS: Record<string, string> = { sans: "Sans coordonnées GPS", avec: "Géolocalisés" };
 /** Tri par colonne → champs de ?ordering= (le premier est inversé pour un tri décroissant). */
 const TRIS: Record<string, string[]> = {
@@ -43,7 +43,7 @@ const DECROISSANT_DABORD = ["membres", "encours"];
 /** Regroupement : les lignes d'un même groupe doivent se suivre. */
 const GROUPES: Record<string, string> = { imf: "imf__nom,imf,nom", region: "region__nom,commune__nom,nom" };
 const URL_ZONES = (type: string) => `/cartographie/zones/?type_zone=${type}&page_size=1000`;
-const VIDE = { imf: "", nom: "", type: "AGENCE", statut: "OUVERT", regl: "EN_COURS", adresse: "", lat: "", lon: "", region: "", departement: "", commune: "", tel: "", email: "", date: "", membres: "", encours: "", depots: "" };
+const VIDE = { imf: "", nom: "", type: "AGENCE", statut: "OUVERT", regl: "EN_ACTIVITE", adresse: "", lat: "", lon: "", region: "", departement: "", commune: "", tel: "", email: "", date: "", membres: "", encours: "", depots: "" };
 const champ: CSSProperties = { display: "flex", flexDirection: "column", gap: 8, minWidth: 0 };
 const selectFiltre: CSSProperties = { cursor: "pointer", flex: "1 1 170px", minWidth: 0, width: "auto" };
 const boutonEntete: CSSProperties = { height: 46, padding: "0 16px", borderRadius: 10, border: "1px solid #E7E5E4", background: "#FFFFFF", fontSize: "var(--t-md)", fontWeight: 600, color: "#0B1424", display: "flex", alignItems: "center", gap: 8, textDecoration: "none", boxSizing: "border-box" };
@@ -126,7 +126,7 @@ export function PointsService() {
   const st = d.stats?.points;
   const tuiles: { n?: number; label: string; color: string; on: boolean; clic: () => void }[] = [
     { n: st?.total, label: "Tous les points", color: "#0B1424", on: !type && !gps, clic: () => maj({ type: "", gps: "" }) },
-    ...TYPES.map(([k, l]) => ({ n: st?.par_type[k], label: k === "SIEGE" ? "Sièges sociaux" : k === "BUREAU" ? "Bureaux de représentation" : `${l}s`, color: COULEUR_TYPE_POINT[k], on: type === k, clic: () => maj({ type: type === k ? "" : k }) })),
+    ...TYPES.map(([k, l]) => ({ n: st?.par_type[k], label: `${l}s`, color: COULEUR_TYPE_POINT[k], on: type === k, clic: () => maj({ type: type === k ? "" : k }) })),
     { n: st?.sans_gps, label: "Sans coordonnées GPS", color: "#B45309", on: gps === "sans", clic: () => maj({ gps: gps === "sans" ? "" : "sans" }) },
   ];
 
@@ -152,7 +152,7 @@ export function PointsService() {
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <span style={{ fontSize: "var(--t-sm)", fontWeight: 500, color: "#6B7280" }}>Référentiels</span>
             <h1 style={{ margin: 0, fontSize: "var(--t-3xl)", fontWeight: 700, letterSpacing: "-0.022em" }}>Points de service</h1>
-            <p style={{ margin: 0, fontSize: "var(--t-base)", color: "#4A5568", lineHeight: 1.55 }}>Sièges, agences, guichets et bureaux de représentation.</p>
+            <p style={{ margin: 0, fontSize: "var(--t-base)", color: "#4A5568", lineHeight: 1.55 }}>Agences et guichets des institutions, sièges sociaux compris.</p>
           </div>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <Link to={lienCarte} style={boutonEntete}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14" /></svg>Voir sur la carte</Link>
@@ -266,11 +266,11 @@ export function PointsService() {
                     </LigneGroupe>
                   ),
                   <tr key={r.id} tabIndex={0} title="Ouvrir la fiche du point" onClick={() => setFiche(r.id)} onKeyDown={(e) => e.key === "Enter" && e.target === e.currentTarget && setFiche(r.id)}>
-                    <td className="principal"><div style={{ minWidth: 0 }}><div style={{ fontWeight: 600 }}>{r.nom}</div>{(r.adresse || r.lieu_dit || r.telephone) && <span className="muet">{[r.adresse || r.lieu_dit, r.telephone].filter(Boolean).join(" · ")}</span>}</div></td>
+                    <td className="principal"><div style={{ minWidth: 0 }}><div style={{ fontWeight: 600 }}>{r.nom}{r.est_siege && <span className="badge sans-point" style={{ marginLeft: 8, verticalAlign: "middle" }}>Siège</span>}</div>{(r.adresse || r.lieu_dit || r.telephone) && <span className="muet">{[r.adresse || r.lieu_dit, r.telephone].filter(Boolean).join(" · ")}</span>}</div></td>
                     {colImf && <td data-label="Institution"><button type="button" className="di-lien" title="Voir tous les points de cette institution" onClick={(e) => { e.stopPropagation(); maj({ imf: r.imf }); }} style={{ fontSize: "var(--t-sm)", fontWeight: 500, lineHeight: 1.4, textAlign: "inherit" }}>{r.imf_nom}</button>{r.imf_sigle && <span className="muet">{r.imf_sigle}</span>}</td>}
                     <td data-label="Type" style={{ whiteSpace: "nowrap" }}><span style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "#4A5568" }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: col }} />{TYPE_POINT[r.type_point]}</span></td>
                     <td data-label="Localisation"><div>{lieu ?? "—"}</div>{lieuDetail && <span className="muet">{lieuDetail}</span>}{!r.a_gps && <span className="muet" style={{ color: "#B45309" }}>Sans GPS</span>}</td>
-                    <td data-label="Statut"><Badge ton={TON_STATUT[r.statut_point === "SUSPENDU" ? "SUSPENDU_POINT" : r.statut_point]}>{STATUT_POINT[r.statut_point] ?? r.statut_point}</Badge></td>
+                    <td data-label="Statut"><Badge ton={TON_STATUT[r.statut_point]}>{STATUT_POINT[r.statut_point] ?? r.statut_point}</Badge></td>
                     <td data-label="Membres" className="num">{r.nombre_membres != null ? nombre(r.nombre_membres) : "—"}</td>
                     <td data-label="Encours" className="num">{montantCourt(r.encours)}</td>
                     <CelluleActions>

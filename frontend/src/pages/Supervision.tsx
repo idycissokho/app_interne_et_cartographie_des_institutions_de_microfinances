@@ -37,7 +37,7 @@ export function Supervision() {
     { label: "Mandats expirés ou < 30 j", value: (st?.mandats.echeance_30j ?? 0), color: "#B91C1C", bg: "#FDECEC", cta: "Relancer les IMF", to: "/dirigeants?alerte=echeance", icon: "M12 8v5l3 2M12 3a9 9 0 1 0 0 18 9 9 0 1 0 0-18" },
     { label: "Points sans coordonnées GPS", value: sansGps, color: "#B45309", bg: "#FEF3C7", cta: "Géolocaliser", to: "/points-service?sans_gps=true", icon: "M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z" },
     { label: "Fiches IMF incomplètes", value: incompletes, color: "#8A6A1F", bg: "#F5F5F4", cta: "Compléter", to: "/imf", icon: "M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6zM14 3v6h6" },
-    { label: "IMF en cours d'agrément", value: (st?.imf.en_cours ?? 0), color: "#1F4E79", bg: "#E0ECF7", cta: "Suivre les dossiers", to: "/imf?statut=EN_COURS", icon: "M12 3 4 6v6c0 4.5 3.4 8 8 9 4.6-1 8-4.5 8-9V6l-8-3z" },
+    { label: "IMF en OPR", value: (st?.imf.opr ?? 0), color: "#B45309", bg: "#FEF3C7", cta: "Suivre les dossiers", to: "/imf?statut=OPR", icon: "M12 3 4 6v6c0 4.5 3.4 8 8 9 4.6-1 8-4.5 8-9V6l-8-3z" },
   ];
   const quality = [
     { label: "Référentiel IMF", v: pct(totalImf - incompletes, totalImf), color: "#15803D", hint: "Contacts et position GPS du siège renseignés" },

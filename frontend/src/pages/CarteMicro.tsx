@@ -1,6 +1,6 @@
 /**
  * Écran 04 — Carte micro (maquette-carto-imf/ecrans/04-carte-micro.dc.html).
- * Types et statuts : valeurs du backend (Bureau de représentation, Suspendu).
+ * Types : agence ou guichet (le siège social, agence marquée « est_siege », est mis en avant). Statuts : ouvert ou fermé.
  */
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Link, useSearchParams } from "react-router-dom";
@@ -18,12 +18,12 @@ import { useDonnees } from "../lib/useDonnees";
 interface FeaturePoint {
   id: string;
   geometry: { coordinates: [number, number] };
-  properties: { nom: string; imf: string; imf_nom: string; type_point: TypePoint; statut_point: StatutPoint; region_nom: string | null; departement_nom: string | null; commune_nom: string | null; telephone: string; email: string };
+  properties: { nom: string; imf: string; imf_nom: string; type_point: TypePoint; est_siege: boolean; statut_point: StatutPoint; region_nom: string | null; departement_nom: string | null; commune_nom: string | null; telephone: string; email: string };
 }
 interface PointMicro extends PointCarte { p: FeaturePoint["properties"]; lat: number; lon: number }
 
-const TYPES: [TypePoint, string][] = [["SIEGE", "Siège social"], ["AGENCE", "Agence"], ["GUICHET", "Guichet"], ["BUREAU", "Bureau de représentation"]];
-const STATUTS: [StatutPoint, string][] = [["OUVERT", "Ouvert"], ["SUSPENDU", "Suspendu"], ["FERME", "Fermé"]];
+const TYPES: [TypePoint, string][] = [["AGENCE", "Agence"], ["GUICHET", "Guichet"]];
+const STATUTS: [StatutPoint, string][] = [["OUVERT", "Ouvert"], ["FERME", "Fermé"]];
 const REGION_PAR_CLE = new Map(SENEGAL_REGIONS.map((r) => [cleRegion(r.id), r.id]));
 const VIDE = { imf: "", region: "", type: "", statut: "", bailleur: "" };
 
@@ -49,7 +49,7 @@ export function CarteMicro() {
       (d.geo?.features ?? []).map((ft) => {
         const [lon, lat] = ft.geometry.coordinates;
         const p = ft.properties;
-        return { id: ft.id, ...projeter(lon, lat), type: p.type_point, statut: p.statut_point, region: p.region_nom ? REGION_PAR_CLE.get(cleRegion(p.region_nom)) ?? p.region_nom : null, imf: p.imf, p, lat, lon };
+        return { id: ft.id, ...projeter(lon, lat), type: p.type_point, statut: p.statut_point, siege: p.est_siege, region: p.region_nom ? REGION_PAR_CLE.get(cleRegion(p.region_nom)) ?? p.region_nom : null, imf: p.imf, p, lat, lon };
       }),
     [d.geo],
   );
@@ -87,7 +87,7 @@ export function CarteMicro() {
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <span style={{ fontSize: "var(--t-sm)", fontWeight: 500, color: "#6B7280" }}>Pilotage / Points de service</span>
             <h1 style={{ margin: 0, fontSize: "var(--t-3xl)", fontWeight: 700, letterSpacing: "-0.022em" }}>Carte micro</h1>
-            <p style={{ margin: 0, fontSize: "var(--t-base)", color: "#4A5568", lineHeight: 1.55 }}>Sièges, agences, guichets et bureaux de représentation géolocalisés.</p>
+            <p style={{ margin: 0, fontSize: "var(--t-base)", color: "#4A5568", lineHeight: 1.55 }}>Agences et guichets géolocalisés ; les sièges sociaux sont signalés en or.</p>
           </div>
           <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
             <span style={{ fontSize: "var(--t-md)", color: "#4A5568" }}><b style={{ fontSize: "var(--t-xl)", color: "#0B1424", letterSpacing: "-0.02em" }}>{vis.length}</b> points affichés</span>
@@ -111,8 +111,8 @@ export function CarteMicro() {
             ))}
             <div style={{ marginTop: 6, padding: 14, borderRadius: 12, border: "1px solid #E7E5E4", display: "flex", flexDirection: "column", gap: 10 }}>
               <span style={{ fontSize: "var(--t-xs)", fontWeight: 500, color: "#6B7280" }}>Répartition par statut</span>
-              <div style={{ display: "flex", height: 8, borderRadius: 99, overflow: "hidden", gap: 2 }}><span style={{ flex: cnt("OUVERT"), background: "#22A05A" }} /><span style={{ flex: cnt("SUSPENDU"), background: "#E0A33A" }} /><span style={{ flex: cnt("FERME"), background: "#9AA3B2" }} /></div>
-              <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: "4px 10px", fontSize: "var(--t-xs)", color: "#6B7280", whiteSpace: "nowrap" }}><span>Ouverts <b style={{ color: "#0B1424" }}>{cnt("OUVERT")}</b></span><span>Suspendus <b style={{ color: "#0B1424" }}>{cnt("SUSPENDU")}</b></span><span>Fermés <b style={{ color: "#0B1424" }}>{cnt("FERME")}</b></span></div>
+              <div style={{ display: "flex", height: 8, borderRadius: 99, overflow: "hidden", gap: 2 }}><span style={{ flex: cnt("OUVERT"), background: "#22A05A" }} /><span style={{ flex: cnt("FERME"), background: "#9AA3B2" }} /></div>
+              <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: "4px 10px", fontSize: "var(--t-xs)", color: "#6B7280", whiteSpace: "nowrap" }}><span>Ouverts <b style={{ color: "#0B1424" }}>{cnt("OUVERT")}</b></span><span>Fermés <b style={{ color: "#0B1424" }}>{cnt("FERME")}</b></span></div>
             </div>
           </aside>
 
@@ -122,10 +122,10 @@ export function CarteMicro() {
                 onPickPoint={(p) => setPt(p as PointMicro)} onPick={(id) => { setF({ ...f, region: id }); setPt(null); }} />
             </div>
 
-            <div className="mi-legende" style={{ position: "absolute", left: 20, bottom: 18, display: "flex", gap: 14, flexWrap: "wrap", padding: "10px 14px", borderRadius: 10, background: "rgba(255,255,255,.92)", border: "1px solid #E7E5E4", backdropFilter: "blur(10px)", fontSize: "var(--t-xs)", fontWeight: 500, color: "#1A2333", marginRight: 76, zIndex: 3 }}>
+            {/* Légende en haut à gauche ; elle se resserre quand la fiche d'un point est ouverte à droite. */}
+            <div className="mi-legende" style={{ position: "absolute", left: 20, top: 18, maxWidth: pt ? "calc(100% - 390px)" : "calc(100% - 40px)", boxSizing: "border-box", display: "flex", gap: "8px 14px", flexWrap: "wrap", padding: "10px 14px", borderRadius: 10, background: "rgba(255,255,255,.92)", border: "1px solid #E7E5E4", backdropFilter: "blur(10px)", fontSize: "var(--t-xs)", fontWeight: 500, color: "#1A2333", zIndex: 3 }}>
               <span style={{ display: "flex", alignItems: "center", gap: 6 }}><span style={{ width: 12, height: 12, borderRadius: "50%", background: "#C9A44C", border: "2px solid #FFFFFF", boxShadow: "0 0 0 1px #C9A44C", boxSizing: "content-box" }} />Siège social</span>
               <span style={{ display: "flex", alignItems: "center", gap: 6 }}><span style={point("#1F4E79")} />Agence</span>
-              <span style={{ display: "flex", alignItems: "center", gap: 6 }}><span style={point("#2E7D6B")} />Bureau de représentation</span>
               <span style={{ display: "flex", alignItems: "center", gap: 6 }}><span style={point("#B5763A")} />Guichet</span>
               <span style={{ display: "flex", alignItems: "center", gap: 6 }}><span style={point("#FFFFFF", { border: "1.5px solid #6B7280" })} />Fermé</span>
             </div>
@@ -134,7 +134,7 @@ export function CarteMicro() {
               <article key={pt.id} className="mi-sheet" style={{ position: "absolute", top: 20, right: 20, zIndex: 5, width: 330, maxWidth: "calc(100% - 40px)", boxSizing: "border-box", borderRadius: 12, background: "#FFFFFF", border: "1px solid #E7E5E4", boxShadow: "0 30px 70px -20px rgba(11,20,36,.35)", overflow: "hidden" }}>
                 <div style={{ padding: "18px 18px 16px 18px", borderBottom: "1px solid #E7E5E4", display: "flex", flexDirection: "column", gap: 10, position: "relative" }}>
                   <button type="button" aria-label="Fermer la fiche" onClick={() => setPt(null)} style={{ position: "absolute", right: 12, top: 12, width: 34, height: 34, borderRadius: 10, border: "none", background: "#F5F5F4", color: "#0B1424", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg></button>
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}><Badge point={false}>{typeLabel(pt.type)}</Badge><Badge ton={TON_STATUT[pt.statut === "SUSPENDU" ? "SUSPENDU_POINT" : pt.statut]}>{statutLabel(pt.statut)}</Badge></div>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}><Badge point={false}>{typeLabel(pt.type)}{pt.siege ? " · Siège social" : ""}</Badge><Badge ton={TON_STATUT[pt.statut]}>{statutLabel(pt.statut)}</Badge></div>
                   <div style={{ fontSize: "var(--t-lg)", fontWeight: 700, letterSpacing: "-0.01em", paddingRight: 30 }}>{pt.p.nom}</div>
                   <div style={{ fontSize: "var(--t-sm)", color: "#6B7280" }}>{pt.p.imf_nom}{pt.region ? ` · Région de ${pt.region}` : ""}</div>
                 </div>

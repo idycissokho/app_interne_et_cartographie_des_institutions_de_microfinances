@@ -16,6 +16,6 @@ class PointServiceFilter(django_filters.FilterSet):
     class Meta:
         model = PointService
         fields = [
-            "imf", "type_point", "statut_point", "statut_reglementaire",
+            "imf", "type_point", "est_siege", "statut_point", "statut_reglementaire",
             "region", "departement", "commune", "bailleur", "sans_gps",
         ]

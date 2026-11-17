@@ -4,7 +4,7 @@ import { cleRegion } from "../data/senegalRegions";
 /** Compteurs de GET /cartographie/statistiques/ (tableau de bord, supervision, en-têtes de listes). */
 export interface Statistiques {
   imf: {
-    total: number; agreees: number; agreees_depuis_janvier: number; en_cours: number; radiees: number;
+    total: number; en_activite: number; en_activite_depuis_janvier: number; opr: number; retrait_agrement: number;
     incompletes: number; avec_bailleur: number; par_type: Record<string, number>;
   };
   points: { total: number; sans_gps: number; par_type: Record<string, number> };

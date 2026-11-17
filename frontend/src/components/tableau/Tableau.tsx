@@ -86,9 +86,9 @@ export type Ton = "succes" | "alerte" | "danger" | "neutre" | "info";
 
 /** Ton des statuts métier (IMF, points, mandats). */
 export const TON_STATUT: Record<string, Ton> = {
-  AGREE: "succes", OUVERT: "succes", EN_FONCTION: "succes",
-  EN_COURS: "alerte", INTERIM: "alerte", SUSPENDU_POINT: "alerte",
-  RADIEE: "danger", RADIE: "danger", SUSPENDU: "danger",
+  EN_ACTIVITE: "succes", OUVERT: "succes", EN_FONCTION: "succes",
+  OPR: "alerte", INTERIM: "alerte",
+  RETRAIT_AGREMENT: "danger", SUSPENDU: "danger",
   FERME: "neutre",
 };
 

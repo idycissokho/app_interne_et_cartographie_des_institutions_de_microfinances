@@ -167,9 +167,18 @@ EMPRISE_SENEGAL = {"latitude": (12.0, 16.9), "longitude": (-17.8, -11.2)}
 
 # Statut réglementaire d'un point de service déduit de celui de son IMF.
 STATUT_POINT_SELON_IMF = {
-    IMF.StatutReglementaire.AGREE: PointService.StatutReglementaire.AGREE,
-    IMF.StatutReglementaire.EN_COURS: PointService.StatutReglementaire.EN_COURS,
-    IMF.StatutReglementaire.RADIEE: PointService.StatutReglementaire.RADIE,
+    IMF.StatutReglementaire.EN_ACTIVITE: PointService.StatutReglementaire.EN_ACTIVITE,
+    IMF.StatutReglementaire.OPR: PointService.StatutReglementaire.OPR,
+    IMF.StatutReglementaire.RETRAIT_AGREMENT: PointService.StatutReglementaire.RETRAIT_AGREMENT,
+}
+
+# Libellés acceptés dans les fichiers, y compris les anciens statuts (agréée, radiée…).
+SYNONYMES_STATUT_REGLEMENTAIRE = {
+    "en_activite": "EN_ACTIVITE", "activite": "EN_ACTIVITE", "actif": "EN_ACTIVITE", "active": "EN_ACTIVITE",
+    "agree": "EN_ACTIVITE", "agreee": "EN_ACTIVITE", "en_cours": "EN_ACTIVITE",
+    "opr": "OPR",
+    "retrait_d_agrement": "RETRAIT_AGREMENT", "retrait_agrement": "RETRAIT_AGREMENT", "retrait": "RETRAIT_AGREMENT",
+    "radie": "RETRAIT_AGREMENT", "radiee": "RETRAIT_AGREMENT",
 }
 
 
@@ -601,11 +610,7 @@ class ImportIMFProcessor(BaseImportProcessor):
         "non_affilie": IMF.TypeIMF.MUTUELLE,
         "reseau": IMF.TypeIMF.MUTUELLE,
     }
-    SYNONYMES_STATUT = {
-        "agree": IMF.StatutReglementaire.AGREE,
-        "radie": IMF.StatutReglementaire.RADIEE,
-        "en_cours": IMF.StatutReglementaire.EN_COURS,
-    }
+    SYNONYMES_STATUT = SYNONYMES_STATUT_REGLEMENTAIRE
 
     def __init__(self, importation: ImportationFichier):
         super().__init__(importation)
@@ -649,9 +654,13 @@ class ImportIMFProcessor(BaseImportProcessor):
 
         existante = self._trouver(champs)
         self._refuser_conflit(existante, champs["nom"])
-        if existante is None and not champs["statut_reglementaire"] and champs["numero_agrement"]:
-            # Une institution qui possède un numéro d'agrément est agréée.
-            champs["statut_reglementaire"] = IMF.StatutReglementaire.AGREE
+        if existante is None and not champs["statut_reglementaire"]:
+            # Annuaire DRS-SFD : la colonne « Situation » signale les IMF en OPR ; les autres
+            # institutions agréées (numéro d'agrément) sont en activité.
+            if cle(champs.get("situation")) == "opr":
+                champs["statut_reglementaire"] = IMF.StatutReglementaire.OPR
+            elif champs["numero_agrement"]:
+                champs["statut_reglementaire"] = IMF.StatutReglementaire.EN_ACTIVITE
         imf = self._enregistrer(
             IMFDetailSerializer, existante, _sans_vides(champs), obligatoires=self.obligatoires
         )
@@ -662,9 +671,9 @@ class ImportIMFProcessor(BaseImportProcessor):
     @staticmethod
     def _synchroniser_siege(imf: IMF) -> None:
         """Crée ou met à jour le point de service « Siège » de l'IMF à partir de sa fiche."""
-        siege = PointService.objects.filter(
-            imf=imf, type_point=PointService.TypePoint.SIEGE, is_active=True
-        ).first() or PointService(imf=imf, type_point=PointService.TypePoint.SIEGE)
+        siege = PointService.objects.filter(imf=imf, est_siege=True, is_active=True).first() or PointService(
+            imf=imf, type_point=PointService.TypePoint.AGENCE, est_siege=True
+        )
         siege.nom = f"Siège — {imf.sigle or imf.nom}"[:255]
         siege.statut_reglementaire = STATUT_POINT_SELON_IMF[imf.statut_reglementaire]
         siege.adresse = imf.adresse_siege
@@ -749,7 +758,12 @@ class ImportPointServiceProcessor(BaseImportProcessor):
         "url_de_la_fiche": "url_fiche",
     }
     COLONNES_IMF = {"imf_sigle", "imf_agrement", "imf_nom"}
-    SYNONYMES_TYPE = {"siege": PointService.TypePoint.SIEGE, "bureau": PointService.TypePoint.BUREAU}
+    # Anciens types : un siège ou un bureau de représentation est enregistré comme agence.
+    SYNONYMES_TYPE = {"siege": PointService.TypePoint.AGENCE, "siege_social": PointService.TypePoint.AGENCE,
+                      "bureau": PointService.TypePoint.AGENCE, "bureau_de_representation": PointService.TypePoint.AGENCE}
+    # Ancien statut « suspendu » : le point n'accueille plus de public.
+    SYNONYMES_STATUT_POINT = {"ouverte": PointService.StatutPoint.OUVERT, "fermee": PointService.StatutPoint.FERME,
+                              "suspendu": PointService.StatutPoint.FERME}
     TYPES_SFD_LOCAUX = {"affilie", "non_affilie"}
 
     def verifier_colonnes(self, presentes: set[str]) -> None:
@@ -768,11 +782,11 @@ class ImportPointServiceProcessor(BaseImportProcessor):
             donnees.get("type_point", ""), PointService.TypePoint.choices, self.SYNONYMES_TYPE, "type_point"
         )
         donnees["statut_point"] = _choix(
-            donnees.get("statut_point", ""), PointService.StatutPoint.choices, {}, "statut_point"
+            donnees.get("statut_point", ""), PointService.StatutPoint.choices, self.SYNONYMES_STATUT_POINT, "statut_point"
         )
         donnees["statut_reglementaire"] = _choix(
             donnees.get("statut_reglementaire", ""), PointService.StatutReglementaire.choices,
-            {"agree": PointService.StatutReglementaire.AGREE, "radie": PointService.StatutReglementaire.RADIE},
+            SYNONYMES_STATUT_REGLEMENTAIRE,
             "statut_reglementaire",
         )
         self.nettoyer_telephone(donnees)

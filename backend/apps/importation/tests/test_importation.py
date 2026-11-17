@@ -199,13 +199,33 @@ def test_colonnes_du_cahier_des_charges_acceptees(client_admin):
         assert resp.data["nb_lignes_erreur"] == 0
 
     mdf = IMF.objects.get(sigle="MDF")
-    assert (mdf.type_imf, mdf.statut_reglementaire) == ("MUTUELLE", "AGREE")
-    assert str(PointService.objects.get(type_point="AGENCE").encours) == "2500000.00"
+    assert (mdf.type_imf, mdf.statut_reglementaire) == ("MUTUELLE", "EN_ACTIVITE")
+    assert str(PointService.objects.get(type_point="AGENCE", est_siege=False).encours) == "2500000.00"
     # L'IMF importée reçoit son point de service « Siège ».
-    assert PointService.objects.get(type_point="SIEGE").nom == "Siège — MDF"
+    assert PointService.objects.get(est_siege=True).nom == "Siège — MDF"
     mandat = Mandat.objects.get()
     assert mandat.imf == mdf and mandat.date_debut.isoformat() == "2022-03-01"
     assert mandat.dirigeant.email_professionnel == "a.sy@mdf.sn"
+
+
+def test_anciens_libelles_convertis_aux_nouveaux_statuts(client_admin):
+    """Les fichiers anciens restent importables : agréée/radiée, siège/bureau, suspendu."""
+    imf = "nom;sigle;type_imf;statut_reglementaire;adresse_siege\n" \
+          "Mutuelle A;MA;Mutuelle;Radiée;Dakar\n" \
+          "Mutuelle B;MB;Mutuelle;OPR;Thiès\n" \
+          "Mutuelle C;MC;Mutuelle;En activité;Kaolack\n"
+    points = "imf_sigle;nom;type_point;statut_point;adresse\n" \
+             "MC;Siège C;Siège social;Ouvert;Kaolack\n" \
+             "MC;Bureau C;Bureau de représentation;Suspendu;Kaolack\n"
+    for type_import, contenu in (("IMF", imf), ("POINTS_SERVICE", points)):
+        resp = _importer(client_admin, type_import, _csv(contenu))
+        assert resp.data["nb_lignes_erreur"] == 0, resp.data["rapport_erreurs"]
+    statuts = dict(IMF.objects.values_list("sigle", "statut_reglementaire"))
+    assert statuts == {"MA": "RETRAIT_AGREMENT", "MB": "OPR", "MC": "EN_ACTIVITE"}
+    assert set(PointService.objects.values_list("type_point", flat=True)) == {"AGENCE"}
+    assert PointService.objects.get(nom="Bureau C").statut_point == "FERME"
+    # Les points suivent le statut de leur IMF.
+    assert PointService.objects.get(imf__sigle="MB", est_siege=True).statut_reglementaire == "OPR"
 
 
 def test_statuts_successifs_et_rapport_explicite():
@@ -309,7 +329,7 @@ def test_annuaire_drs_sfd_les_trois_imports_depuis_le_meme_classeur(client_admin
     resp = _importer(client_admin, "IMF", _xlsx(_annuaire()))
     assert resp.data["nb_lignes_importees"] == 2, resp.data["rapport_erreurs"]
     acep = IMF.objects.get(numero_agrement="DK1-93-00008")
-    assert (acep.type_imf, acep.statut_reglementaire, acep.telephone) == ("MUTUELLE", "AGREE", "33 869 69 65 / 33 800 00 00")
+    assert (acep.type_imf, acep.statut_reglementaire, acep.telephone) == ("MUTUELLE", "EN_ACTIVITE", "33 869 69 65 / 33 800 00 00")
     assert round(acep.localisation_siege.y, 3) == 14.683
     baobab = IMF.objects.get(sigle="BAOBAB")
     assert baobab.type_imf == "SA" and baobab.adresse_siege == "DAKAR"  # adresse absente : région
@@ -320,7 +340,7 @@ def test_annuaire_drs_sfd_les_trois_imports_depuis_le_meme_classeur(client_admin
     assert PointService.objects.get(reference_externe="226").nom == "MEC ACEP DAKAR — Guichet HLM5"
     # Deux points de même nom dans la même IMF restent distincts grâce à leur référence.
     assert PointService.objects.filter(imf=baobab, nom="Agence Tivaouane").count() == 2
-    assert PointService.objects.get(reference_externe="747").statut_reglementaire == "AGREE"
+    assert PointService.objects.get(reference_externe="747").statut_reglementaire == "EN_ACTIVITE"
 
     resp = _importer(client_admin, "DIRIGEANTS", _xlsx(_annuaire()))
     assert resp.data["nb_lignes_total"] == 5 and resp.data["nb_lignes_erreur"] == 0, resp.data["rapport_erreurs"]
@@ -416,7 +436,7 @@ def test_attributs_annuaire_et_regions(client_admin):
     assert (acep.annee_creation, acep.ninea, acep.nb_beneficiaires, acep.nb_membres_ca) == (1993, "0012345", 22849, 6)
     assert (str(acep.capital), acep.situation, acep.lieu_dit) == ("54959000.00", "ATTENDU", "Amitié 1")
     assert acep.date_fiche.isoformat() == "2019-07-11" and acep.url_fiche.endswith("/acep/")
-    siege = PointService.objects.get(imf=acep, type_point="SIEGE")
+    siege = PointService.objects.get(imf=acep, est_siege=True)
     assert (siege.region, siege.nombre_membres, siege.localisation is not None) == (dakar, 22849, True)
 
     # Réseau : ses bénéficiaires ne sont pas recomptés sur son siège.
