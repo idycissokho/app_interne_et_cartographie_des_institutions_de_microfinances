@@ -16,7 +16,7 @@ export function AppLayout({ active, minHeight = 1000, children, style }: { activ
   return (
     <div style={{ minHeight, display: "flex", flexWrap: "wrap", background: "#FFFFFF", color: "#0B1424", ...style }}>
       <div className="app-sidebar" style={{ flex: "1 1 248px", maxWidth: 272, background: "#0B1424", display: "flex" }}>
-        <Sidebar active={active} role={role} nomComplet={utilisateur?.nom_complet ?? ""} onDeconnexion={deconnecter} />
+        <Sidebar active={active} role={role} nomComplet={utilisateur?.nom_complet ?? ""} onDeconnexion={() => void deconnecter()} />
       </div>
       {children}
     </div>

@@ -10,6 +10,7 @@ import { Navigate } from "react-router-dom";
 
 import logo from "../assets/logo-drs-sfd.png";
 import { useAuth } from "../auth/AuthContext";
+import { session } from "../auth/session";
 import { SenegalMap, type StatsRegion } from "../components/carto/SenegalMap";
 import { DEMO_POINTS, DEMO_POINTS_REGION } from "../data/demoConnexion";
 import { cleRegion } from "../data/senegalRegions";
@@ -41,6 +42,9 @@ export function Connexion() {
   const [rester, setRester] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
   const [envoi, setEnvoi] = useState(false);
+  // Déconnexion automatique précédente : expliquée une fois, au-dessus du formulaire.
+  const [motif] = useState(() => session.lireMotif());
+  useEffect(() => { session.oublierMotif(); }, []);
   const [theme, setTheme] = useState<Theme>(themeInitial);
   const c = P[theme];
   const stats = useMemo(() => {
@@ -75,13 +79,15 @@ export function Connexion() {
     <div className="ci-page" style={{ height: "100dvh", overflow: "hidden", display: "flex", flexWrap: "wrap", background: "#0B1424", color: "#F4EFE3", colorScheme: theme === "sombre" ? "dark" : "only light" }}>
       <section className="ci-hero" style={{ flex: "1.25 1 640px", minWidth: 0, height: "100%", position: "relative", overflow: "hidden", padding: "clamp(20px, 4.4vh, 40px) 56px", boxSizing: "border-box", display: "flex", flexDirection: "column", gap: "clamp(12px, 3.1vh, 28px)", background: "radial-gradient(900px 600px at 70% 60%, #15253F 0%, #0B1424 70%)" }}>
         <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap", flex: "none" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ width: 40, height: 40, borderRadius: 10, background: "#C9A44C", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0B1424" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z" /><circle cx="12" cy="9.5" r="2.5" /></svg>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              <span style={{ fontWeight: 700, fontSize: "var(--t-lg)", letterSpacing: "-0.01em" }}>Carto IMF</span>
-              <span style={{ fontSize: "var(--t-xs)", color: "#A9B3C4" }}>DRS-SFD · Ministère des Finances et du Budget</span>
+          {/* En-tête officiel : drapeau, République et devise (le ministère figure sur le logo du panneau de connexion). */}
+          <div style={{ display: "flex", alignItems: "center", gap: 14, minWidth: 0 }}>
+            <svg width="42" height="28" viewBox="0 0 30 20" role="img" aria-label="Drapeau du Sénégal" style={{ flex: "none", display: "block", borderRadius: 3, boxShadow: "0 0 0 1px rgba(255,255,255,.14)" }}>
+              <rect width="10" height="20" fill="#00853F" /><rect x="10" width="10" height="20" fill="#FDEF42" /><rect x="20" width="10" height="20" fill="#E31B23" />
+              <path d="M15 6.2l1.06 3.27h3.44l-2.78 2.02 1.06 3.27L15 12.74l-2.78 2.02 1.06-3.27-2.78-2.02h3.44z" fill="#00853F" />
+            </svg>
+            <div style={{ display: "flex", flexDirection: "column", gap: 2, lineHeight: 1.3 }}>
+              <span style={{ fontSize: "var(--t-sm)", fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: "#F4EFE3" }}>République du Sénégal</span>
+              <span style={{ fontSize: "var(--t-xs)", fontStyle: "italic", color: "#A9B3C4" }}>Un Peuple – Un But – Une Foi</span>
             </div>
           </div>
           <span style={{ fontSize: "var(--t-xs)", fontWeight: 500, letterSpacing: ".06em", textTransform: "uppercase", color: "#E9D49A", border: "1px solid rgba(201,164,76,.35)", borderRadius: 999, padding: "7px 14px" }}>Intranet · Accès restreint</span>
@@ -128,24 +134,33 @@ export function Connexion() {
             <h2 style={{ margin: 0, fontSize: "clamp(1.625rem, 3.6vh, 2rem)", fontWeight: 700, letterSpacing: "-0.022em" }}>Connexion</h2>
             <p style={{ margin: 0, fontSize: "clamp(0.9375rem, 1.7vh, 1rem)", color: c.doux, lineHeight: 1.55 }}>Accédez à l'espace de cartographie et de gouvernance des institutions de microfinance.</p>
           </div>
+          {motif && !erreur && (
+            <div role="status" style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "10px 14px", borderRadius: 10, border: `1px solid ${c.bord}`, fontSize: "var(--t-sm)", lineHeight: 1.5, color: c.doux }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flex: "none", marginTop: 1 }}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+              <span>{motif === "inactivite" ? "Vous avez été déconnecté après une période d'inactivité, pour protéger les données." : motif === "duree" ? "Votre session a atteint sa durée maximale. Merci de vous reconnecter." : "Votre session a expiré. Merci de vous reconnecter."}</span>
+            </div>
+          )}
           <form onSubmit={onSubmit} style={{ display: "flex", flexDirection: "column", gap: "clamp(10px, 2vh, 18px)" }}>
             <div style={{ display: "flex", flexDirection: "column", gap: "clamp(5px, 0.9vh, 8px)" }}>
               <label htmlFor="ci-email" style={libelle}>Email professionnel</label>
-              <input id="ci-email" className="ci-input" type="email" required autoComplete="username" placeholder="prenom.nom@finances.gouv.sn" value={email} onChange={(e) => setEmail(e.target.value)} style={champ} />
+              <input id="ci-email" className="ci-input" type="email" required autoComplete="username" placeholder="prenom.nom@finances.gouv.sn" value={email} disabled={envoi} onChange={(e) => setEmail(e.target.value)} style={champ} />
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "clamp(5px, 0.9vh, 8px)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}><label htmlFor="ci-pass" style={libelle}>Mot de passe</label><a href="#" style={{ fontSize: "var(--t-sm)", fontWeight: 500, color: c.lien }}>Mot de passe oublié ?</a></div>
-              <input id="ci-pass" className="ci-input" type="password" required autoComplete="current-password" placeholder="••••••••••" value={motDePasse} onChange={(e) => setMotDePasse(e.target.value)} style={champ} />
+              <input id="ci-pass" className="ci-input" type="password" required autoComplete="current-password" placeholder="••••••••••" value={motDePasse} disabled={envoi} onChange={(e) => setMotDePasse(e.target.value)} style={champ} />
             </div>
             <label style={{ display: "flex", alignItems: "center", gap: 10, fontSize: "var(--t-md)", color: c.doux }}><input type="checkbox" checked={rester} onChange={(e) => setRester(e.target.checked)} style={{ width: 18, height: 18, accentColor: "#C9A44C" }} /> Rester connecté sur ce poste</label>
             {erreur && <div role="alert" style={{ fontSize: "var(--t-sm)", fontWeight: 500, color: theme === "clair" ? "#B91C1C" : "#FCA5A5" }}>{erreur}</div>}
-            <button className="ci-btn" type="submit" disabled={envoi} style={{ height: "clamp(44px, 6vh, 54px)", border: "none", borderRadius: 10, background: "#C9A44C", color: "#0B1424", font: "inherit", fontSize: "var(--t-base)", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>Se connecter <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg></button>
+            <button className="ci-btn" type="submit" disabled={envoi} aria-busy={envoi} style={{ height: "clamp(44px, 6vh, 54px)", border: "none", borderRadius: 10, background: "#C9A44C", color: "#0B1424", font: "inherit", fontSize: "var(--t-base)", fontWeight: 700, cursor: envoi ? "progress" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+              {envoi
+                ? <><svg className="sys-roue" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" strokeOpacity=".25" strokeWidth="3" /><path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="3" strokeLinecap="round" /></svg>Connexion en cours…</>
+                : <>Se connecter <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg></>}
+            </button>
           </form>
           <div style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "clamp(10px, 1.6vh, 14px) 16px", borderRadius: 10, background: c.encartFond, color: c.encartTexte, fontSize: "var(--t-sm)", lineHeight: 1.5, transition: "background .3s ease, color .3s ease" }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flex: "none", marginTop: 1 }}><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
             <span>Accès réservé aux agents de la DRS-SFD. Les consultations des fiches dirigeants sont journalisées.</span>
           </div>
-          <div style={{ fontSize: "var(--t-xs)", color: c.pied }}>République du Sénégal · Un Peuple – Un But – Une Foi</div>
         </div>
       </section>
     </div>

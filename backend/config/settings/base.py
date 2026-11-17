@@ -69,6 +69,7 @@ LOCAL_APPS = [
     "apps.cartographie",
     "apps.importation",
     "apps.audit",
+    "apps.itineraires",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -206,6 +207,19 @@ DONNEES_FICTIVES = env.bool("DJANGO_DONNEES_FICTIVES", default=False)
 
 
 # ---------------------------------------------------------------------------
+# Itinéraires (apps/itineraires, docs/itineraire.md)
+# ---------------------------------------------------------------------------
+
+# Moteur de calcul d'itinéraire et son adresse. ROUTING_URL vide : section indisponible
+# (aucun appel vers l'extérieur par défaut, comportement attendu sur l'intranet sans moteur).
+ROUTING_PROVIDER = env("ROUTING_PROVIDER", default="valhalla")
+ROUTING_URL = env("ROUTING_URL", default="")
+ROUTING_TIMEOUT = env.float("ROUTING_TIMEOUT", default=10)
+# Identifiant de l'application auprès du moteur (les instances publiques l'exigent).
+ROUTING_USER_AGENT = env("ROUTING_USER_AGENT", default="cartographie-imf/1.0")
+
+
+# ---------------------------------------------------------------------------
 # Clé primaire par défaut
 # ---------------------------------------------------------------------------
 
@@ -221,9 +235,19 @@ AUTH_USER_MODEL = "authentication.Utilisateur"
 
 from datetime import timedelta  # noqa: E402
 
+# Sessions (recommandations OWASP pour une application manipulant des données personnelles) :
+# - jeton d'accès court : 15 min ;
+# - inactivité : sans renouvellement pendant SESSION_INACTIVITE_MINUTES, le jeton de
+#   rafraîchissement expire (il est renouvelé à chaque activité, rotation + liste noire) ;
+# - durée maximale : au-delà de SESSION_DUREE_MAX_HEURES depuis la connexion, il faut se
+#   reconnecter, même en restant actif (contrôle dans RafraichissementSerializer).
+SESSION_INACTIVITE_MINUTES = env.int("SESSION_INACTIVITE_MINUTES", default=30)
+SESSION_DUREE_MAX_HEURES = env.int("SESSION_DUREE_MAX_HEURES", default=8)
+
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=env.int("JWT_ACCES_MINUTES", default=15)),
+    "REFRESH_TOKEN_LIFETIME": timedelta(minutes=SESSION_INACTIVITE_MINUTES),
+    "TOKEN_REFRESH_SERIALIZER": "apps.authentication.serializers.RafraichissementSerializer",
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
     "UPDATE_LAST_LOGIN": True,
@@ -256,6 +280,10 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "config.pagination.PaginationStandard",
     "PAGE_SIZE": 20,
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    # Limitation des tentatives de connexion (force brute) : par adresse IP.
+    "DEFAULT_THROTTLE_RATES": {
+        "connexion": env("LIMITE_CONNEXION", default="10/min"),
+    },
 }
 
 

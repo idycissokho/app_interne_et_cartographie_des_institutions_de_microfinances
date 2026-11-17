@@ -4,6 +4,8 @@
  * - Normalise les erreurs DRF en message lisible.
  */
 
+import { canalSession, session } from "../auth/session";
+
 const BASE = "/api/v1";
 const CLE_ACCESS = "imf.access";
 const CLE_REFRESH = "imf.refresh";
@@ -51,8 +53,14 @@ function formaterErreur(details: unknown): string {
 }
 
 let renouvellement: Promise<boolean> | null = null;
+/** Heure du dernier renouvellement réussi (la session côté serveur expire sans renouvellement). */
+export const etatJetons = { renouveleA: Date.now() };
 
-async function renouveler(): Promise<boolean> {
+/**
+ * Renouvelle la paire de jetons (rotation : l'ancien jeton de rafraîchissement est révoqué).
+ * Les autres onglets reçoivent les nouveaux jetons par le canal de session.
+ */
+export async function renouveler(): Promise<boolean> {
   const refresh = jetons.refresh();
   if (!refresh) return false;
   renouvellement ??= fetch(`${BASE}/auth/token/refresh/`, {
@@ -61,16 +69,28 @@ async function renouveler(): Promise<boolean> {
     body: JSON.stringify({ refresh }),
   })
     .then(async (r) => {
-      if (!r.ok) return false;
+      // Un autre onglet a renouvelé au même moment : ses jetons, déjà reçus, font foi.
+      if (!r.ok) return jetons.refresh() !== null && jetons.refresh() !== refresh;
       const data = await r.json();
       jetons.enregistrer(data.access, data.refresh);
+      etatJetons.renouveleA = Date.now();
+      canalSession?.postMessage({ type: "jetons", access: data.access, refresh: data.refresh });
       return true;
     })
+    .catch(() => false)
     .finally(() => {
       renouvellement = null;
     });
   return renouvellement;
 }
+
+// Jetons renouvelés dans un autre onglet : on les reprend pour ne pas utiliser un jeton révoqué.
+canalSession?.addEventListener("message", (e: MessageEvent) => {
+  if (e.data?.type === "jetons" && jetons.refresh()) {
+    jetons.enregistrer(e.data.access, e.data.refresh);
+    etatJetons.renouveleA = Date.now();
+  }
+});
 
 /** Déclenché quand la session est définitivement expirée. */
 export const evenementDeconnexion = new EventTarget();
@@ -124,7 +144,8 @@ export function reveillerServeur() {
 
 export async function requete<T = unknown>(
   chemin: string,
-  options: RequestInit & { brut?: boolean } = {},
+  /** `sansEffet` : POST qui ne modifie aucune donnée (calcul d'itinéraire) ; le cache des lectures reste valable. */
+  options: RequestInit & { brut?: boolean; sansEffet?: boolean } = {},
   dejaRenouvele = false,
   dejaAttendu = false,
 ): Promise<T> {
@@ -150,14 +171,16 @@ export async function requete<T = unknown>(
 
   if (reponse.status === 401 && !dejaRenouvele && !chemin.startsWith("/auth/login")) {
     if (await renouveler()) return requete<T>(chemin, options, true, dejaAttendu);
+    if (jetons.refresh() || jetons.access()) session.memoriserMotif("expiree");
     jetons.effacer();
+    session.effacer();
     evenementDeconnexion.dispatchEvent(new Event("deconnexion"));
   }
   if (!reponse.ok) {
     const details = await reponse.json().catch(() => reponse.statusText);
     throw new ErreurApi(reponse.status, details);
   }
-  const ecriture = (options.method ?? "GET") !== "GET" && !chemin.startsWith("/auth/");
+  const ecriture = (options.method ?? "GET") !== "GET" && !chemin.startsWith("/auth/") && !options.sansEffet;
   if (ecriture) evenementEcriture.dispatchEvent(new Event("ecriture"));
   if (options.brut) return reponse as unknown as T;
   if (reponse.status === 204) return undefined as T;
