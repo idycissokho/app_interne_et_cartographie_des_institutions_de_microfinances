@@ -505,3 +505,13 @@ select.fi-input:focus,select.ps-input:focus,select.di-input:focus{outline:none;b
 select.fi-input:disabled,select.ps-input:disabled,select.di-input:disabled{background-color:#FAFAF9;color:#8B8F98;cursor:not-allowed}
 select.fi-input::-ms-expand{display:none}
 select.fi-input.bad,select.ps-input.bad,select.di-input.bad{border-color:#DC2626}
+
+/* Sidebar fixe à l'écran, avec son propre défilement (ordinateur et tablette).
+   Sous 760 px, elle reste au-dessus du contenu, dans le flux normal. */
+@media (min-width:761px){
+  .app-sidebar{position:sticky;top:0;align-self:flex-start;height:100vh;height:100dvh}
+  .app-nav{min-height:0 !important;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.16) transparent}
+  .app-nav::-webkit-scrollbar{width:8px}
+  .app-nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:8px;border:2px solid #0B1424}
+  .app-nav::-webkit-scrollbar-track{background:transparent}
+}
