@@ -22,13 +22,13 @@ import masqueUrl from "../../data/senegal-masque.geojson?url";
 import regionsUrl from "../../data/senegal-regions.geojson?url";
 import { SENEGAL_REGIONS, cleRegion } from "../../data/senegalRegions";
 import { nombre } from "../../lib/format";
-import { COULEUR_TYPE_POINT } from "../../styles/tokens";
+import { COULEUR_SIEGE, COULEUR_TYPE_POINT } from "../../styles/tokens";
 import { styleCarte } from "./fondCarte";
 
 setWorkerUrl(workerUrl);
 
-export type TypePoint = "SIEGE" | "AGENCE" | "GUICHET" | "BUREAU";
-export type StatutPoint = "OUVERT" | "SUSPENDU" | "FERME";
+export type TypePoint = "AGENCE" | "GUICHET";
+export type StatutPoint = "OUVERT" | "FERME";
 export type Indicateur = "pts" | "imf" | "membres" | "encours";
 
 export interface StatsRegion {
@@ -48,6 +48,8 @@ export interface PointCarte {
   lat?: number;
   type: TypePoint;
   statut: StatutPoint;
+  /** Agence abritant le siège social de l'IMF : épingle dorée, plus grande. */
+  siege?: boolean;
   region?: string | null;
   imf?: string;
 }
@@ -245,19 +247,20 @@ function installer(carte: Carte, style: StyleSpecification, geo: { regions: Coll
   // Épingles : au-dessus de tout, noms de lieux compris.
   (Object.keys(COULEUR_TYPE_POINT) as TypePoint[]).forEach((t) =>
     carte.addImage(`epingle-${t}`, dessinerEpingle(COULEUR_TYPE_POINT[t], "#FFFFFF", "#FFFFFF"), { pixelRatio: 2 }));
+  carte.addImage("epingle-SIEGE", dessinerEpingle(COULEUR_SIEGE, "#FFFFFF", "#FFFFFF"), { pixelRatio: 2 });
   carte.addImage("epingle-FERME", dessinerEpingle("#FFFFFF", "#6B7280", "#9AA3B2"), { pixelRatio: 2 });
-  const siege: ExpressionSpecification = ["==", ["get", "type"], "SIEGE"];
+  const siege: ExpressionSpecification = ["==", ["get", "siege"], true];
   carte.addLayer({ id: "points-pouls", type: "circle", source: "points", filter: siege,
     paint: { "circle-color": "rgba(201,164,76,0)", "circle-radius": 3, "circle-stroke-color": dark ? "#F3D98C" : "#C9A44C", "circle-stroke-width": 1.6, "circle-stroke-opacity": 0,
       "circle-radius-transition": { duration: 0 }, "circle-stroke-opacity-transition": { duration: 0 } } });
   carte.addLayer({ id: "points", type: "symbol", source: "points",
     layout: {
-      "icon-image": ["case", ["==", ["get", "statut"], "FERME"], "epingle-FERME", ["concat", "epingle-", ["get", "type"]]],
+      "icon-image": ["case", ["==", ["get", "statut"], "FERME"], "epingle-FERME", siege, "epingle-SIEGE", ["concat", "epingle-", ["get", "type"]]],
       "icon-anchor": "bottom", "icon-allow-overlap": true, "icon-ignore-placement": true,
       "icon-size": ["interpolate", ["linear"], ["zoom"], 5, ["case", siege, 0.6, 0.44], 9, ["case", siege, 0.95, 0.78], 13, ["case", siege, 1.2, 1]],
       "symbol-sort-key": ["case", siege, 2, 1],
     },
-    paint: { "icon-opacity": ["case", ["==", ["get", "statut"], "SUSPENDU"], 0.55, 1] } });
+    paint: { "icon-opacity": 1 } });
 
   if (style.glyphs) {
     carte.addLayer({ id: "etiquettes", type: "symbol", source: "centres",
@@ -501,7 +504,7 @@ export function SenegalMap({
     const liste = showPoints ? visibles : [];
     parId.current = new Map(liste.map((p) => [p.id, p]));
     (c.getSource("points") as GeoJSONSource).setData(
-      collection(liste.map((p) => ({ type: "Feature", properties: { id: p.id, type: p.type, statut: p.statut }, geometry: { type: "Point", coordinates: lonLat(p) } }))) as unknown as DonneesGeo,
+      collection(liste.map((p) => ({ type: "Feature", properties: { id: p.id, type: p.type, statut: p.statut, siege: !!p.siege }, geometry: { type: "Point", coordinates: lonLat(p) } }))) as unknown as DonneesGeo,
     );
   }, [pret, visibles, showPoints]);
 

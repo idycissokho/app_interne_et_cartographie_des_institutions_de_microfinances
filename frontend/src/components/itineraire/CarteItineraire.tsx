@@ -110,16 +110,16 @@ export function CarteItineraire({ points, origine, destination, trajet, placemen
           paint: { "line-color": "#0B1424", "line-width": ["interpolate", ["linear"], ["zoom"], 6, 6, 14, 11] } });
         c.addLayer({ id: "trajet", type: "line", source: "trajet", layout: { "line-join": "round", "line-cap": "round" },
           paint: { "line-color": "#C9A44C", "line-width": ["interpolate", ["linear"], ["zoom"], 6, 3, 14, 6] } });
-        // Une épingle par structure, tailles de la carte micro ; sièges (IMF et « Siège social ») au-dessus.
-        const siege: ExpressionSpecification = ["in", ["get", "type"], ["literal", ["SIEGE", "IMF"]]];
+        // Une épingle par structure, tailles de la carte micro ; sièges des institutions au-dessus.
+        const siege: ExpressionSpecification = ["==", ["get", "type"], "IMF"];
         c.addLayer({ id: "points", type: "symbol", source: "points",
           layout: {
             "icon-image": ["case", ["==", ["get", "statut"], "FERME"], "epingle-FERME", ["concat", "epingle-", ["get", "type"]]],
             "icon-anchor": "bottom", "icon-allow-overlap": true, "icon-ignore-placement": true,
             "icon-size": ["interpolate", ["linear"], ["zoom"], 5, ["case", siege, 0.6, 0.44], 9, ["case", siege, 0.95, 0.78], 13, ["case", siege, 1.2, 1]],
-            "symbol-sort-key": ["case", ["==", ["get", "type"], "IMF"], 3, siege, 2, 1],
+            "symbol-sort-key": ["case", siege, 2, 1],
           },
-          paint: { "icon-opacity": ["case", ["==", ["get", "statut"], "SUSPENDU"], 0.55, 1] } });
+          paint: { "icon-opacity": 1 } });
         c.addLayer({ id: "arrivee", type: "symbol", source: "arrivee",
           layout: { "icon-image": "epingle-arrivee", "icon-anchor": "bottom", "icon-size": 1.35, "icon-allow-overlap": true, "icon-ignore-placement": true } });
 
@@ -128,9 +128,9 @@ export function CarteItineraire({ points, origine, destination, trajet, placemen
         sources?.removeAttribute("open");
 
         c.on("click", (e: MapMouseEvent) => {
-          // Un siège d'IMF et son point « Siège social » partagent souvent la même position :
-          // on retient l'épingle dessinée au-dessus (institution, puis siège, puis les autres).
-          const rang = (t: unknown) => (t === "IMF" ? 0 : t === "SIEGE" ? 1 : 2);
+          // Un siège d'IMF et son agence « siège » partagent souvent la même position :
+          // on retient l'épingle dessinée au-dessus (l'institution).
+          const rang = (t: unknown) => (t === "IMF" ? 0 : 1);
           const [f] = c.queryRenderedFeatures(e.point, { layers: ["points"] })
             .sort((a, b) => rang(a.properties?.type) - rang(b.properties?.type));
           if (f) {
@@ -207,7 +207,7 @@ export function CarteItineraire({ points, origine, destination, trajet, placemen
     (c.getSource("trajet") as GeoJSONSource).setData(ligne(trajet));
     // Trajet affiché : les autres points s'estompent pour laisser le tracé lisible.
     const estompe = trajet ? 0.35 : 1;
-    c.setPaintProperty("points", "icon-opacity", ["case", ["==", ["get", "statut"], "SUSPENDU"], 0.55 * estompe, estompe]);
+    c.setPaintProperty("points", "icon-opacity", estompe);
     const coords: [number, number][] = [...(trajet ?? [])];
     if (destination) coords.push([destination.lon, destination.lat]);
     if (origine) coords.push([origine.lon, origine.lat]);
@@ -230,10 +230,8 @@ export function CarteItineraire({ points, origine, destination, trajet, placemen
       {horsLigne && <div className="cs-hors-ligne">Fond de carte indisponible (hors ligne)</div>}
       <ul className="it-legende" aria-label="Légende">
         <li><span style={{ background: COULEUR_IMF, boxShadow: "0 0 0 2px #C9A44C" }} />Institution (siège)</li>
-        <li><span style={{ background: COULEUR_TYPE_POINT.SIEGE }} />Siège social</li>
         <li><span style={{ background: COULEUR_TYPE_POINT.AGENCE }} />Agence</li>
         <li><span style={{ background: COULEUR_TYPE_POINT.GUICHET }} />Guichet</li>
-        <li><span style={{ background: COULEUR_TYPE_POINT.BUREAU }} />Bureau</li>
       </ul>
     </div>
   );

@@ -26,7 +26,7 @@ def jeu():
     imf = IMF.objects.create(nom="IMF A", sigle="IA", type_imf="SA", adresse_siege="Dakar",
                              email="a@imf.sn", localisation_siege=Point(-17.44, 14.69))
     imf.bailleurs.add(fongip)
-    PointService.objects.create(imf=imf, nom="Siège", type_point="SIEGE", localisation=Point(-17.44, 14.69), nombre_membres=100)
+    PointService.objects.create(imf=imf, nom="Siège", type_point="AGENCE", est_siege=True, localisation=Point(-17.44, 14.69), nombre_membres=100)
     PointService.objects.create(imf=imf, nom="Guichet", type_point="GUICHET", nombre_membres=50)
     d1 = Dirigeant.objects.create(nom="Diop", prenom="Awa", email_professionnel="awa@ia.sn")
     d2 = Dirigeant.objects.create(nom="Fall", prenom="Ali")
@@ -69,7 +69,7 @@ def test_points_recherche_tri_et_fiche(jeu, client_consultant):
     assert client_consultant.get(f"{url}?search=33 800").data["count"] == 1
     assert client_consultant.get(f"{url}?search=IA").data["count"] == 2
     # Tri : les valeurs vides restent en dernier, dans les deux sens.
-    autre = PointService.objects.create(imf=jeu["imf"], nom="Bureau", type_point="BUREAU")
+    autre = PointService.objects.create(imf=jeu["imf"], nom="Bureau", type_point="AGENCE")
     for sens in ("nombre_membres", "-nombre_membres"):
         noms = [p["nom"] for p in client_consultant.get(f"{url}?ordering={sens}").data["results"]]
         assert noms[-1] == "Bureau"

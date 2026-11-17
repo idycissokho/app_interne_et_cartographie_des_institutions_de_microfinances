@@ -52,7 +52,7 @@ def _jeu_de_donnees(nombre: int) -> None:
     depart = IMF.objects.count()
     for i in range(depart, depart + nombre):
         imf = IMF.objects.create(
-            nom=f"IMF {i}", sigle=f"I{i}", type_imf="MUTUELLE", statut_reglementaire="AGREE",
+            nom=f"IMF {i}", sigle=f"I{i}", type_imf="MUTUELLE", statut_reglementaire="EN_ACTIVITE",
             adresse_siege="Dakar", region=region,
         )
         imf.bailleurs.add(Bailleur.objects.create(nom=f"Bailleur {i}", sigle=f"B{i}"))
@@ -110,8 +110,8 @@ def test_reponse_en_cache_puis_invalidee_par_une_ecriture(client_admin, url):
 def test_statistiques_identiques_aux_compteurs_des_listes(client_admin):
     """Chaque compteur agrégé vaut le « count » de la liste filtrée qu'il remplace."""
     _jeu_de_donnees(4)
-    IMF.objects.filter(sigle="I0").update(statut_reglementaire="EN_COURS", type_imf="SA", telephone="33 800 00 00")
-    IMF.objects.filter(sigle="I1").update(statut_reglementaire="RADIEE", is_active=False)
+    IMF.objects.filter(sigle="I0").update(statut_reglementaire="OPR", type_imf="SA", telephone="33 800 00 00")
+    IMF.objects.filter(sigle="I1").update(statut_reglementaire="RETRAIT_AGREMENT", is_active=False)
     PointService.objects.filter(nom="Point 2-0").update(localisation=None, type_point="GUICHET")
     Mandat.objects.filter(dirigeant__nom="Nom20").update(date_fin=date.today() + timedelta(days=10))
     Mandat.objects.filter(dirigeant__nom="Nom21").update(documents_justificatifs="https://exemple.sn/pv.pdf")
@@ -125,11 +125,11 @@ def test_statistiques_identiques_aux_compteurs_des_listes(client_admin):
     stats = client_admin.get("/api/v1/cartographie/statistiques/").json()
     dans_30_jours = (date.today() + timedelta(days=30)).isoformat()
     assert stats["imf"]["total"] == compte("/imf/?page_size=1") == 3
-    assert stats["imf"]["agreees"] == compte("/imf/?statut_reglementaire=AGREE&page_size=1")
-    assert stats["imf"]["en_cours"] == compte("/imf/?statut_reglementaire=EN_COURS&page_size=1") == 1
-    assert stats["imf"]["radiees"] == compte("/imf/?statut_reglementaire=RADIEE&page_size=1") == 0
-    assert stats["imf"]["agreees_depuis_janvier"] == compte(
-        f"/imf/?statut_reglementaire=AGREE&date_creation__gte={date.today().year}-01-01&page_size=1"
+    assert stats["imf"]["en_activite"] == compte("/imf/?statut_reglementaire=EN_ACTIVITE&page_size=1")
+    assert stats["imf"]["opr"] == compte("/imf/?statut_reglementaire=OPR&page_size=1") == 1
+    assert stats["imf"]["retrait_agrement"] == compte("/imf/?statut_reglementaire=RETRAIT_AGREMENT&page_size=1") == 0
+    assert stats["imf"]["en_activite_depuis_janvier"] == compte(
+        f"/imf/?statut_reglementaire=EN_ACTIVITE&date_creation__gte={date.today().year}-01-01&page_size=1"
     )
     for type_imf in ("MUTUELLE", "COOPERATIVE", "SA"):
         assert stats["imf"]["par_type"][type_imf] == compte(f"/imf/?type_imf={type_imf}&page_size=1")
@@ -138,7 +138,7 @@ def test_statistiques_identiques_aux_compteurs_des_listes(client_admin):
 
     assert stats["points"]["total"] == compte("/points-service/?page_size=1")
     assert stats["points"]["sans_gps"] == compte("/points-service/?sans_gps=true&page_size=1") == 1
-    for type_point in ("SIEGE", "AGENCE", "GUICHET", "BUREAU"):
+    for type_point in ("AGENCE", "GUICHET"):
         assert stats["points"]["par_type"][type_point] == compte(f"/points-service/?type_point={type_point}&page_size=1")
 
     assert stats["mandats"]["total"] == compte("/dirigeants/mandats/?page_size=1")
@@ -169,7 +169,7 @@ def test_geojson_des_points_format_et_filtres(client_admin):
     point = collection["features"][0]
     assert point["type"] == "Feature" and point["geometry"] == {"type": "Point", "coordinates": [-17.4, 14.7]}
     assert set(point["properties"]) == {
-        "nom", "imf", "imf_nom", "type_point", "statut_point",
+        "nom", "imf", "imf_nom", "type_point", "est_siege", "statut_point",
         "region_nom", "departement_nom", "commune_nom", "telephone", "email",
     }
     assert point["properties"]["region_nom"] == "Dakar" and point["properties"]["imf_nom"].startswith("IMF ")

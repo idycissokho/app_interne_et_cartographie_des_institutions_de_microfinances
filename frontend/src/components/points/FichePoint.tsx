@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 
 import { useAuth } from "../../auth/AuthContext";
 import { montantCourt, nombre } from "../../lib/format";
-import { STATUT_POINT, TYPE_POINT, regionAffichee } from "../../lib/metier";
+import { STATUT_IMF_LONG, STATUT_POINT, TYPE_POINT, regionAffichee } from "../../lib/metier";
 import { useDonnees } from "../../lib/useDonnees";
 import { COULEUR_TYPE_POINT } from "../../styles/tokens";
 import { dateCourte } from "../dirigeants/FicheDirigeant";
@@ -17,14 +17,14 @@ import { Badge, TON_STATUT } from "../tableau/Tableau";
 
 export interface PointDetail {
   id: string; imf: string; imf_nom: string; imf_sigle: string; nom: string; reference_externe: string;
-  type_point: string; statut_point: string; statut_reglementaire: string; adresse: string; lieu_dit: string;
+  type_point: string; est_siege: boolean; statut_point: string; statut_reglementaire: string; adresse: string; lieu_dit: string;
   region: string | null; departement: string | null; commune: string | null;
   region_nom: string | null; departement_nom: string | null; commune_nom: string | null;
   localisation: { coordinates: [number, number] } | null; telephone: string; email: string; url_fiche: string;
   date_ouverture: string | null; nombre_membres: number | null; encours: string; depots: string | null; date_modification: string;
 }
 
-const REGL: Record<string, string> = { EN_COURS: "En cours d'agrément", AGREE: "Agréé", RADIE: "Radié" };
+const REGL = STATUT_IMF_LONG;
 const titreSection: CSSProperties = { margin: 0, fontSize: "var(--t-base)", fontWeight: 700 };
 const grille: CSSProperties = { margin: 0, display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "14px 18px" };
 
@@ -53,8 +53,8 @@ export function FichePoint({ id, onClose, onModifier, onVoirInstitution }: { id:
         {p && (<>
           <section style={{ padding: 16, borderRadius: 12, background: "#FFFFFF", border: "1px solid #E7E5E4", display: "flex", flexDirection: "column", gap: 12 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: "var(--t-sm)", fontWeight: 500, color: "#4A5568" }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: couleur }} />{TYPE_POINT[p.type_point] ?? p.type_point}</span>
-              <Badge ton={TON_STATUT[p.statut_point === "SUSPENDU" ? "SUSPENDU_POINT" : p.statut_point]}>{STATUT_POINT[p.statut_point] ?? p.statut_point}</Badge>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: "var(--t-sm)", fontWeight: 500, color: "#4A5568" }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: couleur }} />{TYPE_POINT[p.type_point] ?? p.type_point}{p.est_siege ? " · Siège social" : ""}</span>
+              <Badge ton={TON_STATUT[p.statut_point]}>{STATUT_POINT[p.statut_point] ?? p.statut_point}</Badge>
               <span style={{ fontSize: "var(--t-sm)", color: "#6B7280" }}>{REGL[p.statut_reglementaire] ?? p.statut_reglementaire}</span>
             </div>
             <div>

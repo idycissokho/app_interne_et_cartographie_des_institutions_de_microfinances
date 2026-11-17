@@ -18,7 +18,7 @@ interface Ligne {
   region_siege: string | null; a_gps: boolean; nb_points_service: number; nb_dirigeants_en_fonction: number; bailleurs_noms: string[];
 }
 
-const TABMAP: [string, string][] = [["Toutes", ""], ["Agréées", "AGREE"], ["En cours", "EN_COURS"], ["Radiées", "RADIEE"]];
+const TABMAP: [string, string][] = [["Toutes", ""], ["En activité", "EN_ACTIVITE"], ["OPR", "OPR"], ["Retrait d'agrément", "RETRAIT_AGREMENT"]];
 const TYPES: [string, string][] = [["Tous", ""], ["Mutuelle", "MUTUELLE"], ["Coopérative", "COOPERATIVE"], ["Société Anonyme", "SA"], ["Association", "ASSOCIATION"]];
 // Exception demandée : le tableau des institutions affiche 8 lignes par page (6 ailleurs).
 const TAILLE = 8;
@@ -43,9 +43,9 @@ export function Institutions() {
     {
       rows: `/imf/${qs({ ...base, statut_reglementaire: tab, page, page_size: TAILLE })}`,
       t0: `/imf/${qs({ ...base, page_size: 1 })}`,
-      t1: `/imf/${qs({ ...base, statut_reglementaire: "AGREE", page_size: 1 })}`,
-      t2: `/imf/${qs({ ...base, statut_reglementaire: "EN_COURS", page_size: 1 })}`,
-      t3: `/imf/${qs({ ...base, statut_reglementaire: "RADIEE", page_size: 1 })}`,
+      t1: `/imf/${qs({ ...base, statut_reglementaire: "EN_ACTIVITE", page_size: 1 })}`,
+      t2: `/imf/${qs({ ...base, statut_reglementaire: "OPR", page_size: 1 })}`,
+      t3: `/imf/${qs({ ...base, statut_reglementaire: "RETRAIT_AGREMENT", page_size: 1 })}`,
     },
     [version],
   );

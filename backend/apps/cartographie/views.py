@@ -217,12 +217,12 @@ class StatistiquesView(APIView):
         Statut = IMF.StatutReglementaire
         imf = imfs.aggregate(
             total=Count("pk"),
-            agreees=Count("pk", filter=Q(statut_reglementaire=Statut.AGREE)),
-            agreees_depuis_janvier=Count(
-                "pk", filter=Q(statut_reglementaire=Statut.AGREE, date_creation__gte=debut_annee)
+            en_activite=Count("pk", filter=Q(statut_reglementaire=Statut.EN_ACTIVITE)),
+            en_activite_depuis_janvier=Count(
+                "pk", filter=Q(statut_reglementaire=Statut.EN_ACTIVITE, date_creation__gte=debut_annee)
             ),
-            en_cours=Count("pk", filter=Q(statut_reglementaire=Statut.EN_COURS)),
-            radiees=Count("pk", filter=Q(statut_reglementaire=Statut.RADIEE)),
+            opr=Count("pk", filter=Q(statut_reglementaire=Statut.OPR)),
+            retrait_agrement=Count("pk", filter=Q(statut_reglementaire=Statut.RETRAIT_AGREMENT)),
             # Fiche incomplète : téléphone, email ou position GPS du siège manquant.
             incompletes=Count("pk", filter=Q(telephone="") | Q(email="") | Q(localisation_siege__isnull=True)),
         )

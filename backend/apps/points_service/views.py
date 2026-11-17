@@ -95,7 +95,7 @@ class PointServiceGeoView(generics.GenericAPIView):
     pagination_class = None
     PROPRIETES = {
         "nom": "nom", "imf": "imf_id", "imf_nom": "imf__nom",
-        "type_point": "type_point", "statut_point": "statut_point",
+        "type_point": "type_point", "est_siege": "est_siege", "statut_point": "statut_point",
         "region_nom": "region__nom", "departement_nom": "departement__nom", "commune_nom": "commune__nom",
         "telephone": "telephone", "email": "email",
     }
