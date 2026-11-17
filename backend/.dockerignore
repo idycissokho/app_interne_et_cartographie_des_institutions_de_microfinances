@@ -25,3 +25,4 @@ venv/
 .coverage
 htmlcov/
 .DS_Store
+donnees_initiales/

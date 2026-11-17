@@ -70,3 +70,7 @@ logs/
 
 # --- Déploiement (outils en ligne de commande) ---
 .vercel/
+
+# Données initiales (classeurs réels, rapports) : seul le mode d'emploi est versionné.
+backend/donnees_initiales/*
+!backend/donnees_initiales/LISEZMOI.md
