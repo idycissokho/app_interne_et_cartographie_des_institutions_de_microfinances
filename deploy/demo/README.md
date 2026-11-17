@@ -123,6 +123,11 @@ docker compose -f infra/docker-compose.yml run --rm --no-deps \
   -v "$PWD/backend/mediafiles/importations/<annuaire>.xlsx:/tmp/annuaire.xlsx:ro" \
   backend python manage.py charger_annuaire /tmp/annuaire.xlsx
 
+# 2 bis. Base déjà chargée avant l'ajout des départements : les charger, puis compléter le
+#    département des points d'après leur GPS (champs vides uniquement ; --simulation pour voir avant).
+docker compose -f infra/docker-compose.yml run --rm --no-deps -e DATABASE_URL="$NEON_URL" \
+  backend sh -c "python manage.py charger_departements && python manage.py rattacher_zones"
+
 # 3. Vérification : anonymiser à nouveau (sans effet si c'est déjà fait).
 docker compose -f infra/docker-compose.yml run --rm --no-deps -e DATABASE_URL="$NEON_URL" \
   backend python manage.py anonymiser_dirigeants --confirmer

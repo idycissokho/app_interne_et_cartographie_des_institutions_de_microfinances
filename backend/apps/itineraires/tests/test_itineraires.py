@@ -145,7 +145,7 @@ def test_pas_de_repli_sur_le_point_siege(client_superviseur, imf):
     """Une IMF sans GPS fiable reste invalide, même si son point « Siège » est géolocalisé."""
     imf.localisation_siege = None
     imf.save()
-    PointService.objects.create(imf=imf, nom="Siège", type_point="SIEGE", localisation=Point(-16.93, 14.79))
+    PointService.objects.create(imf=imf, nom="Siège", type_point="AGENCE", est_siege=True, localisation=Point(-16.93, 14.79))
     reponse = client_superviseur.get(f"{URL_RECHERCHE}institution/{imf.pk}/")
     assert reponse.status_code == 422
 
@@ -183,6 +183,15 @@ def test_carte_toutes_les_structures_fiables(client_superviseur, imf, point):
     assert sorted((e["type"], e["nom"], e["type_point"]) for e in epingles) == [
         ("institution", "Mutuelle Test", "IMF"), ("point_service", "Agence Rufisque", "AGENCE"),
     ]
+
+
+def test_siege_social_signale(client_superviseur, imf):
+    """Le siège social est une agence marquée est_siege : signalé sur la carte et dans la fiche."""
+    siege = PointService.objects.create(imf=imf, nom="Siège Thiès", est_siege=True, localisation=Point(-16.92, 14.80))
+    epingle = next(e for e in client_superviseur.get(URL_CARTE).data["results"] if e["id"] == str(siege.pk))
+    assert epingle["siege"] is True and epingle["type_point"] == "AGENCE"
+    fiche = client_superviseur.get(f"{URL_RECHERCHE}point_service/{siege.pk}/").data
+    assert fiche["sous_titre"] == "Siège social · MT"
 
 
 def test_carte_refusee_au_consultant(client_consultant):

@@ -1,7 +1,7 @@
 """
 importation/management/commands/charger_annuaire.py
 ===================================================
-Charge en base l'export Excel de l'annuaire DRS-SFD : régions, institutions,
+Charge en base l'export Excel de l'annuaire DRS-SFD : régions, départements, institutions,
 points de service, puis dirigeants et mandats.
 
 La commande enchaîne les trois imports dans l'ordre imposé par leurs dépendances
@@ -39,8 +39,10 @@ class Command(BaseCommand):
         if not fichier.is_file():
             raise CommandError(f"Fichier introuvable : {fichier}")
 
-        # Les régions doivent exister avant l'import : elles servent au rattachement géographique.
+        # Les régions et départements doivent exister avant l'import : chaque point de service
+        # y est rattaché d'après son GPS à l'enregistrement (ZoneGeographique.zones_a_completer).
         call_command("charger_regions", stdout=self.stdout)
+        call_command("charger_departements", stdout=self.stdout)
 
         for type_import in ORDRE:
             with fichier.open("rb") as contenu:

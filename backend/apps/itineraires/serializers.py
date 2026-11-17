@@ -6,8 +6,10 @@ Entrée du calcul (origine, destination, modes) et formats de réponse (document
 
 from rest_framework import serializers
 
+from apps.cartographie.positions import dans_le_senegal
+
 from .fournisseurs import MODES
-from .services import MARGE_ORIGINE, TYPES, dans_le_senegal, modes_valides
+from .services import MARGE_ORIGINE, TYPES, modes_valides
 
 
 class PositionSerializer(serializers.Serializer):
@@ -90,6 +92,7 @@ class EpingleSerializer(serializers.Serializer):
     nom = serializers.CharField()
     sous_titre = serializers.CharField(help_text="Sigle de l'IMF (institution) ou IMF de rattachement (point).")
     type_point = serializers.CharField(help_text="« IMF » pour un siège d'institution, sinon le type du point.")
+    siege = serializers.BooleanField(help_text="Agence abritant le siège social de son IMF.")
     statut = serializers.CharField(allow_blank=True)
     lat = serializers.FloatField()
     lon = serializers.FloatField()
