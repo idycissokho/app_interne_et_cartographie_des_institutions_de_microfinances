@@ -20,7 +20,8 @@ interface Ligne {
 
 const TABMAP: [string, string][] = [["Toutes", ""], ["Agréées", "AGREE"], ["En cours", "EN_COURS"], ["Radiées", "RADIEE"]];
 const TYPES: [string, string][] = [["Tous", ""], ["Mutuelle", "MUTUELLE"], ["Coopérative", "COOPERATIVE"], ["Société Anonyme", "SA"], ["Association", "ASSOCIATION"]];
-const TAILLE = 20;
+// Exception demandée : le tableau des institutions affiche 8 lignes par page (6 ailleurs).
+const TAILLE = 8;
 const barreBtn: CSSProperties = { height: 30, padding: "0 12px", borderRadius: 8, border: "1px solid #D6D3D1", background: "#FFFFFF", color: "#0B1424", font: "inherit", fontSize: "var(--t-sm)", fontWeight: 500, cursor: "pointer" };
 const pastilleImf: CSSProperties = { width: 36, height: 36, flex: "none", borderRadius: 8, background: "#F5F5F4", color: "#44403C", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--t-xs)", fontWeight: 600 };
 
@@ -123,7 +124,7 @@ export function Institutions() {
               </tr>
             </thead>
             <tbody>
-              {!d.rows && <LignesChargement colonnes={9} />}
+              {!d.rows && <LignesChargement colonnes={9} lignes={TAILLE} />}
               {rows.map((r) => (
                 <tr key={r.id}>
                   <td data-label=""><input type="checkbox" className="in-check" aria-label={`Sélectionner ${r.nom}`} checked={!!sel[r.id]} onChange={() => setSel({ ...sel, [r.id]: !sel[r.id] })} /></td>

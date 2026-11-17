@@ -5,6 +5,7 @@
 import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 
+import logo from "../../assets/logo-drs-sfd.png";
 import { prechargerPage } from "../../lib/pages";
 
 export type CleMenu =
@@ -77,12 +78,20 @@ export function Sidebar({ active, role, nomComplet, onDeconnexion }: Props) {
 
   return (
     <nav className="app-nav" aria-label="Navigation principale" style={{ width: "100%", height: "100%", minHeight: 900, boxSizing: "border-box", background: "#0B1424", color: "#DCE2EC", padding: "24px 16px", display: "flex", flexDirection: "column", gap: 4, fontFamily: "var(--police)" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "4px 10px 22px 10px" }}>
-        <div style={{ width: 34, height: 34, borderRadius: 8, background: "#C9A44C", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0B1424" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z" /><circle cx="12" cy="9.5" r="2.5" /></svg>
+      {/* En-tête officiel : drapeau, République du Sénégal et devise, puis logo de la DRS-SFD (réduit). */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "0 6px" }}>
+        <svg width="24" height="16" viewBox="0 0 30 20" role="img" aria-label="Drapeau du Sénégal" style={{ flex: "none", borderRadius: 2 }}>
+          <rect width="10" height="20" fill="#00853F" /><rect x="10" width="10" height="20" fill="#FDEF42" /><rect x="20" width="10" height="20" fill="#E31B23" />
+          <path d="M15 6.2l1.06 3.27h3.44l-2.78 2.02 1.06 3.27L15 12.74l-2.78 2.02 1.06-3.27-2.78-2.02h3.44z" fill="#00853F" />
+        </svg>
+        <div style={{ minWidth: 0, lineHeight: 1.3 }}>
+          <div style={{ fontSize: "var(--t-sm)", fontWeight: 600, color: "#F4EFE3" }}>République du Sénégal</div>
+          <div style={{ fontSize: "var(--t-2xs)", color: "#8E99AB", whiteSpace: "nowrap" }}>Un Peuple – Un But – Une Foi</div>
         </div>
-        <div><div style={{ fontWeight: 700, fontSize: "var(--t-lg)", color: "#F4EFE3" }}>Carto IMF</div><div style={{ fontSize: "var(--t-2xs)", color: "#8E99AB" }}>DRS-SFD</div></div>
       </div>
+      <Link to="/" aria-label="Accueil — Direction de la Réglementation et de la Supervision des SFD" style={{ display: "inline-block", alignSelf: "flex-start", margin: "14px 8px 10px 8px", padding: "5px 7px", borderRadius: 6, background: "#FFFFFF" }}>
+        <img src={logo} alt="Direction de la Réglementation et de la Supervision des SFD" style={{ display: "block", width: 128, height: "auto" }} />
+      </Link>
       {groups.map((g) => (
         <div key={g.title} style={{ display: "contents" }}>
           <div style={{ fontSize: "var(--t-xs)", fontWeight: 500, color: "#7C889B", padding: "18px 12px 6px 12px" }}>{g.title}</div>
