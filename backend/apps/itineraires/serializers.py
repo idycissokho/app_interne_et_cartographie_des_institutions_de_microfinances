@@ -84,6 +84,21 @@ class RechercheReponseSerializer(serializers.Serializer):
     results = DestinationSerializer(many=True)
 
 
+class EpingleSerializer(serializers.Serializer):
+    type = serializers.ChoiceField(choices=TYPES)
+    id = serializers.UUIDField()
+    nom = serializers.CharField()
+    sous_titre = serializers.CharField(help_text="Sigle de l'IMF (institution) ou IMF de rattachement (point).")
+    type_point = serializers.CharField(help_text="« IMF » pour un siège d'institution, sinon le type du point.")
+    statut = serializers.CharField(allow_blank=True)
+    lat = serializers.FloatField()
+    lon = serializers.FloatField()
+
+
+class CarteReponseSerializer(serializers.Serializer):
+    results = EpingleSerializer(many=True)
+
+
 class ErreurSerializer(serializers.Serializer):
     code = serializers.CharField()
     detail = serializers.CharField()

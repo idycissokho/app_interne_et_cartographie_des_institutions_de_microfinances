@@ -1,8 +1,9 @@
 /**
  * Carte de la section « Itinéraire ».
  *
- * Même fond de carte (fondCarte.ts), mêmes épingles et mêmes libellés que <SenegalMap>, avec en plus :
- *  - points de service regroupés en grappes (un clic sur une grappe zoome dessus) ;
+ * Même rendu que la carte micro (<SenegalMap>) : fond de carte (fondCarte.ts), pays voisins voilés,
+ * contour du Sénégal, une épingle par structure — sièges des IMF compris — dès l'ouverture. En plus :
+ *  - un clic sur une épingle ouvre sa fiche (« Y aller ») ;
  *  - point de départ déplaçable, posé d'un clic sur la carte quand `placement` est actif ;
  *  - trajet tracé en or sur contour nuit, et recadrage sur l'ensemble du trajet.
  */
@@ -10,16 +11,23 @@ import "maplibre-gl/dist/maplibre-gl.css";
 
 import {
   AttributionControl, Map as Carte, Marker, NavigationControl,
-  type GeoJSONSource, type LngLatBoundsLike, type MapMouseEvent,
+  type ExpressionSpecification, type GeoJSONSource, type LngLatBoundsLike, type MapMouseEvent,
 } from "maplibre-gl";
 import { useEffect, useRef, useState } from "react";
 
+import masqueUrl from "../../data/senegal-masque.geojson?url";
 import { COULEUR_TYPE_POINT } from "../../styles/tokens";
 import { styleCarte } from "../carto/fondCarte";
-import { FR, dessinerEpingle, mouvementReduit, type StatutPoint, type TypePoint } from "../carto/SenegalMap";
-import type { Position } from "./types";
+import { FR, dessinerEpingle, mouvementReduit, type TypePoint } from "../carto/SenegalMap";
+import type { Position, TypeDestination } from "./types";
 
-export interface PointItineraire { id: string; nom: string; imf_nom: string; type: TypePoint; statut: StatutPoint; lat: number; lon: number }
+/** Épingle de la carte (GET /itineraires/destinations/carte/) : siège d'IMF (type_point « IMF ») ou point de service. */
+export interface PointItineraire {
+  type: TypeDestination; id: string; nom: string; sous_titre: string;
+  type_point: TypePoint | "IMF"; statut: string; lat: number; lon: number;
+}
+/** Couleur de l'épingle d'un siège d'institution : nuit cerclée d'or (les points gardent celles de la carte micro). */
+export const COULEUR_IMF = "#0B1424";
 export interface Marges { top: number; right: number; bottom: number; left: number }
 
 interface Props {
@@ -59,11 +67,14 @@ export function CarteItineraire({ points, origine, destination, trajet, placemen
   useEffect(() => {
     let annule = false;
     let carte: Carte | null = null;
-    styleCarte("light").then((fond) => {
+    const masque = fetch(masqueUrl).then((r) => r.json()).catch(() => null);
+    Promise.all([styleCarte("light"), masque]).then(([fond, contours]) => {
       if (annule || !conteneur.current) return;
       setHorsLigne(fond.horsLigne);
       carte = new Carte({
         container: conteneur.current, style: fond.style, bounds: SENEGAL, maxBounds: LIMITES, maxZoom: 18,
+        // Sur téléphone, le pays est cadré dans la partie visible, au-dessus du panneau.
+        fitBoundsOptions: { padding: { top: 16, right: 16, left: 16, bottom: etat.current.marges.bottom + 16 } },
         attributionControl: false, dragRotate: false, pitchWithRotate: false, touchPitch: false,
         renderWorldCopies: false, fadeDuration: 150, locale: FR,
       });
@@ -78,30 +89,35 @@ export function CarteItineraire({ points, origine, destination, trajet, placemen
         (Object.keys(COULEUR_TYPE_POINT) as TypePoint[]).forEach((t) =>
           c.addImage(`epingle-${t}`, dessinerEpingle(COULEUR_TYPE_POINT[t], "#FFFFFF", "#FFFFFF"), { pixelRatio: 2 }));
         c.addImage("epingle-FERME", dessinerEpingle("#FFFFFF", "#6B7280", "#9AA3B2"), { pixelRatio: 2 });
+        c.addImage("epingle-IMF", dessinerEpingle(COULEUR_IMF, "#C9A44C", "#C9A44C"), { pixelRatio: 2 });
         c.addImage("epingle-arrivee", dessinerEpingle("#C9A44C", "#0B1424", "#0B1424"), { pixelRatio: 2 });
+
+        // Comme la carte micro : pays voisins voilés et contour du Sénégal, sous les noms de lieux.
+        if (contours) {
+          const avant = fond.style.layers.find((l) => l.type === "symbol" && l.layout && "text-field" in l.layout)?.id;
+          c.addSource("masque", { type: "geojson", data: contours });
+          c.addLayer({ id: "voile", type: "fill", source: "masque", filter: ["==", ["get", "role"], "voile"],
+            paint: { "fill-color": "#FAF7F0", "fill-opacity": 0.84, "fill-antialias": false } }, avant);
+          c.addLayer({ id: "contour", type: "line", source: "masque", filter: ["==", ["get", "role"], "contour"], layout: { "line-join": "round" },
+            paint: { "line-color": "#0B1424", "line-width": ["interpolate", ["linear"], ["zoom"], 5, 1.2, 9, 2.2], "line-opacity": 0.7 } }, avant);
+        }
 
         c.addSource("trajet", { type: "geojson", data: VIDE });
         c.addSource("arrivee", { type: "geojson", data: VIDE });
-        c.addSource("points", { type: "geojson", data: VIDE, cluster: true, clusterRadius: 44, clusterMaxZoom: 12 });
+        c.addSource("points", { type: "geojson", data: VIDE });
 
         c.addLayer({ id: "trajet-contour", type: "line", source: "trajet", layout: { "line-join": "round", "line-cap": "round" },
           paint: { "line-color": "#0B1424", "line-width": ["interpolate", ["linear"], ["zoom"], 6, 6, 14, 11] } });
         c.addLayer({ id: "trajet", type: "line", source: "trajet", layout: { "line-join": "round", "line-cap": "round" },
           paint: { "line-color": "#C9A44C", "line-width": ["interpolate", ["linear"], ["zoom"], 6, 3, 14, 6] } });
-        c.addLayer({ id: "grappes", type: "circle", source: "points", filter: ["has", "point_count"],
-          paint: {
-            "circle-color": "#0B1424", "circle-stroke-color": "#C9A44C", "circle-stroke-width": 2,
-            "circle-radius": ["step", ["get", "point_count"], 15, 10, 19, 50, 24],
-          } });
-        if (fond.style.glyphs) {
-          c.addLayer({ id: "grappes-nombre", type: "symbol", source: "points", filter: ["has", "point_count"],
-            layout: { "text-field": ["get", "point_count_abbreviated"], "text-font": ["Noto Sans Bold"], "text-size": 12, "text-allow-overlap": true },
-            paint: { "text-color": "#F4EFE3" } });
-        }
-        c.addLayer({ id: "points", type: "symbol", source: "points", filter: ["!", ["has", "point_count"]],
+        // Une épingle par structure, tailles de la carte micro ; sièges (IMF et « Siège social ») au-dessus.
+        const siege: ExpressionSpecification = ["in", ["get", "type"], ["literal", ["SIEGE", "IMF"]]];
+        c.addLayer({ id: "points", type: "symbol", source: "points",
           layout: {
             "icon-image": ["case", ["==", ["get", "statut"], "FERME"], "epingle-FERME", ["concat", "epingle-", ["get", "type"]]],
-            "icon-anchor": "bottom", "icon-allow-overlap": true, "icon-size": ["interpolate", ["linear"], ["zoom"], 8, 0.7, 14, 1],
+            "icon-anchor": "bottom", "icon-allow-overlap": true, "icon-ignore-placement": true,
+            "icon-size": ["interpolate", ["linear"], ["zoom"], 5, ["case", siege, 0.6, 0.44], 9, ["case", siege, 0.95, 0.78], 13, ["case", siege, 1.2, 1]],
+            "symbol-sort-key": ["case", ["==", ["get", "type"], "IMF"], 3, siege, 2, 1],
           },
           paint: { "icon-opacity": ["case", ["==", ["get", "statut"], "SUSPENDU"], 0.55, 1] } });
         c.addLayer({ id: "arrivee", type: "symbol", source: "arrivee",
@@ -112,21 +128,20 @@ export function CarteItineraire({ points, origine, destination, trajet, placemen
         sources?.removeAttribute("open");
 
         c.on("click", (e: MapMouseEvent) => {
-          const [f] = c.queryRenderedFeatures(e.point, { layers: ["grappes", "points"] });
-          if (f?.layer.id === "grappes") {
-            const id = f.properties?.cluster_id as number;
-            const centre = (f.geometry as unknown as { coordinates: [number, number] }).coordinates;
-            void (c.getSource("points") as GeoJSONSource).getClusterExpansionZoom(id).then((zoom) =>
-              c.easeTo({ center: centre, zoom, duration: mouvementReduit() ? 0 : 500 }));
-          } else if (f?.layer.id === "points") {
-            const p = etat.current.points.find((x) => x.id === f.properties?.id);
+          // Un siège d'IMF et son point « Siège social » partagent souvent la même position :
+          // on retient l'épingle dessinée au-dessus (institution, puis siège, puis les autres).
+          const rang = (t: unknown) => (t === "IMF" ? 0 : t === "SIEGE" ? 1 : 2);
+          const [f] = c.queryRenderedFeatures(e.point, { layers: ["points"] })
+            .sort((a, b) => rang(a.properties?.type) - rang(b.properties?.type));
+          if (f) {
+            const p = etat.current.points.find((x) => `${x.type}:${x.id}` === f.properties?.cle);
             if (p) etat.current.onPoint(p);
           } else if (etat.current.placement) {
             etat.current.onOrigine({ lat: e.lngLat.lat, lon: e.lngLat.lng });
           }
         });
         c.on("mousemove", (e) => {
-          const survol = c.queryRenderedFeatures(e.point, { layers: ["grappes", "points"] }).length > 0;
+          const survol = c.queryRenderedFeatures(e.point, { layers: ["points"] }).length > 0;
           c.getCanvas().style.cursor = survol ? "pointer" : etat.current.placement ? "crosshair" : "";
         });
         carteRef.current = c;
@@ -154,7 +169,7 @@ export function CarteItineraire({ points, origine, destination, trajet, placemen
     (c.getSource("points") as GeoJSONSource).setData({
       type: "FeatureCollection",
       features: points.map((p) => ({
-        type: "Feature", properties: { id: p.id, type: p.type, statut: p.statut },
+        type: "Feature", properties: { cle: `${p.type}:${p.id}`, type: p.type_point, statut: p.statut },
         geometry: { type: "Point", coordinates: [p.lon, p.lat] },
       })),
     });
@@ -192,9 +207,6 @@ export function CarteItineraire({ points, origine, destination, trajet, placemen
     (c.getSource("trajet") as GeoJSONSource).setData(ligne(trajet));
     // Trajet affiché : les autres points s'estompent pour laisser le tracé lisible.
     const estompe = trajet ? 0.35 : 1;
-    c.setPaintProperty("grappes", "circle-opacity", estompe);
-    c.setPaintProperty("grappes", "circle-stroke-opacity", estompe);
-    if (c.getLayer("grappes-nombre")) c.setPaintProperty("grappes-nombre", "text-opacity", estompe);
     c.setPaintProperty("points", "icon-opacity", ["case", ["==", ["get", "statut"], "SUSPENDU"], 0.55 * estompe, estompe]);
     const coords: [number, number][] = [...(trajet ?? [])];
     if (destination) coords.push([destination.lon, destination.lat]);
@@ -216,6 +228,13 @@ export function CarteItineraire({ points, origine, destination, trajet, placemen
     <div className="cs-carte it-carte-cadre">
       <div ref={conteneur} style={{ position: "absolute", inset: 0 }} role="region" aria-label="Carte de l'itinéraire" />
       {horsLigne && <div className="cs-hors-ligne">Fond de carte indisponible (hors ligne)</div>}
+      <ul className="it-legende" aria-label="Légende">
+        <li><span style={{ background: COULEUR_IMF, boxShadow: "0 0 0 2px #C9A44C" }} />Institution (siège)</li>
+        <li><span style={{ background: COULEUR_TYPE_POINT.SIEGE }} />Siège social</li>
+        <li><span style={{ background: COULEUR_TYPE_POINT.AGENCE }} />Agence</li>
+        <li><span style={{ background: COULEUR_TYPE_POINT.GUICHET }} />Guichet</li>
+        <li><span style={{ background: COULEUR_TYPE_POINT.BUREAU }} />Bureau</li>
+      </ul>
     </div>
   );
 }

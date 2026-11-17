@@ -4,6 +4,7 @@ itineraires/views.py
 Section « Itinéraire » — réservée aux SUPERVISEUR et ADMIN (CONSULTANT : 403) :
   POST /api/v1/itineraires/calculer/                       — trajets à pied, moto, voiture
   GET  /api/v1/itineraires/destinations/?q=                — recherche d'IMF et de points géolocalisés
+  GET  /api/v1/itineraires/destinations/carte/             — toutes les épingles de la carte
   GET  /api/v1/itineraires/destinations/<type>/<uuid>/     — une destination (lien direct depuis une fiche)
 
 La position de l'utilisateur voyage dans le corps de la requête POST (jamais dans l'URL,
@@ -25,6 +26,7 @@ from .fournisseurs import ErreurFournisseur, FournisseurNonConfigure
 from .serializers import (
     CalculItineraireSerializer,
     CalculReponseSerializer,
+    CarteReponseSerializer,
     DestinationSerializer,
     ErreurSerializer,
     RechercheReponseSerializer,
@@ -33,6 +35,7 @@ from .services import (
     TYPES,
     DestinationSansPosition,
     calculer_itineraire,
+    destinations_carte,
     obtenir_destination,
     rechercher_destinations,
 )
@@ -128,6 +131,23 @@ class DestinationsView(APIView):
     def get(self, request):
         resultats = rechercher_destinations(request.query_params.get("q", ""))
         return Response({"results": [d.en_dict() for d in resultats]})
+
+
+class DestinationsCarteView(APIView):
+    permission_classes = [IsSuperviseurOrAdmin]
+
+    @extend_schema(
+        tags=["Itinéraires"],
+        operation_id="itineraires_destinations_carte",
+        summary="Toutes les destinations de la carte",
+        description=(
+            "Sièges des IMF et points de service dont la position GPS est fiable, en version courte, "
+            "pour afficher toutes les épingles dès l'ouverture de la page. Réponse mise en cache."
+        ),
+        responses={200: CarteReponseSerializer, 403: REPONSES_ERREUR[403]},
+    )
+    def get(self, request):
+        return Response({"results": destinations_carte()})
 
 
 class DestinationDetailView(APIView):

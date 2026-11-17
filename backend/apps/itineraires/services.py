@@ -152,6 +152,36 @@ def rechercher_destinations(texte: str, nb_imf: int = 8, nb_points: int = 12) ->
     return fiables_imf[:nb_imf] + fiables_pts[:nb_points]
 
 
+def destinations_carte() -> list[dict]:
+    """Toutes les structures à la position fiable, pour les épingles de la carte (version courte, en cache).
+
+    Sièges des IMF actives et points de service actifs ; deux requêtes SQL, aucun objet modèle.
+    """
+
+    def calcul() -> list[dict]:
+        imfs = IMF.objects.filter(is_active=True, localisation_siege__isnull=False).values_list(
+            "id", "nom", "sigle", "localisation_siege"
+        )
+        points = PointService.objects.filter(
+            is_active=True, imf__is_active=True, localisation__isnull=False
+        ).values_list("id", "nom", "type_point", "statut_point", "imf__nom", "imf__sigle", "localisation")
+        resultat = [
+            {"type": "institution", "id": str(i), "nom": nom, "sous_titre": sigle or "Institution",
+             "type_point": "IMF", "statut": "", "lat": round(pos.y, 5), "lon": round(pos.x, 5)}
+            for i, nom, sigle, pos in imfs
+            if raison_position_non_fiable(pos) is None
+        ]
+        resultat += [
+            {"type": "point_service", "id": str(i), "nom": nom, "sous_titre": imf_sigle or imf_nom,
+             "type_point": type_point, "statut": statut, "lat": round(pos.y, 5), "lon": round(pos.x, 5)}
+            for i, nom, type_point, statut, imf_nom, imf_sigle, pos in points
+            if raison_position_non_fiable(pos) is None
+        ]
+        return resultat
+
+    return en_cache("itineraire_carte", calcul)
+
+
 # ---------------------------------------------------------------------------
 # Calcul
 # ---------------------------------------------------------------------------

@@ -103,3 +103,10 @@
 .it-icone-depart{background:#0B1424;color:#FFFFFF}
 .it-choix .it-lien{white-space:nowrap}
 .it-resume{margin-left:auto;font-size:var(--t-sm);font-weight:600;color:#0B1424;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+
+/* Légende des épingles (coin bas gauche de la carte) */
+.it-legende{position:absolute;z-index:2;left:12px;bottom:12px;margin:0;padding:10px 12px;list-style:none;display:flex;flex-direction:column;gap:6px;background:rgba(255,255,255,.94);border:1px solid #E7E5E4;border-radius:10px;font-size:var(--t-xs);color:#1A2333;box-shadow:0 4px 14px rgba(11,20,36,.08)}
+.it-legende li{display:flex;align-items:center;gap:8px}
+.it-legende span{width:10px;height:10px;border-radius:50%;flex:none}
+@media (max-width: 760px){.it-legende{top:12px;bottom:auto;flex-direction:row;flex-wrap:wrap;right:64px;gap:4px 10px;padding:8px 10px}}
+.it-onglet-na{font-size:var(--t-md);font-weight:600;white-space:normal;overflow-wrap:anywhere}

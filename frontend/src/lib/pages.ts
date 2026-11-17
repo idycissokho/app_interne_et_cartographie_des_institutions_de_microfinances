@@ -33,7 +33,7 @@ const AU_SURVOL: Record<string, { page: () => Promise<unknown>; donnees: string[
   "/dirigeants": { page: PAGES.dirigeants, donnees: [] },
   "/donnees": { page: PAGES.donnees, donnees: [URL_STATISTIQUES] },
   "/audit": { page: PAGES.audit, donnees: [] },
-  "/itineraire": { page: PAGES.itineraire, donnees: ["/points-service/geojson/"] },
+  "/itineraire": { page: PAGES.itineraire, donnees: ["/itineraires/destinations/carte/"] },
 };
 
 /** À appeler au survol (ou au focus clavier) d'un lien : la page s'ouvrira sans attente. */
