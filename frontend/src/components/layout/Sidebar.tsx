@@ -60,8 +60,8 @@ export function Sidebar({ active, role, nomComplet, onDeconnexion }: Props) {
         ...(role === "admin" ? [mk("consultation", "Espace consultation", "/consultation")] : []),
         mk("micro", "Carte micro", "/carte/micro"),
         mk("macro", "Carte macro", "/carte/macro"),
-        // Itinéraire vers une IMF ou un point de service : superviseurs (terrain) et administrateurs.
-        ...(role !== "consultant" ? [mk("itineraire", "Itinéraire", "/itineraire")] : []),
+        // Itinéraire vers une IMF ou un point de service : tous les utilisateurs connectés.
+        mk("itineraire", "Itinéraire", "/itineraire"),
       ],
     },
     {

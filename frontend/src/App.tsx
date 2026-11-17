@@ -56,7 +56,7 @@ export function App() {
           <Route path="/dirigeants" element={<Protege><Dirigeants /></Protege>} />
           <Route path="/donnees" element={<Protege roles={ADMIN}><Donnees /></Protege>} />
           <Route path="/audit" element={<Protege roles={ADMIN}><Audit /></Protege>} />
-          <Route path="/itineraire" element={<Protege roles={GESTION}><Itineraire /></Protege>} />
+          <Route path="/itineraire" element={<Protege><Itineraire /></Protege>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         </Suspense>

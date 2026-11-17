@@ -1,7 +1,7 @@
 """
 itineraires/views.py
 ====================
-Section « Itinéraire » — réservée aux SUPERVISEUR et ADMIN (CONSULTANT : 403) :
+Section « Itinéraire » — ouverte à tous les utilisateurs connectés (CONSULTANT, SUPERVISEUR, ADMIN) :
   POST /api/v1/itineraires/calculer/                       — trajets à pied, moto, voiture
   GET  /api/v1/itineraires/destinations/?q=                — recherche d'IMF et de points géolocalisés
   GET  /api/v1/itineraires/destinations/carte/             — toutes les épingles de la carte
@@ -20,7 +20,7 @@ from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 
-from apps.authentication.permissions import IsSuperviseurOrAdmin
+from rest_framework.permissions import IsAuthenticated
 
 from .fournisseurs import ErreurFournisseur, FournisseurNonConfigure
 from .serializers import (
@@ -57,14 +57,14 @@ def _sans_position(erreur: DestinationSansPosition) -> Response:
 
 
 REPONSES_ERREUR = {
-    403: OpenApiResponse(description="Réservé aux superviseurs et administrateurs."),
+    401: OpenApiResponse(description="Connexion requise."),
     404: OpenApiResponse(description="Destination introuvable ou désactivée."),
     422: OpenApiResponse(ErreurSerializer, description="Destination sans position GPS fiable."),
 }
 
 
 class CalculerItineraireView(APIView):
-    permission_classes = [IsSuperviseurOrAdmin]
+    permission_classes = [IsAuthenticated]
     throttle_classes = [LimiteCalculs]
 
     @extend_schema(
@@ -115,7 +115,7 @@ class CalculerItineraireView(APIView):
 
 
 class DestinationsView(APIView):
-    permission_classes = [IsSuperviseurOrAdmin]
+    permission_classes = [IsAuthenticated]
 
     @extend_schema(
         tags=["Itinéraires"],
@@ -126,7 +126,7 @@ class DestinationsView(APIView):
             "positions GPS fiables. Deux caractères minimum ; 8 IMF et 12 points au plus."
         ),
         parameters=[OpenApiParameter("q", str, description="Texte recherché (2 caractères minimum).")],
-        responses={200: RechercheReponseSerializer, 403: REPONSES_ERREUR[403]},
+        responses={200: RechercheReponseSerializer, 401: REPONSES_ERREUR[401]},
     )
     def get(self, request):
         resultats = rechercher_destinations(request.query_params.get("q", ""))
@@ -134,7 +134,7 @@ class DestinationsView(APIView):
 
 
 class DestinationsCarteView(APIView):
-    permission_classes = [IsSuperviseurOrAdmin]
+    permission_classes = [IsAuthenticated]
 
     @extend_schema(
         tags=["Itinéraires"],
@@ -144,14 +144,14 @@ class DestinationsCarteView(APIView):
             "Sièges des IMF et points de service dont la position GPS est fiable, en version courte, "
             "pour afficher toutes les épingles dès l'ouverture de la page. Réponse mise en cache."
         ),
-        responses={200: CarteReponseSerializer, 403: REPONSES_ERREUR[403]},
+        responses={200: CarteReponseSerializer, 401: REPONSES_ERREUR[401]},
     )
     def get(self, request):
         return Response({"results": destinations_carte()})
 
 
 class DestinationDetailView(APIView):
-    permission_classes = [IsSuperviseurOrAdmin]
+    permission_classes = [IsAuthenticated]
 
     @extend_schema(
         tags=["Itinéraires"],

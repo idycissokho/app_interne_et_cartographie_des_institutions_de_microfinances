@@ -1,8 +1,8 @@
 # Section « Itinéraire »
 
 Calcule le trajet le plus rapide, **à pied, à moto et en voiture**, entre la position d'un
-superviseur et une IMF ou un point de service. Réservée aux rôles **SUPERVISEUR** et **ADMIN**
-(le CONSULTANT ne voit pas le menu ; l'API lui répond 403).
+superviseur et une IMF ou un point de service. Ouverte à tous les utilisateurs connectés
+(**CONSULTANT**, **SUPERVISEUR** et **ADMIN**) ; sans connexion, l'API répond 401.
 
 ## Comment ça marche
 
