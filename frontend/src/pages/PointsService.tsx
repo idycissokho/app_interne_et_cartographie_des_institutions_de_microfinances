@@ -20,7 +20,7 @@ import { montantCourt, nombre } from "../lib/format";
 import { STATUT_IMF_COURT, STATUT_POINT, TYPE_IMF_COURT, TYPE_POINT, initiales, regionAffichee } from "../lib/metier";
 import { nombreFr, regionProche } from "../lib/region";
 import { URL_IMF_OPTIONS, URL_STATISTIQUES, type ImfOption, type Statistiques } from "../lib/stats";
-import { Badge, BoutonIcone, CadreTableau, CelluleActions, EnTete, EtatVide, LigneGroupe, LignesChargement, Pagination, TON_STATUT, Tableau } from "../components/tableau/Tableau";
+import { Badge, BoutonIcone, CadreTableau, CelluleActions, EnTete, EtatVide, LigneGroupe, LignesChargement, Pagination, TON_STATUT, Tableau, PAR_PAGE } from "../components/tableau/Tableau";
 import { useDonnees } from "../lib/useDonnees";
 import { COULEUR_TYPE_POINT } from "../styles/tokens";
 
@@ -28,7 +28,7 @@ interface Ligne { id: string; nom: string; imf: string; imf_nom: string; imf_sig
 interface Detail { imf: string; nom: string; type_point: string; statut_point: string; statut_reglementaire: string; adresse: string; localisation: { coordinates: [number, number] } | null; region: string | null; departement: string | null; commune: string | null; telephone: string; email: string; date_ouverture: string | null; nombre_membres: number | null; encours: string; depots: string | null }
 interface Zone { id: string; nom: string; parent: string | null }
 
-const TAILLE = 20;
+const TAILLE = PAR_PAGE;
 const TYPES = Object.entries(TYPE_POINT);
 const STATUTS = Object.entries(STATUT_POINT);
 const REGL: [string, string][] = [["EN_COURS", "En cours d'agrément"], ["AGREE", "Agréé"], ["RADIE", "Radié"]];

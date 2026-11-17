@@ -78,20 +78,19 @@ export function Sidebar({ active, role, nomComplet, onDeconnexion }: Props) {
 
   return (
     <nav className="app-nav" aria-label="Navigation principale" style={{ width: "100%", height: "100%", minHeight: 900, boxSizing: "border-box", background: "#0B1424", color: "#DCE2EC", padding: "24px 16px", display: "flex", flexDirection: "column", gap: 4, fontFamily: "var(--police)" }}>
-      {/* En-tête officiel : drapeau, République du Sénégal et devise, puis logo de la DRS-SFD (réduit). */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "0 6px" }}>
-        <svg width="24" height="16" viewBox="0 0 30 20" role="img" aria-label="Drapeau du Sénégal" style={{ flex: "none", borderRadius: 2 }}>
+      {/* En-tête officiel, centré : drapeau, République et devise, filet, puis logo de la Direction. */}
+      <header style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 6, padding: "4px 8px 20px 8px", marginBottom: 6, borderBottom: "1px solid rgba(255,255,255,.08)" }}>
+        <svg width="33" height="22" viewBox="0 0 30 20" role="img" aria-label="Drapeau du Sénégal" style={{ display: "block", borderRadius: 2, boxShadow: "0 0 0 1px rgba(255,255,255,.12)" }}>
           <rect width="10" height="20" fill="#00853F" /><rect x="10" width="10" height="20" fill="#FDEF42" /><rect x="20" width="10" height="20" fill="#E31B23" />
           <path d="M15 6.2l1.06 3.27h3.44l-2.78 2.02 1.06 3.27L15 12.74l-2.78 2.02 1.06-3.27-2.78-2.02h3.44z" fill="#00853F" />
         </svg>
-        <div style={{ minWidth: 0, lineHeight: 1.3 }}>
-          <div style={{ fontSize: "var(--t-sm)", fontWeight: 600, color: "#F4EFE3" }}>République du Sénégal</div>
-          <div style={{ fontSize: "var(--t-2xs)", color: "#8E99AB", whiteSpace: "nowrap" }}>Un Peuple – Un But – Une Foi</div>
-        </div>
-      </div>
-      <Link to="/" aria-label="Accueil — Direction de la Réglementation et de la Supervision des SFD" style={{ display: "inline-block", alignSelf: "flex-start", margin: "14px 8px 10px 8px", padding: "5px 7px", borderRadius: 6, background: "#FFFFFF" }}>
-        <img src={logo} alt="Direction de la Réglementation et de la Supervision des SFD" style={{ display: "block", width: 128, height: "auto" }} />
-      </Link>
+        <div style={{ marginTop: 4, fontSize: "var(--t-xs)", fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: "#F4EFE3" }}>République du Sénégal</div>
+        <div style={{ fontSize: "var(--t-2xs)", fontStyle: "italic", color: "#8E99AB", whiteSpace: "nowrap" }}>Un Peuple – Un But – Une Foi</div>
+        <span aria-hidden="true" style={{ width: 28, height: 1, margin: "8px 0 6px 0", background: "rgba(201,164,76,.6)" }} />
+        <Link to="/" aria-label="Accueil — Direction de la Réglementation et de la Supervision des SFD" style={{ display: "block", padding: "6px 8px", borderRadius: 6, background: "#FFFFFF" }}>
+          <img src={logo} alt="Direction de la Réglementation et de la Supervision des SFD" style={{ display: "block", width: 140, height: "auto" }} />
+        </Link>
+      </header>
       {groups.map((g) => (
         <div key={g.title} style={{ display: "contents" }}>
           <div style={{ fontSize: "var(--t-xs)", fontWeight: 500, color: "#7C889B", padding: "18px 12px 6px 12px" }}>{g.title}</div>

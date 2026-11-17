@@ -176,7 +176,7 @@ textarea.fi-input{height:auto;min-height:88px;padding:12px 14px;resize:vertical;
 .ps-input{height:46px;box-sizing:border-box;width:100%;border-radius:10px;border:1.5px solid #D6D3D1;background:#FFFFFF;padding:0 14px;font:inherit;font-size:var(--t-base);color:#0B1424;transition:border-color .15s ease,box-shadow .15s ease}
 .ps-input::placeholder{color:#9AA3B2}
 .ps-input:focus{outline:none;border-color:#C9A44C;box-shadow:0 0 0 4px rgba(201,164,76,.18)}
-.ps-input.auto{background:#FFFFFF;border-style:dashed}
+.ps-input.auto{background-color:#FFFFFF;border-style:dashed}
 select.ps-input{cursor:pointer;padding-right:10px;accent-color:#C9A44C}
 .ps-unit{position:relative}
 .ps-unit>span{position:absolute;right:14px;top:14px;font-size:var(--t-xs);font-weight:700;color:#8A6A1F}
@@ -488,3 +488,20 @@ html.cs-fige{overflow:hidden}
 /* Sidebar : survol discret des liens */
 .nav-lien{transition:color .12s ease,background-color .12s ease}
 .nav-lien:not([aria-current=page]):hover{color:#FFFFFF !important;background:rgba(255,255,255,.04)}
+.liste-pied{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding-top:4px;font-size:var(--t-sm);color:#6B7280}
+
+/* Listes déroulantes : même rendu sur Safari, Chrome et Firefox (plus de bouton natif en relief).
+   Fond blanc, bordure fine, flèche discrète, aucune ombre. */
+select.fi-input,select.ps-input,select.di-input{
+  -webkit-appearance:none;-moz-appearance:none;appearance:none;
+  height:44px;padding:0 40px 0 14px;border:1px solid #D6D3D1;border-radius:10px;
+  background-color:#FFFFFF;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center;background-size:16px 16px;
+  font:inherit;font-size:var(--t-md);color:#0B1424;cursor:pointer;box-shadow:none;
+  text-overflow:ellipsis;white-space:nowrap;overflow:hidden;
+}
+select.fi-input:hover,select.ps-input:hover,select.di-input:hover{border-color:#A8A29E}
+select.fi-input:focus,select.ps-input:focus,select.di-input:focus{outline:none;border-color:#C9A44C;box-shadow:0 0 0 3px rgba(201,164,76,.18)}
+select.fi-input:disabled,select.ps-input:disabled,select.di-input:disabled{background-color:#FAFAF9;color:#8B8F98;cursor:not-allowed}
+select.fi-input::-ms-expand{display:none}
+select.fi-input.bad,select.ps-input.bad,select.di-input.bad{border-color:#DC2626}

@@ -6,10 +6,9 @@ import { useEffect, useState, type CSSProperties } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import type { Page } from "../api/types";
-import { useAuth } from "../auth/AuthContext";
 import { SenegalMap } from "../components/carto/SenegalMap";
 import { AppLayout } from "../components/layout/AppLayout";
-import { Badge, TON_STATUT } from "../components/tableau/Tableau";
+import { Badge, PAR_PAGE, Pagination, TON_STATUT } from "../components/tableau/Tableau";
 import { CODE_FONCTION, nombre } from "../lib/format";
 import {
   FAMILLE_FONCTION, LIBELLE_FONCTION, STATUT_IMF_COURT, STATUT_MANDAT, STATUT_POINT, TYPE_IMF_COURT, TYPE_POINT,
@@ -32,13 +31,18 @@ const CHIPS: [string, string][] = [["", "Toutes"], ["MUTUELLE", "Mutuelle"], ["C
 const DCHIPS = ["Tous", "Gouvernance", "Direction", "Comités", "Contrôle"];
 
 export function Consultation() {
-  const { utilisateur } = useAuth();
   const [params] = useSearchParams();
   const [q, setQ] = useState(params.get("q") ?? "");
   const [type, setType] = useState("");
   const [sel, setSel] = useState<string | null>(params.get("imf"));
   const [tab, setTab] = useState<(typeof TABS)[number]["k"]>("apercu");
   const [dchip, setDchip] = useState("Tous");
+  // Listes paginées par 6 (annuaire, points de service et dirigeants de la fiche).
+  const [pageListe, setPageListe] = useState(1);
+  const [pagePts, setPagePts] = useState(1);
+  const [pageDirs, setPageDirs] = useState(1);
+  useEffect(() => { setPageListe(1); }, [q, type]);
+  useEffect(() => { setPagePts(1); setPageDirs(1); }, [sel, dchip]);
 
   const { donnees: l } = useDonnees<{ imfs: ImfLigne[]; zones: AgregatZone[] }>({ imfs: URL_IMF_OPTIONS, zones: URL_REGIONS });
   const imfs = l.imfs ?? VIDE;
@@ -56,10 +60,12 @@ export function Consultation() {
   // Pastille : sigle court (5 lettres au plus) sinon initiales, pour rester lisible dans le carré.
   const court = (m: ImfLigne) => { const s = (m.sigle || "").trim().split(/\s+/)[0]; return s && s.length <= 5 ? s : initiales(m.nom); };
   const dirs = (f.dirs?.results ?? []).filter((d) => dchip === "Tous" || FAMILLE_FONCTION[d.fonction_mandat] === dchip);
-  const actif = utilisateur?.role === "CONSULTANT" ? "consultation" : "imf";
+  const tranche = <T,>(liste: T[], page: number) => liste.slice((page - 1) * PAR_PAGE, page * PAR_PAGE);
+  const nbPages = (n: number) => Math.max(1, Math.ceil(n / PAR_PAGE));
+  const pts = f.pts?.results ?? [];
 
   return (
-    <AppLayout active={actif} minHeight={1300}>
+    <AppLayout active="consultation" minHeight={1300}>
       <main className="app-main" style={{ flex: "999 1 640px", minWidth: 0, padding: "28px 32px 48px 32px", boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 22 }}>
         <header className="co-in" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 16, flexWrap: "wrap" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -80,7 +86,7 @@ export function Consultation() {
               {CHIPS.map(([v, label]) => <button key={label} type="button" aria-pressed={v === type} onClick={() => setType(v)} style={chip(v === type)}>{label}</button>)}
             </div>
             <div style={{ fontSize: "var(--t-xs)", fontWeight: 600, color: "#6B7280", padding: "4px 4px 0 4px" }}>{list.length} institution{list.length > 1 ? "s" : ""}</div>
-            {list.map((m) => {
+            {tranche(list, pageListe).map((m) => {
               const on = m.id === sel;
               return (
                 <button key={m.id} type="button" className="co-item" aria-pressed={on} onClick={() => { setSel(m.id); setDchip("Tous"); if (window.innerWidth < 900) document.querySelector(".co-fiche")?.scrollIntoView({ behavior: "smooth" }); }} style={{ display: "flex", alignItems: "center", gap: 14, width: "100%", font: "inherit", color: "#0B1424", padding: 14, borderRadius: 12, cursor: "pointer", ...(on ? { background: "#FFFFFF", border: "1.5px solid #C9A44C" } : { background: "#FFFFFF", border: "1px solid #E7E5E4" }) }}>
@@ -96,6 +102,7 @@ export function Consultation() {
                 </button>
               );
             })}
+            {list.length > PAR_PAGE && <div className="liste-pied"><Pagination page={pageListe} pages={nbPages(list.length)} onPage={setPageListe} resume={`${(pageListe - 1) * PAR_PAGE + 1}–${Math.min(pageListe * PAR_PAGE, list.length)} sur ${list.length}`} /></div>}
           </section>
 
           <section className="co-in d2 co-fiche" style={{ flex: "999 1 520px", minWidth: 0, borderRadius: 12, background: "#FFFFFF", border: "1px solid #E7E5E4", overflow: "hidden" }}>
@@ -161,7 +168,7 @@ export function Consultation() {
                       {DCHIPS.map((c) => <button key={c} type="button" aria-pressed={c === dchip} onClick={() => setDchip(c)} style={chip(c === dchip)}>{c}</button>)}
                     </div>
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(260px, 100%), 1fr))", gap: 12 }}>
-                      {dirs.map((d) => {
+                      {tranche(dirs, pageDirs).map((d) => {
                         const av = avancementMandat(d.date_debut, d.date_fin);
                         const lien = d.fichier_justificatif || d.documents_justificatifs;
                         return (
@@ -181,6 +188,7 @@ export function Consultation() {
                       })}
                       {f.dirs && dirs.length === 0 && <div style={{ fontSize: "var(--t-sm)", color: "#6B7280" }}>Aucun dirigeant pour ce filtre.</div>}
                     </div>
+                    {dirs.length > PAR_PAGE && <div className="liste-pied"><Pagination page={pageDirs} pages={nbPages(dirs.length)} onPage={setPageDirs} resume={`${(pageDirs - 1) * PAR_PAGE + 1}–${Math.min(pageDirs * PAR_PAGE, dirs.length)} sur ${dirs.length} mandats`} /></div>}
                     <div style={{ display: "flex", gap: 10, alignItems: "center", padding: "12px 14px", borderRadius: 10, background: "#F5F5F4", color: "#5B4A1E", fontSize: "var(--t-sm)" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flex: "none" }}><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>Votre consultation de cette fiche est enregistrée dans le journal d'audit.</div>
                   </div>
                 )}
@@ -189,11 +197,12 @@ export function Consultation() {
                   <div style={{ overflowX: "auto" }}>
                     <div style={{ minWidth: 520 }}>
                       <div style={{ display: "grid", gridTemplateColumns: "1.4fr 0.8fr 1fr 0.8fr", gap: 12, padding: "0 10px 10px 10px", fontSize: "var(--t-xs)", fontWeight: 500, color: "#6B7280", borderBottom: "1px solid #F0EFED" }}><span>Point</span><span>Type</span><span>Région</span><span>Statut</span></div>
-                      {(f.pts?.results ?? []).map((p) => (
+                      {tranche(pts, pagePts).map((p) => (
                         <div key={p.id} style={{ display: "grid", gridTemplateColumns: "1.4fr 0.8fr 1fr 0.8fr", gap: 12, alignItems: "center", padding: "12px 10px", borderBottom: "1px solid #F5F5F4", fontSize: "var(--t-sm)" }}><b>{p.nom}</b><span>{TYPE_POINT[p.type_point]}</span><span style={{ color: "#4A5568" }}>{regionAffichee(p.region_nom) ?? "—"}</span><span style={{ justifySelf: "start" }}><Badge ton={TON_STATUT[p.statut_point === "SUSPENDU" ? "SUSPENDU_POINT" : p.statut_point]}>{STATUT_POINT[p.statut_point]}</Badge></span></div>
                       ))}
                       {f.pts && f.pts.results.length === 0 && <div style={{ fontSize: "var(--t-sm)", color: "#6B7280", padding: "12px 10px" }}>Aucun point de service.</div>}
                     </div>
+                    {pts.length > PAR_PAGE && <div className="liste-pied"><Pagination page={pagePts} pages={nbPages(pts.length)} onPage={setPagePts} resume={`${(pagePts - 1) * PAR_PAGE + 1}–${Math.min(pagePts * PAR_PAGE, pts.length)} sur ${pts.length} points`} /></div>}
                   </div>
                 )}
 
