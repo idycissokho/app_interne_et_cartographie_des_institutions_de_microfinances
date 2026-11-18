@@ -6,6 +6,7 @@ import { AuthProvider, useAuth } from "./auth/AuthContext";
 import { AssistantGlobal } from "./components/assistant/Assistant";
 import { AvisReveil, BandeauDemo } from "./components/AvisSysteme";
 import { GardeSession } from "./components/GardeSession";
+import { FiletErreur } from "./components/FiletErreur";
 import { EcranSquelette } from "./components/Squelette";
 import { PAGES } from "./lib/pages";
 
@@ -42,6 +43,7 @@ export function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <FiletErreur>
         <Suspense fallback={<EcranSquelette />}>
         <Routes>
           <Route path="/connexion" element={<Connexion />} />
@@ -61,6 +63,7 @@ export function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         </Suspense>
+        </FiletErreur>
         <AssistantGlobal />
       </BrowserRouter>
       <AvisReveil />
