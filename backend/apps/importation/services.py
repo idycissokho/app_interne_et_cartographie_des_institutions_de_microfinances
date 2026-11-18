@@ -4,8 +4,9 @@ importation/services.py
 Services du module importation hors traitement des lignes :
 - valider_fichier : contrôle du fichier avant enregistrement (extension, taille)
 - COLONNES        : colonnes du format canonique, par type d'import
-- lignes_export   : export CSV des référentiels, au même format que l'import
-  (un fichier exporté peut être corrigé puis réimporté).
+- lignes_export   : export CSV des points de service et des dirigeants, au même format que
+  l'import (un fichier exporté peut être corrigé puis réimporté). Les institutions s'exportent
+  au format de la liste officielle des IMF (canevas.py).
 
 Le traitement des imports lui-même est dans processors.py.
 """
@@ -15,7 +16,6 @@ from pathlib import Path
 from rest_framework.exceptions import ValidationError
 
 from apps.dirigeants.models import Dirigeant, Mandat
-from apps.imf.models import IMF
 from apps.points_service.models import PointService
 
 from .models import ImportationFichier
@@ -44,25 +44,13 @@ def _lat_lon(point):
     return ("", "") if not point else (point.y, point.x)
 
 
-def _texte(valeur):
-    return "" if valeur is None else valeur
-
-
 def _imf_ref(imf):
     return imf.sigle or imf.nom
 
 
 def lignes_export(type_import: str):
-    """Génère les lignes d'export d'un référentiel, dans l'ordre de COLONNES[type_import]."""
-    if type_import == ImportationFichier.TypeImport.IMF:
-        for imf in IMF.objects.filter(is_active=True).select_related("region").order_by("nom"):
-            lat, lon = _lat_lon(imf.localisation_siege)
-            calculees = {"latitude": lat, "longitude": lon, "region": imf.region.nom if imf.region else ""}
-            yield [
-                calculees[c] if c in calculees else _texte(getattr(imf, c))
-                for c in COLONNES[type_import]
-            ]
-    elif type_import == ImportationFichier.TypeImport.POINTS_SERVICE:
+    """Lignes d'export CSV des points de service ou des dirigeants, dans l'ordre de COLONNES[type_import]."""
+    if type_import == ImportationFichier.TypeImport.POINTS_SERVICE:
         qs = PointService.objects.filter(is_active=True).select_related(
             "imf", "region", "departement", "commune"
         ).order_by("imf__nom", "nom")

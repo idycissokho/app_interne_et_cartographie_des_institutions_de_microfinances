@@ -137,16 +137,18 @@ def test_consultant_ne_peut_pas_importer(client_consultant):
 
 
 def test_export_reimportable(client_admin):
-    IMF.objects.create(nom="IMF A", sigle="IMFA", type_imf="SA", adresse_siege="Dakar")
-    resp = client_admin.get("/api/v1/importation/export/imf/")
+    """Export CSV des points de service (les institutions : voir test_liste_officielle)."""
+    imf = IMF.objects.create(nom="IMF A", sigle="IMFA", type_imf="SA", adresse_siege="Dakar")
+    PointService.objects.create(imf=imf, nom="Agence Plateau", type_point="AGENCE")
+    resp = client_admin.get("/api/v1/importation/export/points_service/")
     assert resp.status_code == 200
     contenu = b"".join(resp.streaming_content).decode("utf-8-sig")
-    assert contenu.splitlines()[0].startswith("nom;sigle;type_imf")
+    assert contenu.splitlines()[0].startswith("imf_sigle;imf_agrement;nom")
     assert JournalAudit.objects.filter(action="EXPORTATION").exists()
 
-    retour = _importer(client_admin, "IMF", _csv(contenu))
+    retour = _importer(client_admin, "POINTS_SERVICE", _csv(contenu))
     assert retour.data["nb_lignes_erreur"] == 0, retour.data["rapport_erreurs"]
-    assert IMF.objects.count() == 1
+    assert PointService.objects.count() == 1
 
 
 def test_modele_et_type_inconnu(client_admin):
