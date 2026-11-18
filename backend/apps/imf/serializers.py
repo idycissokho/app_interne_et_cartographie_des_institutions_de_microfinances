@@ -66,7 +66,7 @@ class IMFDetailSerializer(_NbPointsServiceMixin, serializers.ModelSerializer):
         fields = [
             "id", "nom", "sigle", "numero_agrement", "type_imf", "statut_reglementaire",
             "adresse_siege", "localisation_siege", "telephone", "email", "site_web",
-            "reference_externe", "region", "lieu_dit", "type_sfd", "affiliation", "forme_juridique",
+            "reference_externe", "region", "departement", "departement_nom", "taille", "lieu_dit", "type_sfd", "affiliation", "forme_juridique",
             "type_union", "annee_creation", "ninea", "nb_unions_affiliees", "nb_institutions_base",
             "nb_beneficiaires", "capital", "situation", "nb_membres_ca", "nb_membres_cs", "nb_membres_cc",
             "url_fiche", "date_fiche",
@@ -79,6 +79,7 @@ class IMFDetailSerializer(_NbPointsServiceMixin, serializers.ModelSerializer):
 
     nb_dirigeants_en_fonction = serializers.IntegerField(read_only=True, default=0)
     region_siege = serializers.CharField(read_only=True, default=None)
+    departement_nom = serializers.CharField(source="departement.nom", read_only=True, default=None)
     nb_regions_couvertes = serializers.SerializerMethodField()
     nb_membres_total = serializers.SerializerMethodField()
 

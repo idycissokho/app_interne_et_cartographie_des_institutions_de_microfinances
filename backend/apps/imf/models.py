@@ -86,6 +86,18 @@ class IMF(models.Model):
         limit_choices_to={"type_zone": "REGION"},
         verbose_name="Région du siège",
     )
+    departement = models.ForeignKey(
+        "cartographie.ZoneGeographique",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="imfs_departement",
+        limit_choices_to={"type_zone": "DEPARTEMENT"},
+        verbose_name="Département du siège",
+    )
+    # Colonne « TAILLE » de la liste officielle : « Art 70 » (SFD de l'article 70 de la loi,
+    # suivis aussi par la BCEAO) ou « Autres ».
+    taille = models.CharField(max_length=50, blank=True, verbose_name="Taille réglementaire")
     lieu_dit = models.CharField(max_length=255, blank=True, verbose_name="Localité du siège")
     type_sfd = models.CharField(
         max_length=50, blank=True, verbose_name="Type de SFD",
@@ -126,7 +138,11 @@ class IMF(models.Model):
         return self.sigle or self.nom
 
     def save(self, *args, **kwargs):
-        """Complète la région à partir du GPS du siège si elle n'est pas renseignée."""
+        """Complète la région à partir du département, sinon du GPS du siège, si elle n'est pas renseignée."""
+        if self.departement_id and not self.region_id:
+            self.region_id = self.departement.parent_id
+            if kwargs.get("update_fields") is not None:
+                kwargs["update_fields"] = {*kwargs["update_fields"], "region"}
         if self.localisation_siege and not self.region_id:
             from apps.cartographie.models import ZoneGeographique
 

@@ -115,13 +115,13 @@ export NEON_URL='postgresql://neondb_owner:…@ep-….eu-central-1.aws.neon.tech
 docker compose -f infra/docker-compose.yml run --rm --no-deps -e DATABASE_URL="$NEON_URL" \
   backend python manage.py migrate
 
-# 2. Données : régions, IMF, points de service, dirigeants (annuaire DRS-SFD), ≈ 1 min.
+# 2. Données : régions, IMF, sièges et dirigeants (liste officielle des IMF), ≈ 1 min.
 #    Le classeur est monté dans le conteneur (-v) : remplacer le chemin à gauche du « : ».
 #    DJANGO_DONNEES_FICTIVES=true : les dirigeants sont anonymisés dès leur import.
 docker compose -f infra/docker-compose.yml run --rm --no-deps \
   -e DATABASE_URL="$NEON_URL" -e DJANGO_DONNEES_FICTIVES=true \
-  -v "$PWD/backend/mediafiles/importations/<annuaire>.xlsx:/tmp/annuaire.xlsx:ro" \
-  backend python manage.py charger_annuaire /tmp/annuaire.xlsx
+  -v "$PWD/backend/mediafiles/<liste-imf>.xlsx:/tmp/liste-imf.xlsx:ro" \
+  backend python manage.py charger_annuaire /tmp/liste-imf.xlsx
 
 # 2 bis. Base déjà chargée avant l'ajout des départements : les charger, puis compléter le
 #    département des points d'après leur GPS (champs vides uniquement ; --simulation pour voir avant).
@@ -163,7 +163,7 @@ Ne jamais la lancer sur la base de l'intranet.
   ces fichiers lisibles sans connexion par qui connaît leur adresse. Les liens « Justificatif »
   répondent donc « introuvable » sur la démo.
 - **Imports volumineux par l'interface** : la requête passe par le relais Vercel, dont le délai
-  est limité. Pour l'annuaire complet, préférer la commande du § 5.
+  est limité. Pour la liste complète, préférer la commande du § 5.
 - Un classeur importé **par l'interface** est conservé sur le disque de Render jusqu'au
   redémarrage suivant (non publié, car `DJANGO_SERVIR_MEDIAS=false`). Seule la copie de
   l'import « Dirigeants » est effacée aussitôt. Le chargement par la commande du § 5 n'en laisse aucune.

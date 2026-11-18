@@ -26,12 +26,18 @@ const I: Record<TypeImport, string> = {
   POINTS_SERVICE: "M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21zM12 7a2.5 2.5 0 1 0 0 5 2.5 2.5 0 1 0 0-5",
   DIRIGEANTS: "M9 4.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 1 0 0-7M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c2 .7 3.2 2.5 3.6 5.2",
 };
-const TY: [TypeImport, string, string][] = [["IMF", "Institutions", "Identité, statut, siège"], ["POINTS_SERVICE", "Points de service", "Agences, guichets, GPS"], ["DIRIGEANTS", "Dirigeants", "Dirigeants et mandats"]];
+const TY: [TypeImport, string, string][] = [["IMF", "Institutions", "Liste officielle : IMF, sièges, dirigeants"], ["POINTS_SERVICE", "Points de service", "Agences, guichets, GPS"], ["DIRIGEANTS", "Dirigeants", "Dirigeants et mandats"]];
 const LIB: Record<TypeImport, string> = { IMF: "Institutions", POINTS_SERVICE: "Points de service", DIRIGEANTS: "Dirigeants" };
 const SB: Record<string, [string, string, string]> = { TERMINE: ["#DCFCE7", "#166534", "Terminé"], EN_COURS: ["#E0ECF7", "#1F4E79", "En cours"], ECHEC: ["#FDECEC", "#991B1B", "Échec"], EN_ATTENTE: ["#F0EFED", "#4A5568", "En attente"] };
 const seg = (on: boolean): CSSProperties => ({ border: "none", font: "inherit", fontSize: "var(--t-md)", fontWeight: 600, padding: "10px 18px", borderRadius: 10, cursor: "pointer", ...(on ? { background: "#0B1424", color: "#FFFFFF" } : { background: "transparent", color: "#4A5568" }) });
 const btnS: CSSProperties = { height: 48, padding: "0 18px", borderRadius: 10, border: "1px solid #E7E5E4", background: "#FFFFFF", font: "inherit", fontSize: "var(--t-md)", fontWeight: 600, color: "#0B1424", cursor: "pointer" };
 const btnP: CSSProperties = { height: 48, padding: "0 22px", borderRadius: 10, border: "none", background: "#C9A44C", font: "inherit", fontSize: "var(--t-md)", fontWeight: 700, color: "#0B1424", cursor: "pointer" };
+/** Canevas à télécharger par type : la liste officielle des IMF (Excel) pour les institutions. */
+const CANEVAS: Record<TypeImport, [string, string]> = {
+  IMF: ["modele_liste_imf.xlsx", "Importez la liste officielle des IMF telle quelle : une ligne par institution, dirigeants compris."],
+  POINTS_SERVICE: ["modele_points_service.csv", "Utilisez le canevas standard pour éviter les erreurs de colonnes."],
+  DIRIGEANTS: ["modele_dirigeants.csv", "Utilisez le canevas standard pour éviter les erreurs de colonnes."],
+};
 /** Statuts d'un import pas encore terminé : l'écran interroge alors le serveur. */
 const EN_TRAITEMENT = new Set(["EN_ATTENTE", "EN_COURS"]);
 const tailleFichier = (o: number) => (o >= 1048576 ? `${(o / 1048576).toFixed(1).replace(".", ",")} Mo` : `${Math.max(1, Math.round(o / 1024))} Ko`);
@@ -41,7 +47,7 @@ export function Donnees() {
   const [params] = useSearchParams();
   const [tab, setTab] = useState(params.get("onglet") === "export" ? "export" : "import");
   const [step, setStep] = useState(1);
-  const [type, setType] = useState<TypeImport>("POINTS_SERVICE");
+  const [type, setType] = useState<TypeImport>("IMF");
   const [fichier, setFichier] = useState<File | null>(null);
   const [lignes, setLignes] = useState<number | null>(null);
   const [res, setRes] = useState<Importation | null>(null);
@@ -99,7 +105,7 @@ export function Donnees() {
   const lignesErreur = (res?.rapport_erreurs ?? []).flatMap((r) => Object.entries(r.erreurs).map(([c, m]) => ({ l: r.ligne, c, v: r.valeurs?.[c] ?? "", m: typeof m === "string" ? m : JSON.stringify(m) })));
   const taux = res ? (res.nb_lignes_total ? (100 * res.nb_lignes_importees) / res.nb_lignes_total : 0) : 0;
   const exports: { id: string; t: TypeImport; label: string; count: string }[] = [
-    { id: "ex-imf", t: "IMF", label: "Institutions", count: `${nombre(d.stats?.imf.total ?? 0)} IMF` },
+    { id: "ex-imf", t: "IMF", label: "Liste officielle des IMF", count: `${nombre(d.stats?.imf.total ?? 0)} IMF et leurs dirigeants · Excel` },
     { id: "ex-pts", t: "POINTS_SERVICE", label: "Points de service", count: `${nombre(d.stats?.points.total ?? 0)} points` },
     { id: "ex-dir", t: "DIRIGEANTS", label: "Dirigeants et mandats", count: `${nombre(d.stats?.mandats.total ?? 0)} mandats` },
   ];
@@ -111,7 +117,7 @@ export function Donnees() {
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <span style={{ fontSize: "var(--t-sm)", fontWeight: 500, color: "#6B7280" }}>Données</span>
             <h1 style={{ margin: 0, fontSize: "var(--t-3xl)", fontWeight: 700, letterSpacing: "-0.022em" }}>Import et export</h1>
-            <p style={{ margin: 0, fontSize: "var(--t-base)", color: "#4A5568", lineHeight: 1.55 }}>Alimentez les référentiels depuis le canevas Excel standard, ou extrayez-les en CSV.</p>
+            <p style={{ margin: 0, fontSize: "var(--t-base)", color: "#4A5568", lineHeight: 1.55 }}>Importez la liste officielle des IMF (institutions, sièges et dirigeants en une fois), ou extrayez les référentiels.</p>
           </div>
           <div role="tablist" aria-label="Import ou export" style={{ display: "flex", padding: 5, borderRadius: 10, background: "#FFFFFF", border: "1px solid #E7E5E4" }}>
             {([["import", "Importer"], ["export", "Exporter"]] as const).map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => setTab(k)} style={seg(tab === k)}>{l}</button>)}
@@ -153,7 +159,7 @@ export function Donnees() {
                     </div>
                   )}
                   <Erreur>{erreur}</Erreur>
-                  <div style={{ display: "flex", gap: 10, alignItems: "center", padding: "12px 14px", borderRadius: 10, background: "#F5F5F4", color: "#5B4A1E", fontSize: "var(--t-sm)", flexWrap: "wrap" }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6z" /><path d="M14 3v6h6M12 18v-6M9 15l3 3 3-3" /></svg><span style={{ flex: 1 }}>Utilisez le canevas standard pour éviter les erreurs de colonnes.</span><a href="#" onClick={(e) => { e.preventDefault(); telecharger(`/importation/modeles/${type}/`, `modele_${type.toLowerCase()}.csv`); }} style={{ fontWeight: 700, textDecoration: "none" }}>Télécharger le canevas</a></div>
+                  <div style={{ display: "flex", gap: 10, alignItems: "center", padding: "12px 14px", borderRadius: 10, background: "#F5F5F4", color: "#5B4A1E", fontSize: "var(--t-sm)", flexWrap: "wrap" }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6z" /><path d="M14 3v6h6M12 18v-6M9 15l3 3 3-3" /></svg><span style={{ flex: 1 }}>{CANEVAS[type][1]}</span><a href="#" onClick={(e) => { e.preventDefault(); telecharger(`/importation/modeles/${type}/`, CANEVAS[type][0]); }} style={{ fontWeight: 700, textDecoration: "none" }}>Télécharger le canevas</a></div>
                 </>)}
 
                 {step === 2 && (
@@ -237,7 +243,7 @@ export function Donnees() {
                 <div style={{ display: "flex", alignItems: "center", gap: 14 }}><span style={{ width: 48, height: 48, flex: "none", borderRadius: 10, background: "#F5F5F4", color: "#0B1424", display: "flex", alignItems: "center", justifyContent: "center" }}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={I[x.t]} /></svg></span><div><h2 style={{ margin: 0, fontSize: "var(--t-lg)", fontWeight: 700 }}>{x.label}</h2><div style={{ fontSize: "var(--t-sm)", color: "#6B7280" }}>{x.count}</div></div></div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}><label htmlFor={x.id} style={{ fontSize: "var(--t-xs)", fontWeight: 600, color: "#4A5568" }}>Périmètre</label><select id={x.id} className="fi-input" disabled title="L'export porte sur tout le référentiel (filtre par région non disponible côté API)." style={{ width: "100%" }}><option>Toutes les régions</option></select></div>
                 <label title="L'export ne contient que les éléments actifs." style={{ display: "flex", alignItems: "center", gap: 10, fontSize: "var(--t-sm)", color: "#4A5568", opacity: 0.6 }}><input type="checkbox" disabled style={{ width: 18, height: 18, accentColor: "#C9A44C" }} /> Inclure les éléments archivés</label>
-                <button type="button" className="ie-primary" onClick={() => telecharger(`/importation/export/${x.t}/`, `export_${x.t.toLowerCase()}.csv`)} style={{ marginTop: "auto", height: 46, borderRadius: 10, border: "none", background: "#C9A44C", font: "inherit", fontSize: "var(--t-md)", fontWeight: 700, color: "#0B1424", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 21h16" /></svg>Exporter en CSV</button>
+                <button type="button" className="ie-primary" onClick={() => telecharger(`/importation/export/${x.t}/`, x.t === "IMF" ? "liste_imf.xlsx" : `export_${x.t.toLowerCase()}.csv`)} style={{ marginTop: "auto", height: 46, borderRadius: 10, border: "none", background: "#C9A44C", font: "inherit", fontSize: "var(--t-md)", fontWeight: 700, color: "#0B1424", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 21h16" /></svg>{x.t === "IMF" ? "Exporter en Excel" : "Exporter en CSV"}</button>
               </article>
             ))}
           </section>

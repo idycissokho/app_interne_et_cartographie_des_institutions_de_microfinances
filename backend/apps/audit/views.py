@@ -7,11 +7,13 @@ Vues DRF du module audit :
 Le journal est en lecture seule — aucune création/modification/suppression via l'API.
 """
 
-from rest_framework import generics, filters
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, generics
+
+from apps.authentication.permissions import IsAdmin
+
 from .models import JournalAudit
 from .serializers import JournalAuditSerializer
-from apps.authentication.permissions import IsAdmin
 
 
 class JournalAuditListView(generics.ListAPIView):

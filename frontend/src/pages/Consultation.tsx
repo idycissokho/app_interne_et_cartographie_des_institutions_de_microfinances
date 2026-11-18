@@ -20,7 +20,7 @@ import { useDonnees } from "../lib/useDonnees";
 
 interface ImfLigne { id: string; nom: string; sigle: string; type_imf: string; statut_reglementaire: string; region_siege: string | null; nb_points_service: number }
 const VIDE: ImfLigne[] = [];
-interface ImfFiche extends ImfLigne { adresse_siege: string; telephone: string; email: string; site_web: string; nb_regions_couvertes: number; nb_dirigeants_en_fonction: number; nb_membres_total: number | null; numero_agrement: string; type_sfd: string; affiliation: string; forme_juridique: string; annee_creation: number | null; ninea: string; capital: string | null; nb_beneficiaires: number | null; situation: string; nb_membres_ca: number | null; nb_membres_cs: number | null; nb_membres_cc: number | null; url_fiche: string; bailleurs_detail: { id: string; nom: string; sigle: string }[]; localisation_siege: { coordinates: [number, number] } | null }
+interface ImfFiche extends ImfLigne { adresse_siege: string; telephone: string; email: string; site_web: string; nb_regions_couvertes: number; nb_dirigeants_en_fonction: number; nb_membres_total: number | null; numero_agrement: string; departement_nom: string | null; taille: string; type_sfd: string; affiliation: string; forme_juridique: string; annee_creation: number | null; ninea: string; capital: string | null; nb_beneficiaires: number | null; situation: string; nb_membres_ca: number | null; nb_membres_cs: number | null; nb_membres_cc: number | null; url_fiche: string; bailleurs_detail: { id: string; nom: string; sigle: string }[]; localisation_siege: { coordinates: [number, number] } | null }
 interface PointLigne { id: string; nom: string; type_point: string; statut_point: string; region_nom: string | null }
 interface MandatLigne { id: string; dirigeant_nom_complet: string; fonction_mandat: string; statut_mandat: string; date_debut: string; date_fin: string | null; fichier_justificatif: string | null; documents_justificatifs: string }
 
@@ -151,7 +151,9 @@ export function Consultation() {
                         {/* Informations de l'annuaire DRS-SFD : affichées seulement si elles sont renseignées. */}
                         {([
                           ["N° d'agrément", cur.numero_agrement],
+                          ["Département", cur.departement_nom],
                           ["Type de SFD", cur.type_sfd],
+                          ["Taille", cur.taille],
                           ["Affiliation", cur.affiliation],
                           ["Forme juridique", cur.forme_juridique],
                           ["Année de création", cur.annee_creation],

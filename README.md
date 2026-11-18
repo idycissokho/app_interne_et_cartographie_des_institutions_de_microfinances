@@ -13,6 +13,7 @@ Application web institutionnelle de cartographie et de gouvernance des Instituti
 - [Variables d'environnement](#variables-denvironnement)
 - [Commandes utiles](#commandes-utiles)
 - [Accès à l'application](#accès-à-lapplication)
+- [Déploiement](#déploiement)
 - [Documentation](#documentation)
 - [Statut du projet](#statut-du-projet)
 
@@ -22,10 +23,12 @@ Application web institutionnelle de cartographie et de gouvernance des Instituti
 
 La plateforme permet à la DRS-SFD de :
 
-- **Cartographier** les IMF et leurs points de service sur le territoire sénégalais
-- **Superviser** les données institutionnelles et réglementaires
+- **Cartographier** les IMF et leurs points de service sur le territoire sénégalais (cartes par région et détaillée)
+- **Superviser** les données institutionnelles et réglementaires (statuts, OPR, situation)
 - **Gérer** les dirigeants, mandats et structures administratives
-- **Importer** des données massives depuis des fichiers Excel/CSV
+- **Importer** la liste officielle des IMF de la DRS-SFD telle quelle (Excel) : institutions, sièges et dirigeants en un seul import
+- **Calculer un itinéraire** du superviseur vers une IMF (service Valhalla interne, facultatif)
+- **Interroger un assistant** sur les IMF, points de service et dirigeants (moteur local, sans IA externe)
 - **Auditer** toutes les actions effectuées sur la plateforme
 
 Trois niveaux d'accès : `ADMIN`, `SUPERVISEUR`, `CONSULTANT`.
@@ -48,15 +51,15 @@ Trois niveaux d'accès : `ADMIN`, `SUPERVISEUR`, `CONSULTANT`.
 
 ```
 /
-├── backend/          # API Django REST Framework
-├── frontend/         # Application React TypeScript
-├── infra/            # Docker, Nginx, PostgreSQL, docker-compose.yml
-├── config/           # Variables d'environnement (.env, .gitignore)
-├── docs/
-│   ├── 01_conception/    # Cahier des charges, diagrammes
-│   ├── 02_architecture/  # Décisions techniques, schémas
-│   ├── 03_api/           # Documentation des endpoints
-│   └── 04_infra/         # Guides déploiement et infrastructure
+├── backend/          # API Django REST Framework (apps/ : imf, points_service, dirigeants,
+│                     #   cartographie, importation, audit, itineraires, assistant, authentication)
+├── frontend/         # Application React TypeScript (+ maquette-carto-imf/ : maquette de référence)
+├── infra/            # Docker Compose (développement et production), Nginx, PostgreSQL
+├── deploy/
+│   ├── intranet/     # Guide de mise en production sur le serveur intranet (cible finale)
+│   └── demo/         # Démonstration en ligne temporaire (Neon, Render, Vercel)
+├── config/           # Variables d'environnement (.env, jamais versionné)
+├── docs/             # Conception (cahier des charges, diagrammes), architecture, itinéraire
 └── README.md
 ```
 
@@ -93,36 +96,37 @@ docker compose -f infra/docker-compose.yml up --build
 ### 4. Initialiser la base de données
 
 ```bash
-# Générer les migrations
-docker compose -f infra/docker-compose.yml exec backend python manage.py makemigrations
-
-# Appliquer les migrations
+# Appliquer les migrations (versionnées dans le dépôt)
 docker compose -f infra/docker-compose.yml exec backend python manage.py migrate
 
 # Créer le compte administrateur
 docker compose -f infra/docker-compose.yml exec backend python manage.py createsuperuser
 ```
 
-### 5. Charger les données de référence (annuaire DRS-SFD)
+### 5. Charger la liste officielle des IMF
 
-Le dépôt ne contient aucune donnée réelle. Déposez l'export Excel de l'annuaire (`.xlsx`) dans
-`backend/donnees_initiales/`, puis lancez une fois :
+Le dépôt ne contient aucune donnée réelle. Le format de référence est la **liste officielle des
+IMF de la DRS-SFD** (classeur Excel « LISTE IMF » : une ligne par institution, dirigeants en
+colonnes), importée telle quelle. Deux possibilités :
+
+- **Interface** : *Import / Export* → *Institutions* → déposer le classeur.
+- **Commande** : déposer le classeur dans `backend/donnees_initiales/`, puis :
 
 ```bash
 docker compose -f infra/docker-compose.yml exec backend python manage.py initialiser_donnees
 ```
 
-La commande :
+La commande charge les régions et départements, vérifie le classeur (s'il n'est pas conforme,
+elle s'arrête sans rien enregistrer), puis importe en une fois les institutions, leurs sièges
+géolocalisés et leurs dirigeants avec mandats. Chaque valeur incohérente (GPS hors du Sénégal,
+nom sans prénom…) est écartée et listée dans un rapport `rapport_import_AAAAMMJJ_HHMMSS.csv`
+écrit dans le même dossier ; la ligne est enregistrée.
 
-1. charge les régions et départements ;
-2. vérifie le classeur (lisible, colonnes obligatoires présentes) — s'il n'est pas conforme, elle s'arrête sans rien enregistrer ;
-3. importe les institutions, puis les points de service, puis les dirigeants et mandats : chaque ligne
-   conforme aux règles de la base est enregistrée, chaque ligne non conforme est écartée ;
-4. affiche le bilan et écrit dans le même dossier un rapport `rapport_import_AAAAMMJJ_HHMMSS.csv` des lignes écartées.
-
-Options : un chemin en argument pour un autre classeur ; `--forcer` pour recharger une base qui
-contient déjà des institutions (sans cette option, la commande refuse, pour éviter les doublons).
-Le dossier `backend/donnees_initiales/` n'est jamais versionné, sauf son `LISEZMOI.md`.
+Options : un chemin en argument pour un autre classeur ; `--forcer` pour mettre à jour une base
+qui contient déjà des institutions. Les règles de lecture du classeur (valeurs « 0 » / « ND »,
+statut OPR, graphies des départements…) sont détaillées dans
+[deploy/intranet/README.md](deploy/intranet/README.md) (§ 7). Le dossier
+`backend/donnees_initiales/` n'est jamais versionné, sauf son `LISEZMOI.md`.
 
 ---
 
@@ -171,11 +175,22 @@ cd frontend && npm install && npm run dev
 
 | Service | URL |
 |---|---|
-| Interface frontend | http://localhost:5173 |
+| Interface frontend (Vite) | http://localhost:5173 (ou http://localhost via Nginx) |
 | API REST | http://localhost:8000/api/v1/ |
 | Administration Django | http://localhost:8000/admin/ |
-| Documentation Swagger | http://localhost:8000/api/v1/docs/ |
-| Documentation ReDoc | http://localhost:8000/api/v1/redoc/ |
+| Documentation Swagger | http://localhost:8000/api/v1/docs/ (développement uniquement) |
+| Documentation ReDoc | http://localhost:8000/api/v1/redoc/ (développement uniquement) |
+
+---
+
+## Déploiement
+
+| Cible | Guide | Fichiers |
+|---|---|---|
+| **Intranet** (production) | [deploy/intranet/README.md](deploy/intranet/README.md) | `infra/docker-compose.prod.yml`, `infra/docker/nginx/nginx.prod.conf`, `backend/Dockerfile.prod`, `frontend/Dockerfile.prod`, `deploy/intranet/env.production.example` |
+| Démonstration en ligne (temporaire) | [deploy/demo/README.md](deploy/demo/README.md) | `render.yaml`, `frontend/vercel.json` |
+
+`infra/docker-compose.yml` est réservé au développement.
 
 ---
 
@@ -183,11 +198,12 @@ cd frontend && npm install && npm run dev
 
 | Document | Emplacement |
 |---|---|
-| Cahier des charges | `docs/01_conception/` |
+| Cahier des charges, analyse fonctionnelle | `docs/01_conception/` |
 | Diagrammes (classes, contexte, cas d'utilisation) | `docs/01_conception/` |
-| Architecture technique | `docs/02_architecture/` |
-| Documentation API | `docs/03_api/` |
-| Guide infrastructure | `docs/04_infra/` |
+| Architecture technique, supervision (APM) | `docs/02_architecture/` |
+| Itinéraires (Valhalla, fond de carte interne) | `docs/itineraire.md` |
+| Mise en production intranet | `deploy/intranet/README.md` |
+| Documentation de l'API | Swagger / ReDoc (voir ci-dessus) |
 
 ---
 

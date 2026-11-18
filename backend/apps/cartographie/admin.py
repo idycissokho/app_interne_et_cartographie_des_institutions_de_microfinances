@@ -6,6 +6,7 @@ Utilise GISModelAdmin pour afficher la géométrie sur une carte OpenLayers.
 """
 
 from django.contrib.gis import admin
+
 from .models import ZoneGeographique
 
 

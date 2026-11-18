@@ -1,12 +1,18 @@
 """
 importation/management/commands/charger_annuaire.py
 ===================================================
-Charge en base l'export Excel de l'annuaire DRS-SFD : régions, départements, institutions,
-points de service, puis dirigeants et mandats.
+Charge en base un classeur Excel de la DRS-SFD : régions, départements, institutions, puis,
+s'il en contient, points de service et dirigeants avec mandats.
 
-La commande enchaîne les trois imports dans l'ordre imposé par leurs dépendances
-(les points de service et les dirigeants sont rattachés aux IMF) en utilisant les
-mêmes processors que l'import par l'interface :
+Classeurs pris en charge :
+- la liste officielle des IMF (une feuille « LISTE IMF », dirigeants en colonnes) : l'import
+  des institutions enregistre en une fois les IMF, leurs sièges et leurs dirigeants ;
+- l'export de l'annuaire (feuilles « IMF » et « Points de service »).
+
+La commande enchaîne les imports dans l'ordre imposé par leurs dépendances (les points de
+service et les dirigeants sont rattachés aux IMF) avec les mêmes processors que l'import
+par l'interface ; un import sans objet est sauté (pas de feuille de points de service,
+dirigeants déjà traités avec les institutions) :
 - chaque ligne est contrôlée (colonnes, valeurs autorisées, formats, références) ;
 - les lignes conformes sont enregistrées, les autres sont écartées et listées ;
 - un fichier non conforme (illisible, colonnes obligatoires absentes) arrête tout,
@@ -31,7 +37,7 @@ from django.core.management.base import BaseCommand, CommandError
 
 from apps.imf.models import IMF
 from apps.importation.models import ImportationFichier
-from apps.importation.processors import lancer_importation
+from apps.importation.processors import PROCESSORS, _feuille_voulue, cle, lancer_importation
 
 ORDRE = (
     ImportationFichier.TypeImport.IMF,
@@ -58,7 +64,7 @@ def trouver_classeur() -> Path:
     if not candidats:
         dossiers = "\n".join(f"  - {d}" for d in dossiers_par_defaut())
         raise CommandError(
-            "Aucun classeur Excel trouvé. Déposez l'export de l'annuaire (.xlsx) dans l'un de ces dossiers :\n"
+            "Aucun classeur Excel trouvé. Déposez la liste officielle des IMF (.xlsx) dans l'un de ces dossiers :\n"
             f"{dossiers}\nou indiquez son chemin : python manage.py charger_annuaire chemin/annuaire.xlsx"
         )
     return max(candidats, key=lambda f: f.stat().st_mtime)  # le plus récent
@@ -66,7 +72,8 @@ def trouver_classeur() -> Path:
 
 class Command(BaseCommand):
     help = (
-        "Vérifie et charge l'export Excel de l'annuaire DRS-SFD (IMF, points de service, dirigeants) : "
+        "Vérifie et charge la liste officielle des IMF (ou l'export de l'annuaire) : institutions, sièges, "
+        "dirigeants et, si le classeur en contient, points de service — "
         "lignes conformes enregistrées, lignes non conformes écartées et listées dans un rapport."
     )
 
@@ -100,14 +107,21 @@ class Command(BaseCommand):
 
         rapport: list[list] = []
         total_importees = total_ecartees = 0
+        dirigeants_traites = False
         for type_import in ORDRE:
+            libelle = ImportationFichier.TypeImport(type_import).label
+            if type_import == ImportationFichier.TypeImport.POINTS_SERVICE and not self._a_feuille(fichier, type_import):
+                self.stdout.write(f"{libelle} : aucune feuille de points de service dans le classeur, import sauté.")
+                continue
+            if type_import == ImportationFichier.TypeImport.DIRIGEANTS and dirigeants_traites:
+                self.stdout.write(f"{libelle} : déjà enregistrés avec les institutions.")
+                continue
             with fichier.open("rb") as contenu:
                 importation = ImportationFichier.objects.create(
                     type_import=type_import, fichier=File(contenu, name=fichier.name)
                 )
             bilan = lancer_importation(importation)
             importation.refresh_from_db()
-            libelle = importation.get_type_import_display()
             if importation.statut == ImportationFichier.StatutImport.ECHEC:
                 motif = bilan.erreurs[0]["message"] if bilan.erreurs else "fichier non conforme"
                 raise CommandError(
@@ -119,6 +133,9 @@ class Command(BaseCommand):
                 f"{bilan.lignes_mises_a_jour} mise(s) à jour, {len(bilan.erreurs)} écartée(s), "
                 f"{len(bilan.avertissements)} enregistrée(s) avec une valeur écartée"
             )
+            if bilan.avec_dirigeants:
+                dirigeants_traites = True
+                self.stdout.write(f"  dont {bilan.dirigeants_enregistres} dirigeant(s) et mandat(s) enregistré(s)")
             total_importees += bilan.lignes_importees
             total_ecartees += len(bilan.erreurs)
             for entree in bilan.erreurs + bilan.avertissements:
@@ -134,6 +151,18 @@ class Command(BaseCommand):
         ))
         if chemin_rapport:
             self.stdout.write(f"Rapport des lignes écartées : {chemin_rapport}")
+
+    @staticmethod
+    def _a_feuille(fichier: Path, type_import: str) -> bool:
+        """Le classeur contient-il une feuille propre à ce type d'import ?"""
+        from openpyxl import load_workbook
+
+        classeur = load_workbook(fichier, read_only=True)
+        try:
+            feuilles = PROCESSORS[type_import].feuilles
+            return any(_feuille_voulue(cle(nom), feuilles) is not None for nom in classeur.sheetnames)
+        finally:
+            classeur.close()
 
     def _ecrire_rapport(self, fichier: Path, rapport: list[list]) -> Path | None:
         """CSV (séparateur « ; », lisible dans Excel) des lignes écartées, à côté du classeur."""

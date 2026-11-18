@@ -464,7 +464,6 @@ export function SenegalMap({
       setSurvol("");
       carte?.remove();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [theme, molette, avecAgrandir, parentAgrandi]);
 
   /* --- Fiche de survol : suit le curseur sans sortir du cadre --- */

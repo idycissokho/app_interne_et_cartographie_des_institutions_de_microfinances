@@ -15,9 +15,12 @@ Un processor par type d'import, tous héritant de BaseImportProcessor :
   - ImportPointServiceProcessor : points de service
   - ImportDirigeantProcessor    : dirigeants et leurs mandats
 
-Deux formats de fichier sont acceptés :
+Formats de fichier acceptés :
+  - la LISTE OFFICIELLE DES IMF de la DRS-SFD (canevas de référence, voir canevas.py) :
+    une ligne par institution, dirigeants en colonnes. Importée comme « Institutions »,
+    elle alimente en une fois les IMF, leurs sièges et leurs dirigeants avec mandats ;
   - le format canonique (attribut `colonnes` de chaque processor), qui est aussi
-    celui des modèles et des exports CSV : un export peut être corrigé puis réimporté ;
+    celui des exports CSV des points de service et des dirigeants ;
   - l'export de l'annuaire DRS-SFD (classeur Excel à feuilles « IMF » et
     « Points de service »), reconnu grâce aux alias d'en-têtes.
 
@@ -64,7 +67,31 @@ logger = logging.getLogger(__name__)
 LIGNES_MAX = 10_000
 
 # Mentions utilisées dans les fichiers sources pour « non renseigné ».
-VALEURS_VIDES = {"nd", "n_d", "na", "n_a", "non_defini", "non_renseigne", "neant"}
+VALEURS_VIDES = {"nd", "n_d", "na", "n_a", "non_defini", "nondefini", "non_renseigne", "neant", "x", "xx", "xxx"}
+
+# Liste officielle des IMF (classeur « LISTE IMF » de la DRS-SFD, une ligne par institution,
+# dirigeants en colonnes) : reconnue à ces en-têtes. Dans ce classeur, « 0 » signifie
+# « non renseigné » dans toutes les colonnes.
+ENTETES_LISTE_OFFICIELLE = {"n_agrement", "structures"}
+
+# Graphies des départements dans les fichiers sources -> nom du référentiel (normalisés par `cle`).
+SYNONYMES_DEPARTEMENT = {
+    "guediawayes": "guediawaye",
+    "nioro": "nioro_du_rip",
+    "medina_yoro_foulah": "medina_yorofoula",
+    "medina_yoro_foula": "medina_yorofoula",
+    "boukinling": "bounkiling",
+}
+
+
+def est_liste_officielle(entetes) -> bool:
+    return bool(ENTETES_LISTE_OFFICIELLE & set(entetes))
+
+
+def email_fictif(valeur: str) -> bool:
+    """Adresse de remplissage (« nd@nd.sn », « nondefini@nondefini.sn ») : équivaut à vide."""
+    local, _, domaine = valeur.partition("@")
+    return cle(local) in VALEURS_VIDES or cle(domaine.split(".")[0]) in VALEURS_VIDES
 
 
 # ---------------------------------------------------------------------------
@@ -101,6 +128,10 @@ class BilanImport:
     erreurs: list[dict] = field(default_factory=list)
     #: Lignes importées dont une valeur facultative incohérente a été écartée.
     avertissements: list[dict] = field(default_factory=list)
+    #: Import des institutions d'un fichier à dirigeants en colonnes (liste officielle, annuaire) :
+    #: les dirigeants ont été traités avec leur institution, et combien ont été enregistrés.
+    avec_dirigeants: bool = False
+    dirigeants_enregistres: int = 0
 
     @property
     def lignes_importees(self) -> int:
@@ -128,7 +159,7 @@ def _normaliser_cellule(valeur) -> str:
         return valeur.isoformat()
     if isinstance(valeur, float) and valeur.is_integer():
         return str(int(valeur))
-    texte = str(valeur).strip()
+    texte = " ".join(str(valeur).split())  # espaces superflus (« CREDIT MUTUEL  SENEGAL »)
     forme = cle(texte)
     return "" if not forme or forme in VALEURS_VIDES else texte
 
@@ -205,13 +236,22 @@ class _PointVirgule(csv.excel):
     delimiter = ";"
 
 
+def _feuille_voulue(nom: str, feuilles: tuple[str, ...]) -> int | None:
+    """Rang dans `feuilles` du premier nom correspondant ; « liste_imf* » : tout nom qui commence ainsi."""
+    for rang, voulu in enumerate(feuilles):
+        if nom == voulu or (voulu.endswith("*") and nom.startswith(voulu[:-1])):
+            return rang
+    return None
+
+
 def _lire_excel(contenu: bytes, feuilles: tuple[str, ...]) -> list[list[str]]:
-    """Lit la première feuille dont le nom figure dans `feuilles`, sinon la feuille active."""
+    """Lit la feuille dont le nom figure le plus tôt dans `feuilles`, sinon la feuille active."""
     from openpyxl import load_workbook
 
     classeur = load_workbook(io.BytesIO(contenu), read_only=True, data_only=True)
-    par_nom = {cle(f.title): f for f in classeur.worksheets}
-    feuille = next((par_nom[n] for n in feuilles if n in par_nom), classeur.active)
+    rangs = {f.title: _feuille_voulue(cle(f.title), feuilles) for f in classeur.worksheets}
+    trouvees = [f for f in classeur.worksheets if rangs[f.title] is not None]
+    feuille = min(trouvees, key=lambda f: rangs[f.title]) if trouvees else classeur.active
     logger.info("Lecture de la feuille Excel « %s »", feuille.title)
     return [[_normaliser_cellule(c) for c in ligne] for ligne in feuille.iter_rows(values_only=True)]
 
@@ -290,9 +330,13 @@ def _resoudre_imf(donnees: dict) -> IMF:
 
 
 def _resoudre_zone(reference: str, type_zone: str) -> ZoneGeographique:
-    """Zone active d'un niveau donné, par code ou par nom (sans tenir compte des accents ni de la casse)."""
+    """Zone active d'un niveau donné, par code ou par nom (sans tenir compte des accents ni de la
+    casse ; graphies connues des départements acceptées, ex. « GUEDIAWAYES »)."""
+    nom = cle(reference)
+    if type_zone == ZoneGeographique.TypeZone.DEPARTEMENT:
+        nom = SYNONYMES_DEPARTEMENT.get(nom, nom)
     for zone in ZoneGeographique.objects.filter(type_zone=type_zone, is_active=True):
-        if zone.code == reference or cle(zone.nom) == cle(reference):
+        if zone.code == reference or cle(zone.nom) == nom:
             return zone
     raise ErreurLigne({type_zone.lower(): f"Zone introuvable : « {reference} » (code ou nom)."})
 
@@ -330,6 +374,8 @@ class BaseImportProcessor(ABC):
         self.statut_final = ""
         # Valeurs facultatives incohérentes de la ligne en cours : écartées, la ligne reste importée.
         self._avertissements: dict[str, str] = {}
+        # Colonne source préfixée aux avertissements (dirigeant en cours d'une ligne de la liste).
+        self._prefixe_avertissement = ""
 
     # -- Déroulé ------------------------------------------------------------
 
@@ -365,6 +411,10 @@ class BaseImportProcessor(ABC):
         if not entetes:
             raise ErreurFichier("Le fichier est vide.")
 
+        if est_liste_officielle(entetes):
+            logger.info("Import %s : liste officielle des IMF détectée", self.importation.pk)
+            for ligne in lignes:
+                ligne.valeurs = {c: "" if v == "0" else v for c, v in ligne.valeurs.items()}
         lignes = self.adapter_lignes(entetes, lignes)
         for ligne in lignes:
             ligne.valeurs = self._appliquer_alias(ligne.valeurs)
@@ -461,7 +511,15 @@ class BaseImportProcessor(ABC):
 
     def avertir(self, colonne: str, message: str) -> None:
         """Signale une valeur facultative écartée sans rejeter la ligne."""
+        if self._prefixe_avertissement:
+            colonne = f"{self._prefixe_avertissement} · {colonne}"
         self._avertissements[colonne] = message
+
+    @staticmethod
+    def nettoyer_email(donnees: dict, colonne: str = "email") -> None:
+        """Une adresse de remplissage (« nd@nd.sn ») équivaut à une cellule vide."""
+        if email_fictif(donnees.get(colonne, "")):
+            donnees[colonne] = ""
 
     def nettoyer_telephone(self, donnees: dict, colonne: str = "telephone") -> None:
         """Écarte un « téléphone » qui n'en est pas un (moins de 7 chiffres)."""
@@ -579,35 +637,210 @@ class BaseImportProcessor(ABC):
 
 
 # ---------------------------------------------------------------------------
+# Dirigeants : outils communs aux imports des institutions et des dirigeants
+# ---------------------------------------------------------------------------
+
+CIVILITES = {"m", "mr", "mme", "mlle", "dr", "pr", "monsieur", "madame", "mademoiselle"}
+
+
+def scinder_nom_complet(nom_complet: str) -> tuple[str, str]:
+    """Sépare « Prénom(s) NOM » ou « NOM Prénom(s) » en (nom, prénom).
+
+    Le nom de famille est le groupe de mots en majuscules en fin (ou en début) de
+    chaîne ; si la casse ne permet pas de trancher, c'est le dernier mot.
+    """
+    sans_commentaire = re.sub(r"\(.*?(\)|$)", " ", nom_complet)  # « Awa DIOP (Directrice…) »
+    mots = sans_commentaire.replace(".", ". ").split()
+    while mots and cle(mots[0]) in CIVILITES:
+        mots = mots[1:]
+    if len(mots) < 2:
+        raise ErreurLigne({"nom": f"Impossible de distinguer le nom du prénom dans « {nom_complet} »."})
+
+    def majuscules(mot: str) -> bool:
+        return mot.isupper() and len(mot) > 1
+
+    fin = len(mots)
+    while fin > 1 and majuscules(mots[fin - 1]):
+        fin -= 1
+    if fin < len(mots) and not all(majuscules(m) for m in mots):
+        return " ".join(mots[fin:]), " ".join(mots[:fin])
+    debut = 0
+    while debut < len(mots) - 1 and majuscules(mots[debut]):
+        debut += 1
+    if debut and not all(majuscules(m) for m in mots):
+        return " ".join(mots[:debut]), " ".join(mots[debut:])
+    return mots[-1], " ".join(mots[:-1])
+
+
+_F = Mandat.FonctionMandat
+
+#: Dirigeants en colonnes (liste officielle des IMF et export de l'annuaire), en-têtes normalisés :
+#: (colonne du nom, fonction, colonne email, colonne téléphone, colonne adresse).
+#: Fonction None : directeur général d'une société anonyme, gérant sinon.
+COLONNES_DIRIGEANTS = (
+    ("president_du_ca", _F.PCA, "e_mail_du_pca", "telephone_du_pca", ""),
+    ("vice_president_du_ca", _F.VICE_PRESIDENT_CA, "", "", ""),
+    ("secretaire_general_du_ca", _F.SECRETAIRE_GENERAL_CA, "", "", ""),
+    ("president_du_cs", _F.PRESIDENT_CONSEIL_SURVEILLANCE,
+     "e_mail_du_president_du_cs", "telephone_du_president_du_cs", ""),
+    ("vice_president_du_cs", _F.VICE_PRESIDENT_CS, "", "", ""),
+    ("secretaire_general_du_cs", _F.SECRETAIRE_GENERAL_CS, "", "", ""),
+    ("president_du_cc", _F.PRESIDENT_COMITE_CREDIT, "", "telephone_du_pcc", "adresse_du_pcc"),
+    ("vice_president_du_cc", _F.VICE_PRESIDENT_CC, "", "", ""),
+    ("secretaire_general_du_cc", _F.SECRETAIRE_GENERAL_CC, "", "", ""),
+    ("directeur_general_gerant", None, "e_mail_dg", "telephone_dg", "adresse_dg"),
+)
+
+
+def contient_dirigeants(entetes) -> bool:
+    """Le fichier porte-t-il les dirigeants en colonnes (une ligne par institution) ?"""
+    return any(colonne in entetes for colonne, *_ in COLONNES_DIRIGEANTS)
+
+
+def dirigeants_de_la_ligne(source: dict):
+    """Une ligne « institution » -> (colonne, fonction, valeurs) pour chaque dirigeant renseigné.
+
+    La date de début du mandat est la date de la fiche quand le fichier en donne une (annuaire) ;
+    sinon (liste officielle) elle reste vide et l'enregistrement retient la date de l'import.
+    """
+    forme = source.get("forme_juridique") or source.get("forme", "")
+    societe_anonyme = cle(forme) == "sa"
+    date_debut = source.get("date_fiche") or source.get("date_de_creation_fiche", "")
+    for colonne, fonction, col_email, col_telephone, col_adresse in COLONNES_DIRIGEANTS:
+        if not source.get(colonne):
+            continue
+        yield colonne, fonction or (_F.DG if societe_anonyme else _F.GERANT), {
+            "nom_complet": source[colonne],
+            "email": source.get(col_email, ""),
+            "telephone": source.get(col_telephone, ""),
+            "adresse": source.get(col_adresse, ""),
+            "date_debut": date_debut,
+        }
+
+
+def _trouver_dirigeant(personne: dict, imf: IMF | None) -> Dirigeant | None:
+    """Dirigeant actif de mêmes nom et prénom, confirmé par un autre élément commun
+    (une adresse email est souvent partagée par plusieurs dirigeants d'une institution :
+    elle ne suffit pas seule à fusionner deux homonymes sans autre indice)."""
+    candidats = list(Dirigeant.objects.filter(
+        is_active=True, nom__iexact=personne["nom"], prenom__iexact=personne["prenom"]
+    ))
+    email = personne.get("email_professionnel", "").lower()
+    telephone = re.sub(r"\D", "", personne.get("telephone", ""))
+    for candidat in candidats:
+        if email and candidat.email_professionnel.lower() == email:
+            return candidat
+        if telephone and re.sub(r"\D", "", candidat.telephone) == telephone:
+            return candidat
+        if imf is not None and candidat.mandats.filter(imf=imf, is_active=True).exists():
+            return candidat
+    # Ligne sans élément de confirmation : on ne rapproche que s'il n'y a aucun homonyme.
+    if not email and not telephone and imf is None and len(candidats) == 1:
+        return candidats[0]
+    return None
+
+
+class _DirigeantsMixin:
+    """Enregistrement d'un dirigeant et de son mandat (processors des institutions et des dirigeants).
+
+    Clé d'un mandat : dirigeant + IMF + fonction + date de début ; sans date dans le fichier,
+    le mandat actif du dirigeant pour cette fonction est mis à jour, ou créé à la date de l'import.
+    """
+
+    def enregistrer_dirigeant(self, personne: dict, imf: IMF | None, mandat: dict, titulaire: bool = False) -> bool:
+        """Crée ou met à jour le dirigeant puis, si `imf` est donnée, son mandat.
+
+        `titulaire` : la ligne donne le titulaire actuel de la fonction (liste en colonnes) ;
+        les mandats en cours d'autres personnes pour cette fonction dans l'IMF sont alors clos
+        à la date de l'import. Retourne True si le dirigeant est créé.
+        """
+        existant = _trouver_dirigeant(personne, imf)
+        dirigeant = self._enregistrer(DirigeantDetailSerializer, existant, personne, obligatoires={"nom", "prenom"})
+        if imf is None:
+            return existant is None
+
+        champs = {c: v for c, v in mandat.items() if not c.startswith("imf_")}
+        champs["imf"] = str(imf.pk)
+        actifs = Mandat.objects.filter(imf=imf, is_active=True, fonction_mandat=champs["fonction_mandat"])
+        if champs.get("date_debut"):
+            mandat_existant = actifs.filter(dirigeant=dirigeant, date_debut=champs["date_debut"]).first()
+        else:
+            champs.pop("date_debut", None)
+            mandat_existant = actifs.filter(dirigeant=dirigeant).order_by("-date_debut").first()
+            if mandat_existant is None:
+                champs["date_debut"] = timezone.localdate().isoformat()
+        enregistre = self._enregistrer(
+            MandatSerializer, mandat_existant, champs, obligatoires=set(champs), dirigeant=dirigeant
+        )
+        if titulaire:
+            aujourd_hui = timezone.localdate()
+            anciens = actifs.exclude(dirigeant=dirigeant).filter(
+                date_fin=None, statut_mandat=Mandat.StatutMandat.EN_FONCTION
+            )
+            for ancien in anciens:
+                ancien.date_fin = max(aujourd_hui, ancien.date_debut)
+                ancien.save(update_fields=["date_fin", "date_modification"])
+                logger.info("Mandat %s clos : %s remplacé par %s", ancien.pk, ancien.dirigeant, enregistre.dirigeant)
+        return existant is None
+
+    @staticmethod
+    def personne(nom: str, prenom: str, valeurs: dict) -> dict:
+        """Champs du dirigeant (sérialiseur de l'API) à partir des valeurs d'une ligne."""
+        return _sans_vides({
+            "nom": nom,
+            "prenom": prenom,
+            "telephone": valeurs.get("telephone", ""),
+            "adresse": valeurs.get("adresse", ""),
+            "email_professionnel": valeurs.get("email", ""),
+            "email_secondaire": valeurs.get("email_secondaire", ""),
+        })
+
+
+# ---------------------------------------------------------------------------
 # Institutions de microfinance
 # ---------------------------------------------------------------------------
 
-class ImportIMFProcessor(BaseImportProcessor):
+class ImportIMFProcessor(_DirigeantsMixin, BaseImportProcessor):
     """Import des IMF. Clé de rapprochement : numéro d'agrément, sinon sigle, sinon nom.
 
-    Chaque IMF importée reçoit aussi un point de service « Siège » (adresse, GPS,
-    région, membres) : c'est lui qui la fait apparaître sur les cartes et dans les
-    indicateurs par région, y compris quand elle n'a aucune agence.
+    Format de référence : la liste officielle des IMF de la DRS-SFD (canevas.py), une ligne
+    par institution. Chaque ligne donne :
+      - l'institution (identité, région et département, forme, type, taille, situation…) ;
+      - son point de service « Siège » (adresse, GPS, région, département) : c'est lui qui la
+        fait apparaître sur les cartes et dans les indicateurs, même sans agence ;
+      - ses dirigeants (PCA, président du CS, du CC, DG ou gérant…) et leurs mandats : un seul
+        import du classeur alimente ainsi les trois référentiels.
+    Le format canonique (colonnes de l'export CSV) et l'export de l'annuaire restent acceptés.
     """
 
     type_import = ImportationFichier.TypeImport.IMF
     colonnes = [
         "nom", "sigle", "type_imf", "statut_reglementaire", "numero_agrement", "adresse_siege",
         "latitude", "longitude", "telephone", "email", "site_web",
-        "region", "lieu_dit", "type_sfd", "affiliation", "forme_juridique", "type_union",
+        "region", "departement", "lieu_dit", "type_sfd", "taille", "affiliation", "forme_juridique", "type_union",
         "annee_creation", "ninea", "nb_unions_affiliees", "nb_institutions_base", "nb_beneficiaires",
         "capital", "situation", "nb_membres_ca", "nb_membres_cs", "nb_membres_cc",
         "reference_externe", "url_fiche", "date_fiche",
     ]
     obligatoires = {"nom", "type_imf", "adresse_siege"}
-    feuilles = ("imf", "institutions")
+    feuilles = ("liste_imf*", "imf", "institutions")
     numeriques = {
         "annee_creation", "nb_unions_affiliees", "nb_institutions_base", "nb_beneficiaires",
         "capital", "nb_membres_ca", "nb_membres_cs", "nb_membres_cc",
     }
     dates = {"date_fiche"}
+    # À colonne égale, la première renseignée gagne (ordre du fichier) : « ANNEE » avant
+    # « Année de création », « FORME » avant « Forme juridique », « SITUATION 2025 » avant « Situation ».
     alias = {
-        # Export de l'annuaire DRS-SFD
+        # Liste officielle des IMF
+        "n_agrement": "numero_agrement",
+        "structures": "nom",
+        "regions": "region",
+        "annee": "annee_creation",
+        "forme": "forme_juridique",
+        "type": "type_sfd",
+        "situation_2025": "situation",
+        # Liste officielle et export de l'annuaire DRS-SFD
         "identifiant_wordpress": "reference_externe",
         "nom_de_l_imf": "nom",
         "numero_d_agrement": "numero_agrement",
@@ -630,7 +863,7 @@ class ImportIMFProcessor(BaseImportProcessor):
         "imcec": IMF.TypeIMF.MUTUELLE,  # institution mutualiste ou coopérative d'épargne et de crédit
         "societe_commerciale": IMF.TypeIMF.SA,
     }
-    # Colonne « Type SFD » de l'annuaire, utilisée quand la forme juridique manque.
+    # Colonne « TYPE » (type de SFD), utilisée quand la forme juridique manque.
     TYPE_SELON_TYPE_SFD = {
         "societe_commerciale": IMF.TypeIMF.SA,
         "association": IMF.TypeIMF.ASSOCIATION,
@@ -644,9 +877,15 @@ class ImportIMFProcessor(BaseImportProcessor):
         super().__init__(importation)
         # IMF déjà créées ou mises à jour par ce fichier : pk -> (numéro de ligne, nom).
         self._deja_traitees: dict = {}
+        # Le fichier porte les dirigeants en colonnes : ils sont importés avec leur institution.
+        self.avec_dirigeants = False
+
+    def adapter_lignes(self, entetes: list[str], lignes: list[LigneLue]) -> list[LigneLue]:
+        self.avec_dirigeants = self.bilan.avec_dirigeants = contient_dirigeants(entetes)
+        return lignes
 
     def verifier_colonnes(self, presentes: set[str]) -> None:
-        # Le type peut être déduit de la forme juridique (annuaire).
+        # Le type peut être déduit de la forme juridique ou du type de SFD.
         if "forme_juridique" in presentes or "type_sfd" in presentes:
             presentes = presentes | {"type_imf"}
         super().verifier_colonnes(presentes)
@@ -666,9 +905,11 @@ class ImportIMFProcessor(BaseImportProcessor):
             self.SYNONYMES_STATUT, "statut_reglementaire",
         )
         self.nettoyer_telephone(donnees)
-        # Annuaire : l'adresse manque parfois, la localité puis la région la remplacent.
+        self.nettoyer_email(donnees)
+        # L'adresse manque parfois : la localité, puis le département, puis la région la remplacent.
         donnees["adresse_siege"] = (
-            donnees.get("adresse_siege") or donnees.get("lieu_dit") or donnees.get("region", "")
+            donnees.get("adresse_siege") or donnees.get("lieu_dit")
+            or donnees.get("departement") or donnees.get("region", "")
         )
         return donnees
 
@@ -677,24 +918,79 @@ class ImportIMFProcessor(BaseImportProcessor):
         localisation = self.point_gps(donnees)
         champs = {c: donnees.get(c, "") for c in self.colonnes if c not in ("latitude", "longitude")}
         champs["region"] = self.region(champs["region"])
+        champs["departement"], champs["region"] = self.departement(champs["departement"], champs["region"])
         if localisation:
             champs["localisation_siege"] = localisation
 
         existante = self._trouver(champs)
         self._refuser_conflit(existante, champs["nom"])
-        if existante is None and not champs["statut_reglementaire"]:
-            # Annuaire DRS-SFD : la colonne « Situation » signale les IMF en OPR ; les autres
-            # institutions agréées (numéro d'agrément) sont en activité.
-            if cle(champs.get("situation")) == "opr":
-                champs["statut_reglementaire"] = IMF.StatutReglementaire.OPR
-            elif champs["numero_agrement"]:
-                champs["statut_reglementaire"] = IMF.StatutReglementaire.EN_ACTIVITE
+        if not champs["statut_reglementaire"]:
+            champs["statut_reglementaire"] = self._statut_selon_situation(existante, champs)
         imf = self._enregistrer(
             IMFDetailSerializer, existante, _sans_vides(champs), obligatoires=self.obligatoires
         )
         self._deja_traitees[imf.pk] = (self.numero_ligne, champs["nom"])
         self._synchroniser_siege(imf)
+        if self.avec_dirigeants:
+            self._importer_dirigeants(imf, donnees)
         return existante is None
+
+    @staticmethod
+    def _statut_selon_situation(existante: IMF | None, champs: dict) -> str:
+        """Statut réglementaire déduit de la colonne « Situation » quand le fichier n'en donne pas.
+
+        « OPR » : institution en OPR ; toute autre situation (ATTENDU, DIFFICULTE…) d'une institution
+        agréée : en activité. Un retrait d'agrément enregistré n'est jamais levé par un import.
+        """
+        if existante is not None and existante.statut_reglementaire == IMF.StatutReglementaire.RETRAIT_AGREMENT:
+            return ""
+        if cle(champs.get("situation")) == "opr":
+            return IMF.StatutReglementaire.OPR
+        if champs.get("situation") or (existante is None and champs.get("numero_agrement")):
+            return IMF.StatutReglementaire.EN_ACTIVITE
+        return ""
+
+    def departement(self, reference: str, region_id: str) -> tuple[str, str]:
+        """(identifiant du département, identifiant de la région) d'après les colonnes de la ligne.
+
+        Un département inconnu, ou situé dans une autre région que celle de la ligne, est écarté
+        avec un avertissement. Sans région, celle du département est retenue.
+        """
+        if not reference:
+            return "", region_id
+        try:
+            zone = _resoudre_zone(reference, ZoneGeographique.TypeZone.DEPARTEMENT)
+        except ErreurLigne:
+            self.avertir("departement", f"Département inconnu : « {reference} » : valeur écartée.")
+            return "", region_id
+        if region_id and str(zone.parent_id) != region_id:
+            self.avertir("departement", f"Le département « {reference} » n'est pas dans la région indiquée : valeur écartée.")
+            return "", region_id
+        return str(zone.pk), region_id or (str(zone.parent_id) if zone.parent_id else "")
+
+    def _importer_dirigeants(self, imf: IMF, source: dict) -> None:
+        """Enregistre les dirigeants des colonnes de la ligne et leur mandat dans l'IMF.
+
+        Un dirigeant illisible (nom sans prénom…) est écarté et signalé ; l'institution reste importée.
+        Chaque dirigeant a son propre point de sauvegarde.
+        """
+        for colonne, fonction, valeurs in dirigeants_de_la_ligne(source):
+            self.nettoyer_email(valeurs)
+            try:
+                with transaction.atomic():
+                    self._prefixe_avertissement = colonne
+                    nom, prenom = scinder_nom_complet(valeurs["nom_complet"])
+                    self.nettoyer_telephone(valeurs)
+                    mandat = {"fonction_mandat": fonction, "date_debut": valeurs["date_debut"]}
+                    self.enregistrer_dirigeant(self.personne(nom, prenom, valeurs), imf, mandat, titulaire=True)
+            except ErreurLigne as exc:
+                self._prefixe_avertissement = ""
+                detail = " ".join(str(m) for m in exc.erreurs.values())
+                self.avertir(colonne, f"Dirigeant « {valeurs['nom_complet']} » non enregistré : {detail}")
+            else:
+                self.bilan.dirigeants_enregistres += 1
+            finally:
+                self._prefixe_avertissement = ""
 
     @staticmethod
     def _synchroniser_siege(imf: IMF) -> None:
@@ -710,6 +1006,7 @@ class ImportIMFProcessor(BaseImportProcessor):
         siege.email = imf.email
         siege.localisation = imf.localisation_siege
         siege.region = imf.region
+        siege.departement = imf.departement
         # Les bénéficiaires d'un réseau (union) sont ceux de ses caisses affiliées, déjà
         # comptés sur leurs propres sièges : on ne les ajoute pas une seconde fois.
         est_reseau = cle(imf.type_sfd) == "reseau"
@@ -794,6 +1091,14 @@ class ImportPointServiceProcessor(BaseImportProcessor):
                               "suspendu": PointService.StatutPoint.FERME}
     TYPES_SFD_LOCAUX = {"affilie", "non_affilie"}
 
+    def adapter_lignes(self, entetes: list[str], lignes: list[LigneLue]) -> list[LigneLue]:
+        if est_liste_officielle(entetes):
+            raise ErreurFichier(
+                "Ce fichier est la liste officielle des IMF : elle ne contient pas de points de service. "
+                "Importez-la comme « Institutions » (institutions, sièges et dirigeants)."
+            )
+        return lignes
+
     def verifier_colonnes(self, presentes: set[str]) -> None:
         super().verifier_colonnes(presentes)
         if not self.COLONNES_IMF & presentes:
@@ -873,45 +1178,13 @@ class ImportPointServiceProcessor(BaseImportProcessor):
 # Dirigeants et mandats
 # ---------------------------------------------------------------------------
 
-CIVILITES = {"m", "mr", "mme", "mlle", "dr", "pr", "monsieur", "madame", "mademoiselle"}
-
-
-def scinder_nom_complet(nom_complet: str) -> tuple[str, str]:
-    """Sépare « Prénom(s) NOM » ou « NOM Prénom(s) » en (nom, prénom).
-
-    Le nom de famille est le groupe de mots en majuscules en fin (ou en début) de
-    chaîne ; si la casse ne permet pas de trancher, c'est le dernier mot.
-    """
-    sans_commentaire = re.sub(r"\(.*?(\)|$)", " ", nom_complet)  # « Awa DIOP (Directrice…) »
-    mots = sans_commentaire.replace(".", ". ").split()
-    while mots and cle(mots[0]) in CIVILITES:
-        mots = mots[1:]
-    if len(mots) < 2:
-        raise ErreurLigne({"nom": f"Impossible de distinguer le nom du prénom dans « {nom_complet} »."})
-
-    def majuscules(mot: str) -> bool:
-        return mot.isupper() and len(mot) > 1
-
-    fin = len(mots)
-    while fin > 1 and majuscules(mots[fin - 1]):
-        fin -= 1
-    if fin < len(mots) and not all(majuscules(m) for m in mots):
-        return " ".join(mots[fin:]), " ".join(mots[:fin])
-    debut = 0
-    while debut < len(mots) - 1 and majuscules(mots[debut]):
-        debut += 1
-    if debut and not all(majuscules(m) for m in mots):
-        return " ".join(mots[:debut]), " ".join(mots[debut:])
-    return mots[-1], " ".join(mots[:-1])
-
-
-class ImportDirigeantProcessor(BaseImportProcessor):
+class ImportDirigeantProcessor(_DirigeantsMixin, BaseImportProcessor):
     """Import des dirigeants et, si la ligne le précise, de leur mandat dans une IMF.
 
     Clé de rapprochement d'un dirigeant : nom + prénom, confirmés par l'email, le
-    téléphone ou un mandat dans la même IMF (une adresse email est souvent partagée
-    par plusieurs dirigeants d'une même institution : elle ne suffit pas).
-    Clé d'un mandat : dirigeant + IMF + fonction + date de début.
+    téléphone ou un mandat dans la même IMF (voir _trouver_dirigeant).
+    La liste officielle des IMF (dirigeants en colonnes) est aussi acceptée : ses dirigeants
+    sont normalement enregistrés dès l'import des institutions, cet import les met à jour.
     """
 
     type_import = ImportationFichier.TypeImport.DIRIGEANTS
@@ -920,55 +1193,26 @@ class ImportDirigeantProcessor(BaseImportProcessor):
         "imf_sigle", "imf_agrement", "fonction_mandat", "date_debut", "date_fin", "statut_mandat",
     ]
     obligatoires = {"nom", "prenom"}
-    feuilles = ("dirigeants", "imf")
+    feuilles = ("dirigeants", "liste_imf*", "imf")
     dates = {"date_debut", "date_fin"}
     alias = {"email_professionnel": "email", "imf": "imf_sigle"}
     COLONNES_MANDAT = ("imf_sigle", "imf_agrement", "imf_nom", "fonction_mandat", "date_debut", "date_fin", "statut_mandat")
 
-    # Export de l'annuaire DRS-SFD : les dirigeants sont des colonnes de la feuille « IMF ».
-    # (colonne du nom, fonction, colonne email, colonne téléphone, colonne adresse)
-    _F = Mandat.FonctionMandat
-    DIRIGEANTS_ANNUAIRE = (
-        ("president_du_ca", _F.PCA, "e_mail_du_pca", "telephone_du_pca", ""),
-        ("vice_president_du_ca", _F.VICE_PRESIDENT_CA, "", "", ""),
-        ("secretaire_general_du_ca", _F.SECRETAIRE_GENERAL_CA, "", "", ""),
-        ("president_du_cs", _F.PRESIDENT_CONSEIL_SURVEILLANCE,
-         "e_mail_du_president_du_cs", "telephone_du_president_du_cs", ""),
-        ("vice_president_du_cs", _F.VICE_PRESIDENT_CS, "", "", ""),
-        ("secretaire_general_du_cs", _F.SECRETAIRE_GENERAL_CS, "", "", ""),
-        ("president_du_cc", _F.PRESIDENT_COMITE_CREDIT, "", "telephone_du_pcc", "adresse_du_pcc"),
-        ("vice_president_du_cc", _F.VICE_PRESIDENT_CC, "", "", ""),
-        ("secretaire_general_du_cc", _F.SECRETAIRE_GENERAL_CC, "", "", ""),
-        ("directeur_general_gerant", None, "e_mail_dg", "telephone_dg", "adresse_dg"),
-    )
-
     def adapter_lignes(self, entetes: list[str], lignes: list[LigneLue]) -> list[LigneLue]:
-        """Annuaire : une ligne IMF devient une ligne par dirigeant renseigné.
-
-        L'annuaire ne donne pas la date de prise de fonction : la date de création de
-        la fiche, à laquelle le dirigeant était en poste, sert de date de début.
-        """
-        if "president_du_ca" not in entetes:
+        """Liste officielle ou annuaire : une ligne IMF devient une ligne par dirigeant renseigné."""
+        if not contient_dirigeants(entetes):
             return lignes
-        logger.info("Import %s : format annuaire DRS-SFD détecté (dirigeants issus de la feuille IMF)", self.importation.pk)
+        logger.info("Import %s : dirigeants en colonnes détectés (une ligne par institution)", self.importation.pk)
         resultat = []
         for ligne in lignes:
             source = ligne.valeurs
-            societe_anonyme = cle(source.get("forme_juridique")) == "sa"
-            for colonne, fonction, col_email, col_telephone, col_adresse in self.DIRIGEANTS_ANNUAIRE:
-                if not source.get(colonne):
-                    continue
-                if fonction is None:
-                    fonction = self._F.DG if societe_anonyme else self._F.GERANT
+            for _colonne, fonction, valeurs in dirigeants_de_la_ligne(source):
                 resultat.append(LigneLue(ligne.numero, {
-                    "nom_complet": source[colonne],
-                    "email": source.get(col_email, ""),
-                    "telephone": source.get(col_telephone, ""),
-                    "adresse": source.get(col_adresse, ""),
-                    "imf_agrement": source.get("numero_d_agrement", ""),
-                    "imf_nom": source.get("nom_de_l_imf", ""),
+                    **valeurs,
+                    "imf_agrement": source.get("numero_d_agrement") or source.get("n_agrement", ""),
+                    "imf_nom": source.get("nom_de_l_imf") or source.get("structures", ""),
                     "fonction_mandat": fonction,
-                    "date_debut": source.get("date_de_creation_fiche", ""),
+                    "titulaire": "1",
                     # Présentes pour le contrôle des colonnes obligatoires.
                     "nom": "", "prenom": "",
                 }))
@@ -979,6 +1223,7 @@ class ImportDirigeantProcessor(BaseImportProcessor):
         if donnees.get("nom_complet") and not (donnees.get("nom") and donnees.get("prenom")):
             donnees["nom"], donnees["prenom"] = scinder_nom_complet(donnees["nom_complet"])
         self.nettoyer_telephone(donnees)
+        self.nettoyer_email(donnees)
         donnees["fonction_mandat"] = _choix(
             donnees.get("fonction_mandat", ""), Mandat.FonctionMandat.choices, {}, "fonction_mandat"
         )
@@ -992,53 +1237,13 @@ class ImportDirigeantProcessor(BaseImportProcessor):
         mandat = _sans_vides({c: donnees.get(c, "") for c in self.COLONNES_MANDAT})
         imf = None
         if mandat:
-            manquantes = [c for c in ("fonction_mandat", "date_debut") if c not in mandat]
-            if manquantes:
-                raise ErreurLigne({c: "Obligatoire pour enregistrer un mandat." for c in manquantes})
+            if "fonction_mandat" not in mandat:
+                raise ErreurLigne({"fonction_mandat": "Obligatoire pour enregistrer un mandat."})
             imf = _resoudre_imf(mandat)
-
-        personne = _sans_vides({
-            "nom": donnees["nom"],
-            "prenom": donnees["prenom"],
-            "telephone": donnees.get("telephone", ""),
-            "adresse": donnees.get("adresse", ""),
-            "email_professionnel": donnees.get("email", ""),
-            "email_secondaire": donnees.get("email_secondaire", ""),
-        })
-        existant = self._trouver(personne, imf)
-        dirigeant = self._enregistrer(
-            DirigeantDetailSerializer, existant, personne, obligatoires=self.obligatoires
+        return self.enregistrer_dirigeant(
+            self.personne(donnees["nom"], donnees["prenom"], donnees), imf, mandat,
+            titulaire=bool(donnees.get("titulaire")),
         )
-
-        if imf is not None:
-            champs = {c: v for c, v in mandat.items() if not c.startswith("imf_")}
-            champs["imf"] = str(imf.pk)
-            mandat_existant = Mandat.objects.filter(
-                dirigeant=dirigeant, imf=imf, is_active=True,
-                fonction_mandat=champs["fonction_mandat"], date_debut=champs["date_debut"],
-            ).first()
-            self._enregistrer(MandatSerializer, mandat_existant, champs, obligatoires=set(champs), dirigeant=dirigeant)
-        return existant is None
-
-    @staticmethod
-    def _trouver(personne: dict, imf: IMF | None) -> Dirigeant | None:
-        """Dirigeant actif de mêmes nom et prénom, confirmé par un autre élément commun."""
-        candidats = list(Dirigeant.objects.filter(
-            is_active=True, nom__iexact=personne["nom"], prenom__iexact=personne["prenom"]
-        ))
-        email = personne.get("email_professionnel", "").lower()
-        telephone = re.sub(r"\D", "", personne.get("telephone", ""))
-        for candidat in candidats:
-            if email and candidat.email_professionnel.lower() == email:
-                return candidat
-            if telephone and re.sub(r"\D", "", candidat.telephone) == telephone:
-                return candidat
-            if imf is not None and candidat.mandats.filter(imf=imf, is_active=True).exists():
-                return candidat
-        # Ligne sans élément de confirmation : on ne rapproche que s'il n'y a aucun homonyme.
-        if not email and not telephone and imf is None and len(candidats) == 1:
-            return candidats[0]
-        return None
 
 
 # ---------------------------------------------------------------------------
@@ -1054,11 +1259,14 @@ PROCESSORS: dict[str, type[BaseImportProcessor]] = {
 def lancer_importation(importation: ImportationFichier) -> BilanImport:
     """Exécute le processor correspondant au type de l'import et retourne son bilan.
 
-    Avec DJANGO_DONNEES_FICTIVES=true (démonstration), les dirigeants importés sont
-    aussitôt anonymisés : aucune donnée personnelle réelle ne reste en base.
+    Avec DJANGO_DONNEES_FICTIVES=true (démonstration), les dirigeants importés (import des
+    dirigeants, ou des institutions de la liste officielle) sont aussitôt anonymisés : aucune
+    donnée personnelle réelle ne reste en base.
     """
     processor = PROCESSORS[importation.type_import](importation)
-    anonymiser = settings.DONNEES_FICTIVES and importation.type_import == ImportationFichier.TypeImport.DIRIGEANTS
+    anonymiser = settings.DONNEES_FICTIVES and importation.type_import in (
+        ImportationFichier.TypeImport.DIRIGEANTS, ImportationFichier.TypeImport.IMF,
+    )
     # Le statut final n'est publié qu'après l'anonymisation : un écran qui suit l'import ne voit
     # jamais le rapport (noms réels dans les messages) avant qu'il ne soit masqué.
     processor.differer_statut = anonymiser

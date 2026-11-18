@@ -7,8 +7,9 @@ Les entrées sont en lecture seule — aucune modification ni suppression autori
 """
 
 import uuid
-from django.db import models
+
 from django.conf import settings
+from django.db import models
 
 
 class JournalAudit(models.Model):

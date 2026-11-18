@@ -5,13 +5,14 @@ Vues DRF du module importation :
 - ImportationListCreateView : liste des imports + upload d'un fichier, traité en tâche de fond
   par son processor (taches.py, processors.py) ; l'écran suit la progression par le détail
 - ImportationDetailView     : détail et rapport d'erreurs d'un import
-- ModeleImportView          : canevas CSV vide (en-têtes attendus) par type
-- ExportView                : export CSV d'un référentiel (même format que l'import)
+- ModeleImportView          : canevas vide par type ; institutions : liste officielle des IMF (.xlsx)
+- ExportView                : export d'un référentiel au format de son import ; institutions :
+                              liste officielle des IMF remplie (.xlsx), points de service et dirigeants : CSV
 """
 
 import csv
 
-from django.http import Http404, StreamingHttpResponse
+from django.http import Http404, HttpResponse, StreamingHttpResponse
 from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, generics, status
@@ -22,7 +23,7 @@ from apps.audit.mixins import AuditMixin
 from apps.audit.models import JournalAudit
 from apps.authentication.permissions import IsAdmin
 
-from . import taches
+from . import canevas, taches
 from .models import ImportationFichier
 from .serializers import ImportationFichierSerializer
 from .services import COLONNES, lignes_export
@@ -82,6 +83,15 @@ class _Echo:
         return value
 
 
+TYPE_XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+
+def _reponse_xlsx(nom_fichier: str, contenu: bytes):
+    reponse = HttpResponse(contenu, content_type=TYPE_XLSX)
+    reponse["Content-Disposition"] = f'attachment; filename="{nom_fichier}"'
+    return reponse
+
+
 def _reponse_csv(nom_fichier: str, lignes):
     """CSV ; + BOM UTF-8 : s'ouvre correctement dans Excel en français."""
     writer = csv.writer(_Echo(), delimiter=";")
@@ -97,17 +107,21 @@ def _reponse_csv(nom_fichier: str, lignes):
 
 
 class ModeleImportView(APIView):
-    """GET /api/v1/importation/modeles/<type>/ — Canevas CSV vide à remplir (ADMIN)."""
+    """GET /api/v1/importation/modeles/<type>/ — Canevas vide à remplir (ADMIN).
+    Institutions : en-têtes de la liste officielle des IMF (.xlsx) ; autres : CSV."""
 
     permission_classes = [IsAdmin]
 
     def get(self, request, type_import):
         type_import = _type_ou_404(type_import)
+        if type_import == ImportationFichier.TypeImport.IMF:
+            return _reponse_xlsx("modele_liste_imf.xlsx", canevas.classeur(avec_donnees=False))
         return _reponse_csv(f"modele_{type_import.lower()}.csv", [COLONNES[type_import]])
 
 
 class ExportView(APIView):
-    """GET /api/v1/importation/export/<type>/ — Export CSV (ADMIN, journalisé)."""
+    """GET /api/v1/importation/export/<type>/ — Export (ADMIN, journalisé).
+    Institutions : liste officielle des IMF (.xlsx, réimportable) ; autres : CSV."""
 
     permission_classes = [IsAdmin]
 
@@ -117,5 +131,7 @@ class ExportView(APIView):
             request.user, JournalAudit.Action.EXPORTATION, f"export:{type_import}"
         )
         horodatage = timezone.localtime().strftime("%Y%m%d_%H%M")
+        if type_import == ImportationFichier.TypeImport.IMF:
+            return _reponse_xlsx(f"liste_imf_{horodatage}.xlsx", canevas.classeur(avec_donnees=True))
         lignes = [COLONNES[type_import], *lignes_export(type_import)]
         return _reponse_csv(f"export_{type_import.lower()}_{horodatage}.csv", lignes)
