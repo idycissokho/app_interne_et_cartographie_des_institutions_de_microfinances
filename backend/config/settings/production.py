@@ -5,8 +5,9 @@ Paramètres spécifiques à l'environnement de production.
 Renforce la sécurité et désactive tout ce qui est réservé au développement.
 """
 
-from .base import *  # noqa: F401, F403
 from django.core.exceptions import ImproperlyConfigured
+
+from .base import *  # noqa: F401, F403
 
 # ---------------------------------------------------------------------------
 # Sécurité production

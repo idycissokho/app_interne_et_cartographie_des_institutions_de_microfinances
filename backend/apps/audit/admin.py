@@ -6,6 +6,7 @@ Toutes les entrées sont en lecture seule.
 """
 
 from django.contrib import admin
+
 from .models import JournalAudit
 
 

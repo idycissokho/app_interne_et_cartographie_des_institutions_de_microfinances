@@ -11,7 +11,6 @@
 
 # Fichiers déposés et générés (données réelles : imports, justificatifs)
 mediafiles/
-msediafiles/
 staticfiles/
 
 # Caches et environnements locaux

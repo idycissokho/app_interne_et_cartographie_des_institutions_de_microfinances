@@ -7,7 +7,8 @@ Routes du module audit :
 """
 
 from django.urls import path
-from .views import JournalAuditListView, JournalAuditDetailView
+
+from .views import JournalAuditDetailView, JournalAuditListView
 
 app_name = "audit"
 

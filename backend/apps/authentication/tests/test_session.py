@@ -37,8 +37,8 @@ def connexion(client, agent):
 
 
 def test_durees_par_defaut():
-    assert api_settings.ACCESS_TOKEN_LIFETIME == timedelta(minutes=15)
-    assert api_settings.REFRESH_TOKEN_LIFETIME == timedelta(minutes=settings.SESSION_INACTIVITE_MINUTES)
+    assert timedelta(minutes=15) == api_settings.ACCESS_TOKEN_LIFETIME
+    assert timedelta(minutes=settings.SESSION_INACTIVITE_MINUTES) == api_settings.REFRESH_TOKEN_LIFETIME
     assert settings.SESSION_INACTIVITE_MINUTES == 30
     assert settings.SESSION_DUREE_MAX_HEURES == 8
 

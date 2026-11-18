@@ -6,7 +6,6 @@ Couverture : login, logout, profil, changement de mot de passe, modèle Utilisat
 """
 
 import pytest
-from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -14,7 +13,6 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from apps.authentication.models import Utilisateur
 
 from .factories import AdminFactory, SuperviseurFactory, UtilisateurFactory
-
 
 # ---------------------------------------------------------------------------
 # Fixtures

@@ -1,7 +1,8 @@
 # =============================================================================
 # .gitignore (racine) — Projet Cartographie IMF DRS-SFD
-# Exclut les fichiers générés, les secrets et les artefacts de build.
-# (config/.gitignore ne s'applique qu'au dossier config/ : il protège config/.env.)
+# Exclut les fichiers générés, les secrets, les données réelles et les artefacts de build.
+# Fichier unique du dépôt : les motifs « .env* » protègent aussi config/.env et
+# config/.env.production.
 # =============================================================================
 
 # --- Environnements virtuels Python ---
@@ -30,7 +31,6 @@ frontend/.env.production
 # --- Django ---
 backend/staticfiles/
 backend/mediafiles/
-backend/msediafiles/
 backend/*.log
 backend/db.sqlite3
 
@@ -49,7 +49,8 @@ frontend/.vite/
 .DS_Store
 Thumbs.db
 
-# --- Couverture de tests ---
+# --- Tests et couverture ---
+.pytest_cache/
 backend/.coverage
 backend/htmlcov/
 frontend/coverage/
@@ -74,3 +75,6 @@ logs/
 # Données initiales (classeurs réels, rapports) : seul le mode d'emploi est versionné.
 backend/donnees_initiales/*
 !backend/donnees_initiales/LISEZMOI.md
+
+# --- Certificats HTTPS du serveur intranet (clé privée : jamais versionnée) ---
+infra/docker/nginx/certs/
