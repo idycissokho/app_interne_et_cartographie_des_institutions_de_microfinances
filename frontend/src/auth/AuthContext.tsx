@@ -24,6 +24,8 @@ function nettoyer() {
   jetons.effacer();
   session.effacer();
   cacheRequetes.clear();
+  // Conversation de l'assistant (peut contenir des coordonnées de dirigeants).
+  try { sessionStorage.removeItem("imf.assistant.historique"); } catch { /* stockage indisponible */ }
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {

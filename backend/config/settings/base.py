@@ -70,6 +70,7 @@ LOCAL_APPS = [
     "apps.importation",
     "apps.audit",
     "apps.itineraires",
+    "apps.assistant",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -294,6 +295,8 @@ REST_FRAMEWORK = {
     # Limitation des tentatives de connexion (force brute) : par adresse IP.
     "DEFAULT_THROTTLE_RATES": {
         "connexion": env("LIMITE_CONNEXION", default="10/min"),
+        # Assistant (questions sur les données) : par utilisateur.
+        "assistant": env("LIMITE_ASSISTANT", default="30/min"),
     },
 }
 

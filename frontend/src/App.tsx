@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import type { Role } from "./api/types";
 import { AuthProvider, useAuth } from "./auth/AuthContext";
+import { AssistantGlobal } from "./components/assistant/Assistant";
 import { AvisReveil, BandeauDemo } from "./components/AvisSysteme";
 import { GardeSession } from "./components/GardeSession";
 import { EcranSquelette } from "./components/Squelette";
@@ -60,6 +61,7 @@ export function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         </Suspense>
+        <AssistantGlobal />
       </BrowserRouter>
       <AvisReveil />
       <GardeSession />
