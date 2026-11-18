@@ -392,11 +392,20 @@ export function SenegalMap({
         bouton.addEventListener("click", () => basculer(!plein));
         c.addControl({ onAdd: () => groupe, onRemove: () => groupe.remove() }, "bottom-right");
       }
-      const surPleinEcran = () => { if (!document.fullscreenElement) basculer(false); };
+      const surPleinEcran = () => {
+        if (!document.fullscreenElement) { basculer(false); return; }
+        // Safari ne donne la taille plein écran qu'à la fin de sa transition : on recadre alors.
+        requestAnimationFrame(() => { if (carteRef.current === c) { c.resize(); recadrer.current(700); } });
+      };
       const surTouche = (e: KeyboardEvent) => { if (e.key === "Escape") basculer(false); };
       document.addEventListener("fullscreenchange", surPleinEcran);
       document.addEventListener("keydown", surTouche);
+      // La zone de dessin suit toujours la taille réelle du cadre (agrandissement, panneau, rotation) :
+      // sans cela, une partie de la carte reste noire tant que la fenêtre n'est pas redimensionnée.
+      const observateur = new ResizeObserver(() => { if (carteRef.current === c) c.resize(); });
+      if (conteneur.current) observateur.observe(conteneur.current);
       nettoyer = () => {
+        observateur.disconnect();
         document.removeEventListener("fullscreenchange", surPleinEcran);
         document.removeEventListener("keydown", surTouche);
         basculer(false);
