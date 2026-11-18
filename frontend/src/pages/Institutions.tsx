@@ -28,7 +28,8 @@ const pastilleImf: CSSProperties = { width: 36, height: 36, flex: "none", border
 export function Institutions() {
   const naviguer = useNavigate();
   // Diagramme de cas d'utilisation : créer / désactiver / importer / exporter = ADMIN.
-  const { estAdmin } = useAuth();
+  // Consulter : tous les rôles. Sélection, changement de statut, modifier : SUPERVISEUR et ADMIN.
+  const { estAdmin, peutModifier } = useAuth();
   const [params] = useSearchParams();
   const [tab, setTab] = useState(params.get("statut") ?? "");
   const [type, setType] = useState("");
@@ -107,7 +108,7 @@ export function Institutions() {
             {TYPES.map(([label, v]) => <Pastille key={label} actif={v === type} onClick={() => filtrer(() => setType(v))}>{label}</Pastille>)}
           </>}
           pied={<Pagination page={page} pages={pages} onPage={(n) => { setPage(n); setSel({}); }} resume={total ? `${(page - 1) * TAILLE + 1}–${(page - 1) * TAILLE + rows.length} sur ${total} institutions` : "0 institution"} />}>
-          {choisis.length > 0 && (
+          {peutModifier && choisis.length > 0 && (
             <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 20px", background: "#FAFAF9", borderBottom: "1px solid #E7E5E4", fontSize: "var(--t-sm)", flexWrap: "wrap" }}>
               <b style={{ fontWeight: 600 }}>{choisis.length} sélectionnée{choisis.length > 1 ? "s" : ""}</b>
               {estAdmin && <button type="button" onClick={exporterSelection} style={barreBtn}>Exporter la sélection</button>}
@@ -119,15 +120,15 @@ export function Institutions() {
           <Tableau largeurMin={980}>
             <thead>
               <tr>
-                <EnTete style={{ width: 18 }}><input type="checkbox" className="in-check" aria-label="Tout sélectionner" checked={allSel} onChange={() => setSel(allSel ? {} : Object.fromEntries(rows.map((r) => [r.id, true])))} /></EnTete>
+                {peutModifier && <EnTete style={{ width: 18 }}><input type="checkbox" className="in-check" aria-label="Tout sélectionner" checked={allSel} onChange={() => setSel(allSel ? {} : Object.fromEntries(rows.map((r) => [r.id, true])))} /></EnTete>}
                 <EnTete>Institution</EnTete><EnTete>Type</EnTete><EnTete>Statut</EnTete><EnTete>Siège</EnTete><EnTete num>Points</EnTete><EnTete num>Dirigeants</EnTete><EnTete>Bailleurs</EnTete><EnTete><span className="sr-only">Actions</span></EnTete>
               </tr>
             </thead>
             <tbody>
-              {!d.rows && <LignesChargement colonnes={9} lignes={TAILLE} />}
+              {!d.rows && <LignesChargement colonnes={peutModifier ? 9 : 8} lignes={TAILLE} />}
               {rows.map((r) => (
                 <tr key={r.id}>
-                  <td data-label=""><input type="checkbox" className="in-check" aria-label={`Sélectionner ${r.nom}`} checked={!!sel[r.id]} onChange={() => setSel({ ...sel, [r.id]: !sel[r.id] })} /></td>
+                  {peutModifier && <td data-label=""><input type="checkbox" className="in-check" aria-label={`Sélectionner ${r.nom}`} checked={!!sel[r.id]} onChange={() => setSel({ ...sel, [r.id]: !sel[r.id] })} /></td>}
                   <td className="principal"><div style={{ display: "flex", alignItems: "center", gap: 12 }}><span style={pastilleImf}>{initiales(r.sigle || r.nom)}</span><div style={{ minWidth: 0 }}><div style={{ fontWeight: 600 }}>{r.nom}</div><span className="muet">{r.sigle ? `${r.sigle}${r.email ? " · " : ""}` : ""}{r.email || (r.sigle ? "" : "—")}</span></div></div></td>
                   <td data-label="Type" style={{ color: "#4A5568" }}>{TYPE_IMF_LONG[r.type_imf]}</td>
                   <td data-label="Statut"><Badge ton={TON_STATUT[r.statut_reglementaire]}>{STATUT_IMF_LONG[r.statut_reglementaire]}</Badge></td>
@@ -137,7 +138,7 @@ export function Institutions() {
                   <td data-label="Bailleurs" style={{ color: "#4A5568", fontSize: "var(--t-sm)" }}>{r.bailleurs_noms.length ? r.bailleurs_noms.join(", ") : "—"}</td>
                   <CelluleActions>
                     <Link className="tbl-icone" to={`/consultation?imf=${r.id}`} aria-label="Voir la fiche" title="Voir la fiche"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></svg></Link>
-                    <BoutonIcone libelle="Modifier" onClick={() => naviguer(`/imf/${r.id}/modifier`)}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" /></svg></BoutonIcone>
+                    {peutModifier && <BoutonIcone libelle="Modifier" onClick={() => naviguer(`/imf/${r.id}/modifier`)}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" /></svg></BoutonIcone>}
                     {estAdmin && <BoutonIcone libelle="Archiver" onClick={() => archiver(r)}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="4" rx="1" /><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8M10 12h4" /></svg></BoutonIcone>}
                   </CelluleActions>
                 </tr>

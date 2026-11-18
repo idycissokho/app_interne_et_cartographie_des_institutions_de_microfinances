@@ -67,7 +67,7 @@ export function Sidebar({ active, role, nomComplet, onDeconnexion }: Props) {
     {
       title: "Référentiels",
       items: [
-        mk("imf", "Institutions (IMF)", role === "consultant" ? "/consultation" : "/imf"),
+        mk("imf", "Institutions (IMF)", "/imf"),
         mk("points", "Points de service", "/points-service"),
         mk("dirigeants", "Dirigeants & mandats", "/dirigeants"),
       ],
