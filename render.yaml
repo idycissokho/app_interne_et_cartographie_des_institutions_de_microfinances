@@ -22,6 +22,8 @@ services:
       # --- Secrets et adresses (saisis dans Render) ---
       - key: DJANGO_SECRET_KEY
         generateValue: true
+      - key: DJANGO_SETTINGS_MODULE
+        value: "config.settings.production"
       - key: DATABASE_URL                # chaîne de connexion Neon (non poolée), avec ?sslmode=require
         sync: false
       - key: DJANGO_ALLOWED_HOSTS        # ex. cartographie-imf-api.onrender.com
@@ -44,5 +46,7 @@ services:
         value: "false"
       - key: WEB_CONCURRENCY                  # un seul processus : 512 Mo de mémoire, cache cohérent
         value: "1"
+      - key: GUNICORN_TIMEOUT                 # les imports sont traités pendant la requête : l'import des
+        value: "900"                          # dirigeants (≈ 2 200 lignes) dépasse 120 s sur l'offre gratuite
       - key: ROUTING_URL                      # section « Itinéraire » : Valhalla public (FOSSGIS), usage modéré
         value: "https://valhalla1.openstreetmap.de"
