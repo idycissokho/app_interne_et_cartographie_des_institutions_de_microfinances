@@ -3,6 +3,7 @@
 # backend/docker-entrypoint.sh — démarrage de l'image de production (Dockerfile.prod)
 #
 #   1. migrations de la base (désactivables : MIGRER_AU_DEMARRAGE=false) ;
+#   1 bis. régions et départements (désactivables : CHARGER_ZONES_AU_DEMARRAGE=false) ;
 #   2. compte administrateur, seulement si DJANGO_ADMIN_EMAIL et DJANGO_ADMIN_PASSWORD
 #      sont définies (un compte existant n'est jamais modifié) ;
 #   3. lancement de la commande de l'image (Gunicorn).
@@ -15,6 +16,14 @@ set -e
 if [ "${MIGRER_AU_DEMARRAGE:-true}" = "true" ]; then
     echo "Migrations de la base…"
     python manage.py migrate --noinput
+fi
+
+# Référentiel géographique (14 régions, 46 départements) : indispensable AVANT tout import,
+# sinon la région des IMF est écartée et les points ne sont rattachés à aucune zone.
+# Relançable sans doublon ; désactivable : CHARGER_ZONES_AU_DEMARRAGE=false.
+if [ "${CHARGER_ZONES_AU_DEMARRAGE:-true}" = "true" ]; then
+    python manage.py charger_regions
+    python manage.py charger_departements
 fi
 
 python manage.py creer_admin --si-configure
