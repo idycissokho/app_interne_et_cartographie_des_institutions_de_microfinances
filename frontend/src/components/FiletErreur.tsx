@@ -1,11 +1,16 @@
 /**
  * Filet de sécurité de l'application : une erreur d'affichage (ou une page introuvable après une
  * mise en ligne) montre un message et un bouton « Recharger », au lieu d'une page blanche.
+ * Changer de page (`cle` : adresse courante) efface l'erreur : une page en échec ne bloque pas les autres.
  */
 import { Component, type ErrorInfo, type ReactNode } from "react";
 
-export class FiletErreur extends Component<{ children: ReactNode }, { erreur: Error | null }> {
+export class FiletErreur extends Component<{ children: ReactNode; cle?: string }, { erreur: Error | null }> {
   state = { erreur: null as Error | null };
+
+  componentDidUpdate(precedentes: { cle?: string }) {
+    if (this.state.erreur && precedentes.cle !== this.props.cle) this.setState({ erreur: null });
+  }
 
   static getDerivedStateFromError(erreur: Error) {
     return { erreur };

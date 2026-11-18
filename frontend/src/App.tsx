@@ -1,5 +1,5 @@
 import { lazy, Suspense, type ReactNode } from "react";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 
 import type { Role } from "./api/types";
 import { AuthProvider, useAuth } from "./auth/AuthContext";
@@ -39,11 +39,16 @@ const GESTION: Role[] = ["ADMIN", "SUPERVISEUR"];
 const ADMIN: Role[] = ["ADMIN"];
 
 
+/** Filet d'erreur réinitialisé à chaque changement de page. */
+function FiletErreurParPage({ children }: { children: ReactNode }) {
+  return <FiletErreur cle={useLocation().pathname}>{children}</FiletErreur>;
+}
+
 export function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <FiletErreur>
+        <FiletErreurParPage>
         <Suspense fallback={<EcranSquelette />}>
         <Routes>
           <Route path="/connexion" element={<Connexion />} />
@@ -63,7 +68,7 @@ export function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         </Suspense>
-        </FiletErreur>
+        </FiletErreurParPage>
         <AssistantGlobal />
       </BrowserRouter>
       <AvisReveil />

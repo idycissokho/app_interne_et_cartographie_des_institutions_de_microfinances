@@ -38,6 +38,13 @@ def client_consultant(db):
 
 
 @pytest.fixture(autouse=True)
+def medias_temporaires(settings, tmp_path_factory):
+    """Fichiers déposés pendant les tests (imports, justificatifs) écrits dans un dossier jetable,
+    jamais dans backend/mediafiles/ (monté depuis le poste en développement)."""
+    settings.MEDIA_ROOT = tmp_path_factory.mktemp("medias")
+
+
+@pytest.fixture(autouse=True)
 def cache_vide():
     """Chaque test démarre avec un cache vide (la base est remise à zéro, le cache doit l'être aussi)."""
     from django.core.cache import cache
