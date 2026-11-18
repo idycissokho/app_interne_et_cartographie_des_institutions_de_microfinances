@@ -195,7 +195,8 @@ def test_demonstration_dirigeants_anonymises_et_fichier_efface(client_admin, zon
     ligne = _acep(**{"Président du CS": "POUYE", "Latitude": "48.85", "Longitude": "2.35"})
     resp = _importer(client_admin, _classeur(ligne))
     assert (resp.data["statut"], resp.data["nb_lignes_importees"]) == ("TERMINE", 1)
-    assert not Dirigeant.objects.filter(nom="FAYE").exists()
+    # Identité réelle absente (le nom seul ne suffit pas : « FAYE » peut être tiré comme nom fictif).
+    assert not Dirigeant.objects.filter(prenom="Ndeye Sanou").exists()
     rapport = resp.data["rapport_erreurs"][0]["erreurs"]
     assert "POUYE" not in str(resp.data["rapport_erreurs"])        # dirigeant écarté : masqué
     assert "hors du Sénégal" in rapport["latitude"]                  # GPS écarté : lisible

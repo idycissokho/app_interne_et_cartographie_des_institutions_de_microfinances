@@ -1,5 +1,7 @@
 # Cartographie des IMF — DRS-SFD
 
+[![Intégration continue](https://github.com/idycissokho/app_interne_et_cartographie_des_institutions_de_microfinances/actions/workflows/ci.yml/badge.svg)](https://github.com/idycissokho/app_interne_et_cartographie_des_institutions_de_microfinances/actions/workflows/ci.yml)
+
 Application web institutionnelle de cartographie et de gouvernance des Institutions de Microfinance (IMF), développée pour la **Direction de la Réglementation et de la Supervision des Systèmes Financiers Décentralisés (DRS-SFD)** — Ministère des Finances et du Budget du Sénégal.
 
 ---
@@ -191,6 +193,10 @@ cd frontend && npm install && npm run dev
 | Démonstration en ligne (temporaire) | [deploy/demo/README.md](deploy/demo/README.md) | `render.yaml`, `frontend/vercel.json` |
 
 `infra/docker-compose.yml` est réservé au développement.
+
+**Intégration continue** : chaque push est vérifié par GitHub Actions (`.github/workflows/ci.yml`) :
+qualité du code, tests backend sur PostGIS, build du frontend, puis démarrage complet de la pile
+de production. Détails et notifications d'échec : [deploy/intranet/README.md](deploy/intranet/README.md) (§ 15).
 
 ---
 

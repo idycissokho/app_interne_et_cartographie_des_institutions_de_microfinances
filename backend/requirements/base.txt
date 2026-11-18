@@ -9,6 +9,8 @@ djangorestframework==3.15.2
 
 # Authentification JWT
 djangorestframework-simplejwt==5.3.1
+# Bibliothèque des jetons JWT (dépendance de simplejwt), épinglée pour des installations identiques.
+PyJWT==2.15.1
 
 # Support CORS pour les requêtes frontend React
 django-cors-headers==4.4.0
