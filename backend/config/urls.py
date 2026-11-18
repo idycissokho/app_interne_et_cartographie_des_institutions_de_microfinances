@@ -41,6 +41,7 @@ urlpatterns = [
     path(f"{API_V1}importation/", include("apps.importation.urls")),
     path(f"{API_V1}audit/", include("apps.audit.urls")),
     path(f"{API_V1}itineraires/", include("apps.itineraires.urls")),
+    path(f"{API_V1}assistant/", include("apps.assistant.urls")),
 
 ]
 
