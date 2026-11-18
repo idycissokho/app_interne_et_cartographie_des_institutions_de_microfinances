@@ -19,7 +19,8 @@ import { useDonnees } from "../lib/useDonnees";
 
 type TypeImport = "IMF" | "POINTS_SERVICE" | "DIRIGEANTS";
 interface Rapport { ligne: number | null; erreurs: Record<string, string>; valeurs?: Record<string, string> }
-interface Importation { id: string; type_import: TypeImport; fichier: string; statut: string; nb_lignes_total: number; nb_lignes_importees: number; nb_lignes_erreur: number; taux_succes: number; rapport_erreurs: Rapport[]; utilisateur_email: string; date_creation: string }
+// fichier : null quand le fichier d'origine a été effacé (démonstration : anonymisation des dirigeants).
+interface Importation { id: string; type_import: TypeImport; fichier: string | null; statut: string; nb_lignes_total: number; nb_lignes_importees: number; nb_lignes_erreur: number; taux_succes: number; rapport_erreurs: Rapport[]; utilisateur_email: string; date_creation: string }
 
 const I: Record<TypeImport, string> = {
   IMF: "M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6",
@@ -41,7 +42,9 @@ const CANEVAS: Record<TypeImport, [string, string]> = {
 /** Statuts d'un import pas encore terminé : l'écran interroge alors le serveur. */
 const EN_TRAITEMENT = new Set(["EN_ATTENTE", "EN_COURS"]);
 const tailleFichier = (o: number) => (o >= 1048576 ? `${(o / 1048576).toFixed(1).replace(".", ",")} Mo` : `${Math.max(1, Math.round(o / 1024))} Ko`);
-const extension = (nom: string) => (nom.split(".").pop() ?? "").toUpperCase();
+const extension = (nom: string | null | undefined) => (nom ? (nom.split(/[?#]/)[0].split(".").pop() ?? "") : "").toUpperCase();
+/** Extension affichée dans l'historique : celle du fichier, sinon celle du format attendu pour le type. */
+const extensionImport = (h: Importation) => extension(h.fichier) || (h.type_import === "IMF" ? "XLSX" : "CSV");
 
 export function Donnees() {
   const [params] = useSearchParams();
@@ -225,7 +228,7 @@ export function Donnees() {
                 const c = SB[h.statut] ?? SB.EN_ATTENTE;
                 return (
                   <div key={h.id} style={{ display: "flex", gap: 12, alignItems: "center", padding: "12px 4px", borderBottom: "1px solid #F5F5F4" }}>
-                    <span style={{ width: 38, height: 38, flex: "none", borderRadius: 10, background: "#F5F5F4", color: "#8A6A1F", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--t-2xs)", fontWeight: 700 }}>{extension(h.fichier)}</span>
+                    <span style={{ width: 38, height: 38, flex: "none", borderRadius: 10, background: "#F5F5F4", color: "#8A6A1F", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--t-2xs)", fontWeight: 700 }}>{extensionImport(h)}</span>
                     <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: "var(--t-sm)", fontWeight: 600 }}>{LIB[h.type_import]}</div><div style={{ fontSize: "var(--t-xs)", color: "#6B7280", overflowWrap: "anywhere" }}>{h.utilisateur_email} · {ilYa(h.date_creation)}</div></div>
                     <span style={{ fontSize: "var(--t-2xs)", fontWeight: 700, padding: "4px 9px", borderRadius: 999, whiteSpace: "nowrap", background: c[0], color: c[1] }}>{c[2]}{h.statut === "EN_COURS" && h.nb_lignes_total ? ` · ${pourcent((100 * (h.nb_lignes_importees + h.nb_lignes_erreur)) / h.nb_lignes_total)}` : ""}</span>
                   </div>

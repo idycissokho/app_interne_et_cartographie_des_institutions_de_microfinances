@@ -80,19 +80,31 @@ def anonymiser_dirigeants() -> dict:
             entree.save(update_fields=["details"])
             entrees += 1
 
-    # Imports de dirigeants : rapports (valeurs recopiées) et fichiers d'origine.
+    # Imports contenant des dirigeants : rapports (valeurs recopiées) et fichiers d'origine.
+    # - import des dirigeants : tout le rapport est masqué ;
+    # - import des institutions (liste officielle, dirigeants en colonnes) : seules les lignes
+    #   du rapport qui portent sur un dirigeant sont masquées (un GPS écarté reste lisible).
+    # Le fichier d'origine est supprimé : l'historique l'affiche alors sans lien (fichier vide).
+    from apps.importation.processors import COLONNES_DIRIGEANTS
+
+    colonnes_dirigeants = tuple(colonne for colonne, *_ in COLONNES_DIRIGEANTS)
+
+    def masquer(entree: dict, tout: bool) -> dict:
+        """Masque les colonnes d'un dirigeant (toutes si `tout`) dans une entrée du rapport."""
+        erreurs = entree.get("erreurs") or {}
+        a_masquer = {c for c in erreurs if tout or str(c).startswith(colonnes_dirigeants)}
+        if not a_masquer:
+            return entree
+        erreurs = {c: "valeur masquée (démonstration)" if c in a_masquer else m for c, m in erreurs.items()}
+        valeurs = {c: v for c, v in (entree.get("valeurs") or {}).items() if c not in a_masquer}
+        detail = " ; ".join(f"{c} : {m}" for c, m in erreurs.items())
+        return {**entree, "erreurs": erreurs, "valeurs": valeurs, "message": f"Ligne {entree.get('ligne')} — {detail}"}
+
     imports = 0
-    for importation in ImportationFichier.objects.filter(type_import=ImportationFichier.TypeImport.DIRIGEANTS):
-        importation.rapport_erreurs = [
-            {
-                "ligne": r.get("ligne"),
-                "erreurs": {colonne: "valeur masquée (démonstration)" for colonne in (r.get("erreurs") or {})},
-                "valeurs": {},
-                "message": f"Ligne {r.get('ligne')} — colonnes : {', '.join(r.get('erreurs') or {})}",
-                "avertissement": r.get("avertissement", False),
-            }
-            for r in importation.rapport_erreurs or []
-        ]
+    types = (ImportationFichier.TypeImport.DIRIGEANTS, ImportationFichier.TypeImport.IMF)
+    for importation in ImportationFichier.objects.filter(type_import__in=types):
+        tout_masquer = importation.type_import == ImportationFichier.TypeImport.DIRIGEANTS
+        importation.rapport_erreurs = [masquer(r, tout_masquer) for r in importation.rapport_erreurs or []]
         if importation.fichier:
             importation.fichier.delete(save=False)
         importation.save(update_fields=["rapport_erreurs", "fichier"])
