@@ -346,8 +346,10 @@ html.cs-fige{overflow:hidden}
 
 /* ---------- Layout commun : petits écrans (sans effet au-delà de 760 px) ---------- */
 @media (max-width: 760px) {
-  .app-sidebar { max-width: none !important; flex-basis: 100% !important; }
-  .app-nav { min-height: 0 !important; }
+  /* Sidebar en tiroir (voir AppLayout) : hors écran, ouverte par le bouton « Menu ». */
+  .app-sidebar { position: fixed !important; top: 0; left: 0; bottom: 0; z-index: 1200; width: min(300px, 86vw); max-width: none !important; flex: none !important; transform: translateX(-100%); visibility: hidden; transition: transform .25s cubic-bezier(.2,.7,.2,1), visibility 0s linear .25s; box-shadow: 0 0 40px rgba(11,20,36,.35); }
+  .app-sidebar[data-ouvert] { transform: none; visibility: visible; transition: transform .25s cubic-bezier(.2,.7,.2,1); }
+  .app-nav { min-height: 0 !important; height: 100% !important; overflow-y: auto; overscroll-behavior: contain; }
   .app-main { padding: 20px 16px 32px 16px !important; }
   .tb-carte { height: 240px !important; }
 }
@@ -579,3 +581,17 @@ select.fi-input.bad,select.ps-input.bad,select.di-input.bad{border-color:#DC2626
 }
 @media print{.as-bouton,.as-panneau{display:none}}
 @media (prefers-reduced-motion:reduce){.as-panneau{animation:none}.as-attente i{animation:none;opacity:.6}}
+
+/* ---------- Navigation mobile : barre du haut, bouton menu, tiroir (≤ 760 px) ---------- */
+.app-barre-mobile,.app-fermer-menu,.app-voile-menu{display:none}
+@media (max-width: 760px){
+  .app-barre-mobile{display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:1100;flex:0 0 100%;height:56px;padding:0 12px;box-sizing:border-box;background:#0B1424;color:#F4EFE3;box-shadow:0 1px 0 rgba(255,255,255,.06)}
+  .app-bouton-menu{width:44px;height:44px;flex:none;display:flex;align-items:center;justify-content:center;border:none;border-radius:10px;background:rgba(255,255,255,.08);color:#F4EFE3;cursor:pointer}
+  .app-bouton-menu:focus-visible,.app-fermer-menu:focus-visible{outline:2px solid #C9A44C;outline-offset:2px}
+  .app-barre-titre{font-size:var(--t-lg);font-weight:700;letter-spacing:-.01em}
+  .app-barre-titre span{margin-left:6px;font-size:var(--t-xs);font-weight:500;color:#8E99AB}
+  .app-voile-menu{display:block;position:fixed;inset:0;z-index:1150;background:rgba(11,20,36,.55)}
+  .app-fermer-menu{display:flex;position:absolute;top:10px;right:10px;z-index:1;width:40px;height:40px;align-items:center;justify-content:center;border:none;border-radius:10px;background:rgba(255,255,255,.08);color:#F4EFE3;cursor:pointer}
+  html.app-menu-fige,html.app-menu-fige body{overflow:hidden}
+}
+@media (max-width: 760px) and (prefers-reduced-motion: reduce){.app-sidebar{transition:none !important}}
