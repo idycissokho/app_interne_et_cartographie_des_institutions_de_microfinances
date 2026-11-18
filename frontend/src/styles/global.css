@@ -516,3 +516,8 @@ select.fi-input.bad,select.ps-input.bad,select.di-input.bad{border-color:#DC2626
   .app-nav::-webkit-scrollbar-track{background:transparent}
 }
 .ci-input:disabled{opacity:.7;cursor:progress}
+
+/* Carte micro : bouton rond « vue d'ensemble », au bout de la légende */
+.mi-recentrer{width:30px;height:30px;flex:none;align-self:center;margin-left:2px;border-radius:50%;border:1px solid #C9A44C;background:#FFFFFF;color:#8A6A1F;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;transition:background .15s ease,color .15s ease}
+.mi-recentrer:hover{background:#C9A44C;color:#0B1424}
+.mi-recentrer:focus-visible{outline:2px solid #C9A44C;outline-offset:2px}

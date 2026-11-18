@@ -36,6 +36,10 @@ export function CarteMicro() {
   const [params] = useSearchParams();
   const [f, setF] = useState({ ...VIDE, region: params.get("region") ?? "" });
   const [pt, setPt] = useState<PointMicro | null>(null);
+  // Vue d'ensemble : le bouton « recentrer » apparaît dès que la carte a été zoomée ou déplacée.
+  const [vueModifiee, setVueModifiee] = useState(false);
+  const [recadrage, setRecadrage] = useState(0);
+  const recentrer = () => { setF((avant) => ({ ...avant, region: "" })); setPt(null); setVueModifiee(false); setRecadrage((n) => n + 1); };
   const [detail, setDetail] = useState<{ date_ouverture: string | null; nombre_membres: number | null } | null>(null);
 
   const { donnees: d } = useDonnees<{ geo: { features: FeaturePoint[] }; imfs: ImfOption[]; bailleurs: Page<{ id: string; nom: string; sigle: string }> }>({
@@ -119,7 +123,8 @@ export function CarteMicro() {
           <div className="mi-zone" style={{ flex: "999 1 480px", minWidth: 0, position: "relative", overflow: "hidden" }}>
             <div className="mi-carte-pos" style={{ position: "absolute", inset: 0 }}>
               <SenegalMap theme="light" fillMode="muted" flow showPoints showLabels={false} zoomSelection zoomPoint molette rayon={0} agrandir=".mi-cadre" selected={f.region} points={points} pointFilter={flt} selectedPoint={pt}
-                onPickPoint={(p) => setPt(p as PointMicro)} onPick={(id) => { setF({ ...f, region: id }); setPt(null); }} />
+                recadrage={recadrage} onVueModifiee={() => setVueModifiee(true)}
+                onPickPoint={(p) => { setPt(p as PointMicro); setVueModifiee(true); }} onPick={(id) => { setF({ ...f, region: id }); setPt(null); setVueModifiee(true); }} />
             </div>
 
             {/* Légende en haut à gauche ; elle se resserre quand la fiche d'un point est ouverte à droite. */}
@@ -128,6 +133,11 @@ export function CarteMicro() {
               <span style={{ display: "flex", alignItems: "center", gap: 6 }}><span style={point("#1F4E79")} />Agence</span>
               <span style={{ display: "flex", alignItems: "center", gap: 6 }}><span style={point("#B5763A")} />Guichet</span>
               <span style={{ display: "flex", alignItems: "center", gap: 6 }}><span style={point("#FFFFFF", { border: "1.5px solid #6B7280" })} />Fermé</span>
+              {(vueModifiee || f.region) && (
+                <button type="button" className="mi-recentrer" onClick={recentrer} aria-label="Revenir à la vue d'ensemble du Sénégal" title="Revenir à la vue d'ensemble">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5" /></svg>
+                </button>
+              )}
             </div>
 
             {pt && (

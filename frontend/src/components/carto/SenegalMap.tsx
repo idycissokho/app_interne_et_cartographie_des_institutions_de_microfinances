@@ -82,6 +82,10 @@ interface Props {
   zoomSelection?: boolean;
   /** Un clic sur une épingle zoome jusqu'au bâtiment (niveau rue). */
   zoomPoint?: boolean;
+  /** À chaque nouvelle valeur, la carte revient à sa vue d'ensemble (pays, ou région sélectionnée). */
+  recadrage?: number;
+  /** Appelé quand l'utilisateur déplace ou zoome la carte lui-même (molette, glisser, pincer). */
+  onVueModifiee?: () => void;
   /** Zoom à la molette sans Ctrl : à réserver aux cartes plein cadre (sinon la page ne défile plus). */
   molette?: boolean;
   /** Rayon des coins du cadre, en px. */
@@ -276,7 +280,7 @@ function installer(carte: Carte, style: StyleSpecification, geo: { regions: Coll
 export function SenegalMap({
   theme = "light", fillMode = "regions", indicator = "pts", stats = {}, selected = "",
   flow = true, showPoints = false, showLabels = true, points = [], pointFilter = {},
-  selectedPoint = null, onPick, onPickPoint, infos, zoomSelection = false, zoomPoint = false, molette = false, rayon = 18, agrandir = "",
+  selectedPoint = null, onPick, onPickPoint, infos, zoomSelection = false, zoomPoint = false, recadrage = 0, onVueModifiee, molette = false, rayon = 18, agrandir = "",
 }: Props) {
   const dark = theme === "dark";
   const cadre = useRef<HTMLDivElement>(null);
@@ -290,8 +294,8 @@ export function SenegalMap({
   const [survol, setSurvol] = useState("");
 
   // Dernières valeurs des rappels et des points, lues par les écouteurs de la carte.
-  const rappels = useRef({ onPick, onPickPoint, zoomPoint });
-  rappels.current = { onPick, onPickPoint, zoomPoint };
+  const rappels = useRef({ onPick, onPickPoint, zoomPoint, onVueModifiee });
+  rappels.current = { onPick, onPickPoint, zoomPoint, onVueModifiee };
   const parId = useRef(new Map<string, PointCarte>());
   const recadrer = useRef<(duree: number) => void>(() => {});
   const avecAgrandir = agrandir !== false;
@@ -409,6 +413,8 @@ export function SenegalMap({
         placerFiche();
       };
 
+      // Geste de l'utilisateur (les recadrages programmés n'ont pas d'événement d'origine).
+      c.on("moveend", (e) => { if ((e as { originalEvent?: unknown }).originalEvent) rappels.current.onVueModifiee?.(); });
       c.on("load", () => {
         if (annule) return;
         installer(c, fond.style, geo, theme === "dark");
@@ -502,6 +508,9 @@ export function SenegalMap({
   useEffect(() => {
     if (pret) recadrer.current(1500);
   }, [pret, cible]);
+  useEffect(() => {
+    if (pret && recadrage) recadrer.current(900);
+  }, [pret, recadrage]);
 
   /* --- Épingles --- */
   useEffect(() => {
