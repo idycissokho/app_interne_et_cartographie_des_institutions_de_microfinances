@@ -186,3 +186,17 @@ def test_commande_de_chargement_avec_la_liste_officielle(settings, tmp_path):
     texte = sortie.getvalue()
     assert "import sauté" in texte and "déjà enregistrés avec les institutions" in texte
     assert (IMF.objects.count(), Mandat.objects.filter(imf__sigle="CORIS MF SA").count()) == (2, 2)
+
+
+def test_demonstration_dirigeants_anonymises_et_fichier_efface(client_admin, zones, settings):
+    """Démo (DONNEES_FICTIVES) : noms réels absents de la base et du rapport, fichier d'origine
+    supprimé ; l'historique renvoie alors fichier = null (l'écran doit le supporter)."""
+    settings.DONNEES_FICTIVES = True
+    ligne = _acep(**{"Président du CS": "POUYE", "Latitude": "48.85", "Longitude": "2.35"})
+    resp = _importer(client_admin, _classeur(ligne))
+    assert (resp.data["statut"], resp.data["nb_lignes_importees"]) == ("TERMINE", 1)
+    assert not Dirigeant.objects.filter(nom="FAYE").exists()
+    rapport = resp.data["rapport_erreurs"][0]["erreurs"]
+    assert "POUYE" not in str(resp.data["rapport_erreurs"])        # dirigeant écarté : masqué
+    assert "hors du Sénégal" in rapport["latitude"]                  # GPS écarté : lisible
+    assert client_admin.get(URL).data["results"][0]["fichier"] is None
