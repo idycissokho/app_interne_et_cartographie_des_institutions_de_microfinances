@@ -49,7 +49,7 @@ export function App() {
           <Route path="/carte/micro" element={<Protege><CarteMicro /></Protege>} />
           <Route path="/supervision" element={<Protege roles={GESTION}><Supervision /></Protege>} />
           <Route path="/consultation" element={<Protege><Consultation /></Protege>} />
-          <Route path="/imf" element={<Protege roles={GESTION}><Institutions /></Protege>} />
+          <Route path="/imf" element={<Protege><Institutions /></Protege>} />
           <Route path="/imf/nouveau" element={<Protege roles={ADMIN}><FormulaireIMF /></Protege>} />
           <Route path="/imf/:id/modifier" element={<Protege roles={GESTION}><FormulaireIMF /></Protege>} />
           <Route path="/points-service" element={<Protege><PointsService /></Protege>} />
