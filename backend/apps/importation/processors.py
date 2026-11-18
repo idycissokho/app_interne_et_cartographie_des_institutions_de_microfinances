@@ -36,6 +36,7 @@ import io
 import json
 import logging
 import re
+import time
 import unicodedata
 import uuid
 from abc import ABC, abstractmethod
@@ -46,6 +47,7 @@ from pathlib import Path
 
 from django.conf import settings
 from django.db import transaction
+from django.utils import timezone
 
 from apps.cartographie.models import ZoneGeographique
 from apps.dirigeants.models import Dirigeant, Mandat
@@ -321,6 +323,11 @@ class BaseImportProcessor(ABC):
         self.importation = importation
         self.bilan = BilanImport()
         self.numero_ligne = 0  # ligne du fichier en cours de traitement
+        self._derniere_publication = 0.0  # instant de la dernière progression publiée
+        # Statut final (TERMINE / ECHEC) laissé « en cours » tant qu'un post-traitement reste à faire
+        # (anonymisation en démonstration) : l'écran ne doit pas lire le rapport avant.
+        self.differer_statut = False
+        self.statut_final = ""
         # Valeurs facultatives incohérentes de la ligne en cours : écartées, la ligne reste importée.
         self._avertissements: dict[str, str] = {}
 
@@ -341,6 +348,7 @@ class BaseImportProcessor(ABC):
             with transaction.atomic():
                 for ligne in lignes:
                     self._importer_ligne(ligne)
+                    self._publier_progression()
         except ErreurFichier as exc:
             return self._echec(str(exc))
         except Exception as exc:  # panne inattendue : la transaction a tout annulé
@@ -516,6 +524,25 @@ class BaseImportProcessor(ABC):
                 self.avertir(champ, f"Valeur « {donnees.pop(champ)} » écartée : {message}")
         raise ErreurLigne(erreurs)
 
+    def _publier_progression(self, intervalle: float = 1.0) -> None:
+        """Publie les compteurs en cours (au plus une fois par seconde) par la connexion de suivi.
+
+        Les lignes sont traitées dans une transaction : sans cette connexion distincte, la
+        progression ne serait visible qu'à la fin. Une panne du suivi n'interrompt jamais l'import.
+        """
+        maintenant = time.monotonic()
+        if maintenant - self._derniere_publication < intervalle:
+            return
+        self._derniere_publication = maintenant
+        try:
+            ImportationFichier.objects.using(settings.IMPORT_ALIAS_SUIVI).filter(pk=self.importation.pk).update(
+                nb_lignes_importees=self.bilan.lignes_importees,
+                nb_lignes_erreur=len(self.bilan.erreurs),
+                date_modification=timezone.now(),
+            )
+        except Exception:  # noqa: BLE001 — le suivi est accessoire
+            logger.warning("Import %s : progression non publiée", self.importation.pk, exc_info=True)
+
     def _changer_statut(self, statut: str) -> None:
         self.importation.statut = statut
         self.importation.save(update_fields=["statut", "date_modification"])
@@ -540,7 +567,8 @@ class BaseImportProcessor(ABC):
         self.importation.rapport_erreurs = sorted(
             bilan.erreurs + bilan.avertissements, key=lambda entree: entree["ligne"]
         )
-        self.importation.statut = Statut.TERMINE if bilan.lignes_importees else Statut.ECHEC
+        self.statut_final = Statut.TERMINE if bilan.lignes_importees else Statut.ECHEC
+        self.importation.statut = Statut.EN_COURS if self.differer_statut else self.statut_final
         self.importation.save()
         logger.info(
             "Import %s : %s — %d créée(s), %d mise(s) à jour, %d en erreur",
@@ -1029,12 +1057,19 @@ def lancer_importation(importation: ImportationFichier) -> BilanImport:
     Avec DJANGO_DONNEES_FICTIVES=true (démonstration), les dirigeants importés sont
     aussitôt anonymisés : aucune donnée personnelle réelle ne reste en base.
     """
-    bilan = PROCESSORS[importation.type_import](importation).executer()
-    if settings.DONNEES_FICTIVES and importation.type_import == ImportationFichier.TypeImport.DIRIGEANTS:
+    processor = PROCESSORS[importation.type_import](importation)
+    anonymiser = settings.DONNEES_FICTIVES and importation.type_import == ImportationFichier.TypeImport.DIRIGEANTS
+    # Le statut final n'est publié qu'après l'anonymisation : un écran qui suit l'import ne voit
+    # jamais le rapport (noms réels dans les messages) avant qu'il ne soit masqué.
+    processor.differer_statut = anonymiser
+    bilan = processor.executer()
+    if anonymiser and processor.statut_final:
         from apps.dirigeants.anonymisation import anonymiser_dirigeants
 
         anonymiser_dirigeants()
         importation.refresh_from_db()  # la réponse de l'API doit montrer le rapport masqué
+        importation.statut = processor.statut_final
+        importation.save(update_fields=["statut", "date_modification"])
         rapport = importation.rapport_erreurs or []
         bilan.erreurs = [r for r in rapport if not r.get("avertissement")]
         bilan.avertissements = [r for r in rapport if r.get("avertissement")]

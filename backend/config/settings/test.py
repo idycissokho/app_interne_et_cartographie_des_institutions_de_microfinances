@@ -15,6 +15,12 @@ CSRF_TRUSTED_ORIGINS = []
 # Les migrations sont versionnées : on les applique telles quelles pour que
 # les tests valident aussi le schéma réellement déployé.
 
+# Imports traités pendant la requête (une tâche de fond ne verrait pas la transaction du test),
+# et progression écrite par la connexion principale.
+IMPORT_ASYNCHRONE = False
+IMPORT_ALIAS_SUIVI = "default"
+DATABASES.pop("suivi", None)  # noqa: F405
+
 # Hashage de mot de passe minimal pour accélérer les tests
 PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.MD5PasswordHasher",

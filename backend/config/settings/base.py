@@ -153,6 +153,17 @@ else:
 
 DATABASES = {"default": {**_base, **_OPTIONS_BASE}}
 
+# Seconde connexion à la MÊME base, réservée au suivi des imports : l'import s'exécute dans une
+# transaction, sa progression (lignes traitées) est publiée par cette connexion pour être lue
+# pendant le traitement. Aucune table, aucune migration propre.
+DATABASES["suivi"] = {**DATABASES["default"], "CONN_MAX_AGE": 0}
+IMPORT_ALIAS_SUIVI = "suivi"
+
+# Imports traités en tâche de fond (l'écran suit la progression) ; false = pendant la requête.
+IMPORT_ASYNCHRONE = env.bool("IMPORT_ASYNCHRONE", default=True)
+# Un import sans nouvelle depuis ce délai (minutes) est déclaré interrompu (serveur redémarré).
+IMPORT_DELAI_INTERRUPTION = env.int("IMPORT_DELAI_INTERRUPTION", default=10)
+
 
 # ---------------------------------------------------------------------------
 # Validation des mots de passe

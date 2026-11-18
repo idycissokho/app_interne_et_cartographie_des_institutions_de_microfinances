@@ -1,10 +1,12 @@
 /**
  * Écran 11 — Import et export (maquette-carto-imf/ecrans/11-import-export.dc.html).
- * Import : POST /importation/ (type_import + fichier), traitement synchrone côté API, rapport.
+ * Import : POST /importation/ (type_import + fichier) ; le serveur répond aussitôt et traite le
+ * fichier en tâche de fond. L'écran suit la progression (GET /importation/<id>/), puis affiche le rapport.
  */
-import { useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { useSearchParams } from "react-router-dom";
 
+import { cacheRequetes } from "../api/cache";
 import { api, telecharger } from "../api/client";
 import type { Page } from "../api/types";
 import { Erreur, Etapes, erreursChamps } from "../components/form";
@@ -30,6 +32,8 @@ const SB: Record<string, [string, string, string]> = { TERMINE: ["#DCFCE7", "#16
 const seg = (on: boolean): CSSProperties => ({ border: "none", font: "inherit", fontSize: "var(--t-md)", fontWeight: 600, padding: "10px 18px", borderRadius: 10, cursor: "pointer", ...(on ? { background: "#0B1424", color: "#FFFFFF" } : { background: "transparent", color: "#4A5568" }) });
 const btnS: CSSProperties = { height: 48, padding: "0 18px", borderRadius: 10, border: "1px solid #E7E5E4", background: "#FFFFFF", font: "inherit", fontSize: "var(--t-md)", fontWeight: 600, color: "#0B1424", cursor: "pointer" };
 const btnP: CSSProperties = { height: 48, padding: "0 22px", borderRadius: 10, border: "none", background: "#C9A44C", font: "inherit", fontSize: "var(--t-md)", fontWeight: 700, color: "#0B1424", cursor: "pointer" };
+/** Statuts d'un import pas encore terminé : l'écran interroge alors le serveur. */
+const EN_TRAITEMENT = new Set(["EN_ATTENTE", "EN_COURS"]);
 const tailleFichier = (o: number) => (o >= 1048576 ? `${(o / 1048576).toFixed(1).replace(".", ",")} Mo` : `${Math.max(1, Math.round(o / 1024))} Ko`);
 const extension = (nom: string) => (nom.split(".").pop() ?? "").toUpperCase();
 
@@ -59,13 +63,38 @@ export function Donnees() {
     fd.append("type_import", type); fd.append("fichier", fichier);
     try {
       setPageErreurs(1);
-      setRes(await api.post<Importation>("/importation/", fd));
-      setStep(3); setVersion((v) => v + 1);
+      // Réponse immédiate : la suite (progression puis rapport) est suivie par l'effet ci-dessous.
+      setSuivi(await api.post<Importation>("/importation/", fd));
     } catch (e) {
       const er = erreursChamps(e);
       setErreur(er.fichier || er.type_import || er.__global || "L'import a échoué."); setStep(1);
     }
   }
+  // Suivi de l'import en tâche de fond : état relu toutes les 1,5 s jusqu'à la fin du traitement.
+  const [suivi, setSuivi] = useState<Importation | null>(null);
+  useEffect(() => {
+    if (!suivi) return;
+    if (!EN_TRAITEMENT.has(suivi.statut)) {
+      setRes(suivi); setStep(3); setSuivi(null); setVersion((v) => v + 1);
+      void cacheRequetes.invalidateQueries(); // cartes, listes et compteurs reflètent les données importées
+      return;
+    }
+    const minuteur = window.setTimeout(() => {
+      api.get<Importation>(`/importation/${suivi.id}/`).then(setSuivi, () => setSuivi((s) => (s ? { ...s } : s)));
+    }, 1500);
+    return () => window.clearTimeout(minuteur);
+  }, [suivi]);
+  const traitees = suivi ? suivi.nb_lignes_importees + suivi.nb_lignes_erreur : 0;
+  const progression = suivi?.statut === "EN_COURS" && suivi.nb_lignes_total ? Math.min(1, traitees / suivi.nb_lignes_total) : null;
+
+  // Un import d'une session précédente encore en cours : l'historique se met à jour tout seul.
+  const histEnCours = (d.hist?.results ?? []).some((h) => EN_TRAITEMENT.has(h.statut));
+  useEffect(() => {
+    if (!histEnCours) return;
+    const minuteur = window.setInterval(() => setVersion((v) => v + 1), 3000);
+    return () => window.clearInterval(minuteur);
+  }, [histEnCours]);
+
   const reset = () => { setStep(1); setFichier(null); setRes(null); setLignes(null); setErreur(null); };
   const lignesErreur = (res?.rapport_erreurs ?? []).flatMap((r) => Object.entries(r.erreurs).map(([c, m]) => ({ l: r.ligne, c, v: r.valeurs?.[c] ?? "", m: typeof m === "string" ? m : JSON.stringify(m) })));
   const taux = res ? (res.nb_lignes_total ? (100 * res.nb_lignes_importees) / res.nb_lignes_total : 0) : 0;
@@ -130,10 +159,20 @@ export function Donnees() {
                 {step === 2 && (
                   <div role="status" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16, padding: "40px 10px", textAlign: "center" }}>
                     <span style={{ width: 64, height: 64, borderRadius: 12, background: "#F5F5F4", color: "#0B1424", display: "flex", alignItems: "center", justifyContent: "center" }}><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.2-8.6"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite" /></path></svg></span>
-                    <b style={{ fontSize: "var(--t-lg)" }}>Traitement du fichier…</b>
+                    <b style={{ fontSize: "var(--t-lg)" }}>{!suivi ? "Envoi du fichier…" : suivi.statut === "EN_ATTENTE" ? "En attente de traitement…" : progression === null ? "Lecture du fichier…" : "Traitement du fichier…"}</b>
                     <span style={{ fontSize: "var(--t-md)", color: "#6B7280" }}>Lecture des lignes, contrôle des champs et géolocalisation.</span>
-                    <div style={{ width: "100%", maxWidth: 420, height: 10, borderRadius: 99, background: "#F0EFED", overflow: "hidden" }}><div className="ie-bar" style={{ height: "100%", width: "72%", borderRadius: 99, background: "#C9A44C" }} /></div>
+                    <div role="progressbar" aria-label="Progression de l'import" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progression === null ? undefined : Math.round(progression * 100)}
+                      style={{ width: "100%", maxWidth: 420, height: 10, borderRadius: 99, background: "#F0EFED", overflow: "hidden" }}>
+                      <div className={progression === null ? "ie-bar ie-indetermine" : undefined} style={{ height: "100%", width: progression === null ? "35%" : `${Math.max(2, progression * 100)}%`, borderRadius: 99, background: "#C9A44C", transition: "width .6s ease" }} />
+                    </div>
+                    {progression !== null && suivi && (
+                      <span style={{ fontSize: "var(--t-md)", fontWeight: 600, color: "#0B1424" }}>
+                        {nombre(traitees)} sur {nombre(suivi.nb_lignes_total)} lignes traitées · {pourcent(progression * 100)}
+                        {suivi.nb_lignes_erreur > 0 && <span style={{ color: "#B91C1C", fontWeight: 500 }}> · {nombre(suivi.nb_lignes_erreur)} rejetée{suivi.nb_lignes_erreur > 1 ? "s" : ""}</span>}
+                      </span>
+                    )}
                     <span style={{ fontSize: "var(--t-sm)", fontWeight: 600, color: "#4A5568" }}>{fichier?.name}{lignes !== null ? ` · ${nombre(lignes)} lignes` : ""}</span>
+                    <span style={{ fontSize: "var(--t-sm)", color: "#6B7280", maxWidth: 440 }}>Vous pouvez quitter cette page : l'import continue sur le serveur et son résultat apparaîtra dans l'historique.</span>
                   </div>
                 )}
 
@@ -182,7 +221,7 @@ export function Donnees() {
                   <div key={h.id} style={{ display: "flex", gap: 12, alignItems: "center", padding: "12px 4px", borderBottom: "1px solid #F5F5F4" }}>
                     <span style={{ width: 38, height: 38, flex: "none", borderRadius: 10, background: "#F5F5F4", color: "#8A6A1F", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--t-2xs)", fontWeight: 700 }}>{extension(h.fichier)}</span>
                     <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: "var(--t-sm)", fontWeight: 600 }}>{LIB[h.type_import]}</div><div style={{ fontSize: "var(--t-xs)", color: "#6B7280", overflowWrap: "anywhere" }}>{h.utilisateur_email} · {ilYa(h.date_creation)}</div></div>
-                    <span style={{ fontSize: "var(--t-2xs)", fontWeight: 700, padding: "4px 9px", borderRadius: 999, whiteSpace: "nowrap", background: c[0], color: c[1] }}>{c[2]}</span>
+                    <span style={{ fontSize: "var(--t-2xs)", fontWeight: 700, padding: "4px 9px", borderRadius: 999, whiteSpace: "nowrap", background: c[0], color: c[1] }}>{c[2]}{h.statut === "EN_COURS" && h.nb_lignes_total ? ` · ${pourcent((100 * (h.nb_lignes_importees + h.nb_lignes_erreur)) / h.nb_lignes_total)}` : ""}</span>
                   </div>
                 );
               })}

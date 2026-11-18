@@ -52,5 +52,5 @@ USER django
 EXPOSE 8000
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
 # Gunicorn : nombre de processus réglable par WEB_CONCURRENCY (lu par Gunicorn), 2 par défaut.
-# Délai de 120 s : les imports Excel volumineux sont traités pendant la requête.
+# Délai de 120 s par requête : les imports Excel sont traités en tâche de fond (apps/importation/taches.py).
 CMD ["sh", "-c", "exec gunicorn config.wsgi:application --bind 0.0.0.0:${PORT} --workers ${WEB_CONCURRENCY:-2} --threads ${GUNICORN_THREADS:-4} --timeout ${GUNICORN_TIMEOUT:-120} --access-logfile - --error-logfile -"]
