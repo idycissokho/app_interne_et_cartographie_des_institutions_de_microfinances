@@ -2,8 +2,8 @@
 importation/views.py
 ====================
 Vues DRF du module importation :
-- ImportationListCreateView : liste des imports + upload d'un fichier, traité par son processor
-  (voir processors.py : aucune règle d'import n'est codée ici)
+- ImportationListCreateView : liste des imports + upload d'un fichier, traité en tâche de fond
+  par son processor (taches.py, processors.py) ; l'écran suit la progression par le détail
 - ImportationDetailView     : détail et rapport d'erreurs d'un import
 - ModeleImportView          : canevas CSV vide (en-têtes attendus) par type
 - ExportView                : export CSV d'un référentiel (même format que l'import)
@@ -22,15 +22,16 @@ from apps.audit.mixins import AuditMixin
 from apps.audit.models import JournalAudit
 from apps.authentication.permissions import IsAdmin
 
+from . import taches
 from .models import ImportationFichier
-from .processors import lancer_importation
 from .serializers import ImportationFichierSerializer
 from .services import COLONNES, lignes_export
 
 
 class ImportationListCreateView(AuditMixin, generics.ListCreateAPIView):
     """GET  /api/v1/importation/  — Liste des imports (ADMIN uniquement : cas « Import / Export Excel »).
-    POST /api/v1/importation/  — Upload d'un fichier CSV/Excel, traité immédiatement.
+    POST /api/v1/importation/  — Upload d'un fichier CSV/Excel : réponse immédiate (statut « En attente »),
+                                 traitement en tâche de fond, progression lue sur le détail.
     """
 
     serializer_class = ImportationFichierSerializer
@@ -41,6 +42,7 @@ class ImportationListCreateView(AuditMixin, generics.ListCreateAPIView):
 
     def get_queryset(self):
         """ADMIN voit tous les imports (filtre conservé par défense en profondeur)."""
+        taches.marquer_imports_interrompus()
         user = self.request.user
         qs = ImportationFichier.objects.select_related("utilisateur")
         return qs if user.is_admin else qs.filter(utilisateur=user)
@@ -49,29 +51,20 @@ class ImportationListCreateView(AuditMixin, generics.ListCreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         importation = serializer.save(utilisateur=request.user)
-        # Tout le traitement est délégué au processor du type d'import choisi.
-        bilan = lancer_importation(importation)
-        self._journaliser(
-            JournalAudit.Action.IMPORTATION,
-            importation,
-            {
-                "type_import": importation.type_import,
-                "statut": importation.statut,
-                "lignes_creees": bilan.lignes_creees,
-                "lignes_mises_a_jour": bilan.lignes_mises_a_jour,
-                "lignes_erreur": importation.nb_lignes_erreur,
-            },
-        )
+        # Traitement par le processor du type choisi, en tâche de fond ; journal d'audit à la fin.
+        taches.lancer(importation, request.user)
+        importation.refresh_from_db()
         return Response(self.get_serializer(importation).data, status=status.HTTP_201_CREATED)
 
 
 class ImportationDetailView(generics.RetrieveAPIView):
-    """GET /api/v1/importation/<uuid>/  — Détail et rapport d'un import."""
+    """GET /api/v1/importation/<uuid>/  — Détail et rapport d'un import (suivi de la progression)."""
 
     serializer_class = ImportationFichierSerializer
     permission_classes = [IsAdmin]
 
     def get_queryset(self):
+        taches.marquer_imports_interrompus()
         user = self.request.user
         qs = ImportationFichier.objects.select_related("utilisateur")
         return qs if user.is_admin else qs.filter(utilisateur=user)

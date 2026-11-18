@@ -521,3 +521,8 @@ select.fi-input.bad,select.ps-input.bad,select.di-input.bad{border-color:#DC2626
 .mi-recentrer{width:30px;height:30px;flex:none;align-self:center;margin-left:2px;border-radius:50%;border:1px solid #C9A44C;background:#FFFFFF;color:#8A6A1F;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;transition:background .15s ease,color .15s ease}
 .mi-recentrer:hover{background:#C9A44C;color:#0B1424}
 .mi-recentrer:focus-visible{outline:2px solid #C9A44C;outline-offset:2px}
+
+/* Import : barre de progression indéterminée (lecture du fichier, avant le décompte des lignes) */
+@keyframes ie-va-et-vient{0%{transform:translateX(-100%)}100%{transform:translateX(290%)}}
+.ie-indetermine{animation:ie-va-et-vient 1.3s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.ie-indetermine{animation:none}}
