@@ -264,6 +264,9 @@ SIMPLE_JWT = {
     "BLACKLIST_AFTER_ROTATION": True,
     "UPDATE_LAST_LOGIN": True,
     "ALGORITHM": "HS256",
+    # Tolérance d'horloge : sans elle, un jeton est refusé (401) si l'horloge du serveur recule
+    # d'une seconde entre son émission et son contrôle (resynchronisation d'une machine virtuelle).
+    "LEEWAY": timedelta(seconds=env.int("JWT_TOLERANCE_SECONDES", default=10)),
     "AUTH_HEADER_TYPES": ("Bearer",),
     "USER_ID_FIELD": "id",
     "USER_ID_CLAIM": "user_id",

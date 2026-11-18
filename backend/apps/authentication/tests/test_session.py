@@ -85,3 +85,12 @@ def test_tentatives_de_connexion_limitees(client, agent):
     for _ in range(10):
         assert client.post(LOGIN, {"email": agent.email, "password": "mauvais"}).status_code == 400
     assert client.post(LOGIN, {"email": agent.email, "password": MDP}).status_code == 429
+
+
+def test_jeton_tolere_un_leger_recul_d_horloge(client, agent):
+    """Horloge du serveur reculée d'une seconde ou deux après l'émission (resynchronisation) :
+    le jeton reste valable, au lieu d'un 401 aléatoire."""
+    jeton = RefreshToken.for_user(agent).access_token
+    jeton["iat"] = int(time.time()) + 3
+    client.credentials(HTTP_AUTHORIZATION=f"Bearer {jeton}")
+    assert client.get("/api/v1/auth/profil/").status_code == 200

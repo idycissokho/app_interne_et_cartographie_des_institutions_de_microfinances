@@ -367,3 +367,34 @@ condition que Docker soit lancé au démarrage : `sudo systemctl enable docker`.
 - [ ] Seuls les ports 80 et 443 ouverts sur le serveur (la base n'est jamais exposée).
 - [ ] Sauvegarde nocturne en place et copiée hors du serveur ; restauration testée une fois.
 - [ ] `sudo systemctl enable docker` (redémarrage automatique).
+
+---
+
+## 15. Intégration continue (GitHub Actions)
+
+Le fichier `.github/workflows/ci.yml` vérifie automatiquement **chaque push** (toutes les
+branches) et chaque pull request vers `master`. Résultats : onglet **Actions** du dépôt GitHub,
+et pastille verte / croix rouge à côté de chaque commit.
+
+| Étape | Ce qui est vérifié |
+|---|---|
+| Backend — qualité du code | Analyse statique `ruff` (style, imports, erreurs courantes) |
+| Backend — tests et contrôles Django | Migrations manquantes, `manage.py check`, toute la suite `pytest` sur PostgreSQL + PostGIS (couverture affichée), configuration de production (`check --deploy`) |
+| Frontend — typage, lint et build | TypeScript, ESLint (aucun avertissement toléré), build de production |
+| Déploiement intranet — pile de production | Construit les images de production, démarre `infra/docker-compose.prod.yml` (HTTPS), vérifie l'API, l'interface, la redirection 80 → 443 et la connexion administrateur |
+
+Le dernier job ne tourne que si les trois premiers ont réussi. Une exécution dure environ
+5 minutes ; un nouveau push sur la même branche annule l'exécution précédente.
+
+**Être prévenu d'un échec.** GitHub envoie un e-mail à l'auteur du push quand un workflow
+échoue. À vérifier une fois sur https://github.com/settings/notifications, rubrique
+**Actions** : cocher *Email* (et *GitHub Mobile* pour une notification sur téléphone) et
+*Only notify for failed workflows*.
+
+**Bloquer une fusion qui casse l'application** (recommandé avant la mise en production) :
+dans le dépôt GitHub, *Settings* → *Branches* → *Add branch ruleset* (ou *Add rule*) pour
+`master` → *Require status checks to pass* → ajouter les quatre vérifications ci-dessus.
+
+**Avant chaque mise à jour du serveur** (§ 9) : ne déployer qu'un commit de `master` dont
+l'intégration continue est verte.
+

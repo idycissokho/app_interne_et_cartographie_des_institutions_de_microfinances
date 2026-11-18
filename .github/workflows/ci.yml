@@ -1,0 +1,197 @@
+# =============================================================================
+# .github/workflows/ci.yml — Intégration continue de Carto IMF (DRS-SFD)
+#
+# Déclenchée à chaque push (toutes les branches), à chaque pull request vers master,
+# et à la demande (onglet Actions → « Intégration continue » → Run workflow).
+#
+#   1. backend-qualite   : analyse statique Python (ruff : style, imports, erreurs courantes)
+#   2. backend-tests     : PostgreSQL + PostGIS, migrations manquantes, contrôles Django,
+#                          suite de tests pytest avec couverture, contrôle de la configuration
+#                          de production (check --deploy)
+#   3. frontend          : typage TypeScript, ESLint, build de production (Vite)
+#   4. deploiement       : images de production construites et pile intranet complète démarrée
+#                          (infra/docker-compose.prod.yml, HTTPS) : santé de l'API, interface,
+#                          redirection HTTP → HTTPS, connexion du compte administrateur
+#
+# Un échec est signalé par GitHub (croix rouge sur le commit, e-mail à l'auteur du push :
+# voir deploy/intranet/README.md, § 15 « Intégration continue »).
+# =============================================================================
+
+name: Intégration continue
+
+on:
+  push:
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+# Un nouveau push sur la même branche annule l'exécution précédente, devenue inutile.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.11"
+  NODE_VERSION: "22"
+
+jobs:
+  # ---------------------------------------------------------------------------
+  backend-qualite:
+    name: Backend — qualité du code
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Installer ruff (version du projet)
+        run: pip install "$(grep -E '^ruff==' requirements/development.txt)"
+      - name: Analyse statique (ruff)
+        run: ruff check . --output-format=github
+
+  # ---------------------------------------------------------------------------
+  backend-tests:
+    name: Backend — tests et contrôles Django
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_DB: cartographie_imf
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      DJANGO_SETTINGS_MODULE: config.settings.test
+      DJANGO_SECRET_KEY: cle-de-test-integration-continue
+      DB_NAME: cartographie_imf
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_HOST: localhost
+      DB_PORT: "5432"
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: backend/requirements/*.txt
+      - name: Bibliothèques géospatiales (GDAL, GEOS, PROJ)
+        run: sudo apt-get update -q && sudo apt-get install -y -q --no-install-recommends gdal-bin libgdal-dev
+      - name: Dépendances Python
+        run: pip install -r requirements/development.txt
+      - name: Aucune migration manquante
+        run: python manage.py makemigrations --check --dry-run
+      - name: Contrôles Django
+        run: python manage.py check
+      - name: Tests (pytest + couverture)
+        run: >-
+          python -m pytest -p no:cacheprovider -q
+          --cov=apps --cov=config --cov-report=term-missing:skip-covered
+          --junitxml=rapport-tests.xml
+      - name: Configuration de production (check --deploy)
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.production
+          DJANGO_SECRET_KEY: cle-de-controle-longue-et-aleatoire-pour-la-verification-ci-0123456789
+          DJANGO_ALLOWED_HOSTS: carto-imf.intranet.local
+          DJANGO_CSRF_TRUSTED_ORIGINS: https://carto-imf.intranet.local
+          DJANGO_SECURE_HSTS_SECONDS: "31536000"
+        run: python manage.py check --deploy --fail-level ERROR
+      - name: Publier le rapport des tests
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapport-tests-backend
+          path: backend/rapport-tests.xml
+          if-no-files-found: ignore
+
+  # ---------------------------------------------------------------------------
+  frontend:
+    name: Frontend — typage, lint et build
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Dépendances
+        run: npm ci --no-audit --no-fund
+      - name: Typage TypeScript
+        run: npm run typecheck
+      - name: ESLint
+        run: npm run lint -- --max-warnings=0
+      - name: Build de production
+        run: npm run build
+
+  # ---------------------------------------------------------------------------
+  deploiement:
+    name: Déploiement intranet — pile de production
+    runs-on: ubuntu-24.04
+    needs: [backend-qualite, backend-tests, frontend]
+    env:
+      COMPOSE: docker compose -f infra/docker-compose.prod.yml
+      ADMIN_EMAIL: admin@ci.local
+      ADMIN_PASSWORD: Ci-Admin-2026!
+    steps:
+      - uses: actions/checkout@v4
+      - name: Réglages de production de test (config/.env.production)
+        run: |
+          sed -e "s|<cle-secrete-generee>|$(openssl rand -hex 32)|" \
+              -e "s|<carto-imf.intranet.local>|localhost|" \
+              -e "s|<https://carto-imf.intranet.local>|https://localhost|" \
+              -e "s|<mot-de-passe-base>|$(openssl rand -hex 12)|" \
+              -e "s|<admin@finances.gouv.sn>|$ADMIN_EMAIL|" \
+              -e "s|<mot-de-passe-administrateur-robuste>|$ADMIN_PASSWORD|" \
+              deploy/intranet/env.production.example > config/.env.production
+          if grep -E '^[A-Z_]+=<' config/.env.production; then
+            echo "::error::Valeur à remplacer restée dans env.production.example"; exit 1
+          fi
+      - name: Certificat HTTPS auto-signé
+        run: |
+          mkdir -p infra/docker/nginx/certs
+          openssl req -x509 -nodes -newkey rsa:2048 -days 1 -subj "/CN=localhost" \
+            -addext "subjectAltName=DNS:localhost" \
+            -keyout infra/docker/nginx/certs/privkey.pem -out infra/docker/nginx/certs/fullchain.pem
+      - name: Fichier Compose valide
+        run: $COMPOSE config --quiet
+      - name: Construire et démarrer la pile (db, backend, frontend, nginx)
+        run: $COMPOSE up -d --build --wait --wait-timeout 300
+      - name: L'API répond en HTTPS
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsk https://localhost/api/v1/sante/ | grep -q '"ok"'; then echo "API opérationnelle"; exit 0; fi
+            sleep 5
+          done
+          echo "::error::L'API ne répond pas"; exit 1
+      - name: Interface, redirection HTTP et connexion administrateur
+        run: |
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost/)" = "301"
+          curl -fsk https://localhost/ | grep -q '<div id="root">'
+          curl -fsk https://localhost/donnees | grep -q '<div id="root">'
+          curl -fsk -X POST https://localhost/api/v1/auth/login/ \
+            -H 'Content-Type: application/json' -H 'Referer: https://localhost/' \
+            -d "{\"email\":\"$ADMIN_EMAIL\",\"password\":\"$ADMIN_PASSWORD\"}" | grep -q '"access"'
+          echo "Interface et connexion opérationnelles"
+      - name: Journaux en cas d'échec
+        if: failure()
+        run: $COMPOSE logs --tail 200
+      - name: Arrêt
+        if: always()
+        run: $COMPOSE down -v

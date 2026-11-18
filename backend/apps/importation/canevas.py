@@ -23,7 +23,7 @@ from django.db.models import Prefetch
 from apps.dirigeants.models import Mandat
 from apps.imf.models import IMF
 
-TITRE_FEUILLE = "LISTE IMF"
+TITRE_FEUILLE = "LISTE IMF 2025"  # nom de la feuille du classeur officiel
 
 #: En-têtes de la liste officielle, dans l'ordre du classeur.
 ENTETES = [

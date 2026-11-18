@@ -79,6 +79,7 @@ def test_tous_les_roles_calculent(request, role, point):
     assert reponse.status_code == 200, reponse.data
 
 
+@VALHALLA
 @pytest.mark.parametrize("url", [URL_CALCUL, URL_RECHERCHE + "?q=Mu", "destinations/"])
 def test_consultant_autorise(client_consultant, point, url):
     """La section Itinéraire est ouverte à tous les utilisateurs connectés."""
