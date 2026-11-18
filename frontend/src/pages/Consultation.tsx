@@ -7,6 +7,7 @@ import { Link, useSearchParams } from "react-router-dom";
 
 import type { Page } from "../api/types";
 import { SenegalMap } from "../components/carto/SenegalMap";
+import { dansLeSenegal, projeter } from "../data/projection";
 import { AppLayout } from "../components/layout/AppLayout";
 import { Badge, PAR_PAGE, Pagination, TON_STATUT } from "../components/tableau/Tableau";
 import { CODE_FONCTION, nombre } from "../lib/format";
@@ -19,7 +20,7 @@ import { useDonnees } from "../lib/useDonnees";
 
 interface ImfLigne { id: string; nom: string; sigle: string; type_imf: string; statut_reglementaire: string; region_siege: string | null; nb_points_service: number }
 const VIDE: ImfLigne[] = [];
-interface ImfFiche extends ImfLigne { adresse_siege: string; telephone: string; email: string; site_web: string; nb_regions_couvertes: number; nb_dirigeants_en_fonction: number; nb_membres_total: number | null; numero_agrement: string; type_sfd: string; affiliation: string; forme_juridique: string; annee_creation: number | null; ninea: string; capital: string | null; nb_beneficiaires: number | null; situation: string; nb_membres_ca: number | null; nb_membres_cs: number | null; nb_membres_cc: number | null; url_fiche: string; bailleurs_detail: { id: string; nom: string; sigle: string }[]; localisation_siege: unknown }
+interface ImfFiche extends ImfLigne { adresse_siege: string; telephone: string; email: string; site_web: string; nb_regions_couvertes: number; nb_dirigeants_en_fonction: number; nb_membres_total: number | null; numero_agrement: string; type_sfd: string; affiliation: string; forme_juridique: string; annee_creation: number | null; ninea: string; capital: string | null; nb_beneficiaires: number | null; situation: string; nb_membres_ca: number | null; nb_membres_cs: number | null; nb_membres_cc: number | null; url_fiche: string; bailleurs_detail: { id: string; nom: string; sigle: string }[]; localisation_siege: { coordinates: [number, number] } | null }
 interface PointLigne { id: string; nom: string; type_point: string; statut_point: string; region_nom: string | null }
 interface MandatLigne { id: string; dirigeant_nom_complet: string; fonction_mandat: string; statut_mandat: string; date_debut: string; date_fin: string | null; fichier_justificatif: string | null; documents_justificatifs: string }
 
@@ -28,6 +29,14 @@ const kpi: CSSProperties = { padding: 16, borderRadius: 12, background: "#FFFFFF
 const ligne: CSSProperties = { display: "flex", justifyContent: "space-between", gap: 12, padding: "10px 0", borderBottom: "1px solid #F0EFED" };
 const TABS = [{ k: "apercu", label: "Aperçu" }, { k: "pts", label: "Points de service" }, { k: "dir", label: "Dirigeants" }, { k: "bail", label: "Bailleurs" }] as const;
 const CHIPS: [string, string][] = [["", "Toutes"], ["MUTUELLE", "Mutuelle"], ["COOPERATIVE", "Coopérative"], ["SA", "SA"], ["ASSOCIATION", "Association"]];
+/** Position du siège pour la carte : seulement si elle est fiable (ni position par défaut 14.75 / -17.33333, ni hors du Sénégal). */
+function positionSiege(imf: { localisation_siege: { coordinates: [number, number] } | null }) {
+  const c = imf.localisation_siege?.coordinates;
+  if (!c) return null;
+  const [lon, lat] = c;
+  if (!dansLeSenegal(lat, lon) || (Math.abs(lat - 14.75) < 1e-4 && Math.abs(lon + 17.33333) < 1e-4)) return null;
+  return { ...projeter(lon, lat), lon, lat };
+}
 const DCHIPS = ["Tous", "Gouvernance", "Direction", "Comités", "Contrôle"];
 
 export function Consultation() {
@@ -158,7 +167,8 @@ export function Consultation() {
                       </div>
                     </div>
                     <div style={{ flex: "1 1 280px", minWidth: 0, height: 320, borderRadius: 12, border: "1px solid #E7E5E4", overflow: "hidden", boxSizing: "border-box" }}>
-                      <SenegalMap theme="light" fillMode="muted" stats={statsParRegion(l.zones)} selected={regionAffichee(cur.region_siege) ?? ""} flow showLabels={false} rayon={15} />
+                      {/* Zoom sur la région du siège, repère animé à sa position exacte (si elle est fiable). */}
+                      <SenegalMap theme="light" fillMode="muted" stats={statsParRegion(l.zones)} selected={regionAffichee(cur.region_siege) ?? ""} zoomSelection selectedPoint={positionSiege(cur)} flow showLabels={false} rayon={15} />
                     </div>
                   </div>
                 )}
