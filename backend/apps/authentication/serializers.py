@@ -50,9 +50,11 @@ class UtilisateurSerializer(serializers.ModelSerializer):
         model = Utilisateur
         fields = [
             "id", "email", "nom", "prenom", "nom_complet",
-            "role", "is_active", "date_creation", "date_modification",
+            "role", "is_active", "doit_changer_mot_de_passe", "date_creation", "date_modification",
         ]
-        read_only_fields = ["id", "email", "role", "is_active", "date_creation", "date_modification"]
+        read_only_fields = [
+            "id", "email", "role", "is_active", "doit_changer_mot_de_passe", "date_creation", "date_modification",
+        ]
 
 
 class ChangePasswordSerializer(serializers.Serializer):
@@ -76,10 +78,16 @@ class ChangePasswordSerializer(serializers.Serializer):
         validate_password(attrs["nouveau_mot_de_passe"], self.context["request"].user)
         return attrs
 
+    def validate_nouveau_mot_de_passe(self, value):
+        if self.context["request"].user.check_password(value):
+            raise serializers.ValidationError("Le nouveau mot de passe doit être différent de l'actuel.")
+        return value
+
     def save(self):
         user = self.context["request"].user
         user.set_password(self.validated_data["nouveau_mot_de_passe"])
-        user.save(update_fields=["password", "date_modification"])
+        user.doit_changer_mot_de_passe = False
+        user.save(update_fields=["password", "doit_changer_mot_de_passe", "date_modification"])
         return user
 
 

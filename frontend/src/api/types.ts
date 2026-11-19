@@ -9,6 +9,8 @@ export interface Utilisateur {
   prenom: string;
   nom_complet: string;
   role: Role;
+  /** Mot de passe provisoire (compte créé par un administrateur) : à changer avant tout le reste. */
+  doit_changer_mot_de_passe?: boolean;
 }
 
 export interface Page<T> {
