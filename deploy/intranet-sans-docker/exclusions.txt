@@ -1,0 +1,52 @@
+# =============================================================================
+# exclusions.txt — chemins RETIRÉS de la branche deploiement-intranet
+#
+# Lu par preparer-branche.sh : un chemin par ligne, relatif à la racine du dépôt (fichier,
+# dossier, ou motif : « backend/apps/*/tests/* » = tout ce qui est sous un dossier tests/ ; le « /* »
+# final est nécessaire pour un dossier). Lignes vides et lignes commençant par
+# « # » ignorées. Un chemin absent de master est signalé sans bloquer.
+# Tout ce qui n'est PAS listé ici part sur le serveur. master n'est jamais modifié.
+# =============================================================================
+
+# --- Docker (le serveur intranet n'utilise pas Docker) -----------------------------------
+infra
+backend/Dockerfile
+backend/Dockerfile.prod
+backend/.dockerignore
+# Étapes reprises dans mettre-a-jour.sh (migrate, régions, départements, compte administrateur).
+backend/docker-entrypoint.sh
+frontend/Dockerfile
+frontend/Dockerfile.prod
+frontend/.dockerignore
+
+# --- Démonstration en ligne (Render, Vercel) ----------------------------------------------
+render.yaml
+frontend/vercel.json
+deploy/demo
+
+# --- Guide de l'installation AVEC Docker (remplacé par deploy/intranet-sans-docker/) -------
+deploy/intranet
+
+# --- Livrables et documentation de conception ----------------------------------------------
+frontend/maquette-carto-imf
+docs
+# Décrit l'installation Docker : dans la branche, le guide de référence est
+# deploy/intranet-sans-docker/README.md.
+README.md
+
+# --- Intégration continue (tourne sur master à chaque push) --------------------------------
+.github
+
+# --- Outils de développement et de test (jamais exécutés sur le serveur) ------------------
+# Les tests restent sur master et sont exécutés par la CI avant chaque préparation de branche.
+# Motif : les dossiers tests/ de toutes les applications, y compris les futures.
+backend/apps/*/tests/*
+backend/conftest.py
+backend/pytest.ini
+backend/pyproject.toml
+backend/requirements/development.txt
+backend/tests
+backend/scripts
+# Modèle de réglages du développement / de Docker (le serveur utilise env.production.example).
+backend/.env.example
+frontend/eslint.config.js

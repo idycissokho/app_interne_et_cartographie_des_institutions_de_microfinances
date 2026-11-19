@@ -20,8 +20,13 @@ import environ
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 env = environ.Env()
-# backend/.env en priorité, sinon le .env racine (partagé avec docker-compose).
-for _env_file in (BASE_DIR / ".env", BASE_DIR.parent / ".env"):
+# Fichier de réglages : celui qu'indique DJANGO_ENV_FILE (installation sans Docker :
+# config/.env.production, lu à l'identique par Gunicorn et par les commandes manage.py),
+# sinon backend/.env, sinon le .env racine (partagé avec docker-compose).
+_fichier_impose = env("DJANGO_ENV_FILE", default="")
+if _fichier_impose and not Path(_fichier_impose).is_file():
+    raise environ.ImproperlyConfigured(f"DJANGO_ENV_FILE : fichier introuvable ({_fichier_impose}).")
+for _env_file in ((Path(_fichier_impose),) if _fichier_impose else (BASE_DIR / ".env", BASE_DIR.parent / ".env")):
     if _env_file.is_file():
         environ.Env.read_env(_env_file)
         break
@@ -205,7 +210,8 @@ STORAGES = {
 }
 
 MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "mediafiles"
+# Dossier des fichiers déposés ; réglable pour le placer hors du code (installation sans Docker).
+MEDIA_ROOT = Path(env("DJANGO_MEDIA_ROOT", default=str(BASE_DIR / "mediafiles")))
 
 # Fichiers déposés (justificatifs, imports) servis par Django lui-même.
 # À laisser à False quand un serveur web les sert (Nginx de l'intranet).

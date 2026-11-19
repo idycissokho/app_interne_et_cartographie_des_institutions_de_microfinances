@@ -189,7 +189,8 @@ cd frontend && npm install && npm run dev
 
 | Cible | Guide | Fichiers |
 |---|---|---|
-| **Intranet** (production) | [deploy/intranet/README.md](deploy/intranet/README.md) | `infra/docker-compose.prod.yml`, `infra/docker/nginx/nginx.prod.conf`, `backend/Dockerfile.prod`, `frontend/Dockerfile.prod`, `deploy/intranet/env.production.example` |
+| **Intranet sans Docker** (production retenue) | [deploy/intranet-sans-docker/README.md](deploy/intranet-sans-docker/README.md) | branche `deploiement-intranet` générée par `deploy/intranet-sans-docker/preparer-branche.sh` |
+| Intranet avec Docker (alternative) | [deploy/intranet/README.md](deploy/intranet/README.md) | `infra/docker-compose.prod.yml`, `infra/docker/nginx/nginx.prod.conf`, `backend/Dockerfile.prod`, `frontend/Dockerfile.prod`, `deploy/intranet/env.production.example` |
 | Démonstration en ligne (temporaire) | [deploy/demo/README.md](deploy/demo/README.md) | `render.yaml`, `frontend/vercel.json` |
 
 `infra/docker-compose.yml` est réservé au développement.

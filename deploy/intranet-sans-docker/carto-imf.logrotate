@@ -1,0 +1,21 @@
+# =============================================================================
+# carto-imf.logrotate — rotation du journal de Gunicorn (facultatif mais recommandé)
+#
+# Installé par l'ADMINISTRATEUR (guide, § i) :
+#   install -m 644 -o root -g root carto-imf.logrotate /etc/logrotate.d/carto-imf
+#   logrotate -d /etc/logrotate.d/carto-imf      # essai à blanc
+#
+# Une rotation par semaine, 8 semaines conservées, compressées. copytruncate : Gunicorn
+# continue d'écrire dans le même fichier, sans redémarrage.
+# =============================================================================
+
+/var/www/annuairedesimf/logs/gunicorn.log {
+    weekly
+    rotate 8
+    compress
+    delaycompress
+    missingok
+    notifempty
+    copytruncate
+    su deploy_app www-data
+}

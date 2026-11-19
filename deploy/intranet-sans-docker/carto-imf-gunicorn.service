@@ -1,0 +1,46 @@
+# =============================================================================
+# carto-imf-gunicorn.service — application Django (Gunicorn) de Carto IMF, sans Docker
+#
+# Installé par l'ADMINISTRATEUR (guide, § i) :
+#   cp /var/www/annuairedesimf/app/deploy/intranet-sans-docker/carto-imf-gunicorn.service /etc/systemd/system/
+#   systemctl daemon-reload && systemctl enable --now carto-imf-gunicorn
+#
+# Gunicorn n'écoute QUE sur 127.0.0.1:8000 : seul Apache (VirtualHost du port 8443) le joint.
+# Réglages : config/.env.production (DJANGO_ENV_FILE), lu aussi par les commandes manage.py.
+# Journaux (Gunicorn et Django) : /var/www/annuairedesimf/logs/gunicorn.log
+# =============================================================================
+
+[Unit]
+Description=Carto IMF — application Django (Gunicorn)
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=deploy_app
+Group=www-data
+# Fichiers déposés lisibles par Apache (groupe www-data), jamais par les autres comptes.
+UMask=0027
+WorkingDirectory=/var/www/annuairedesimf/app/backend
+Environment=DJANGO_SETTINGS_MODULE=config.settings.production
+Environment=DJANGO_ENV_FILE=/var/www/annuairedesimf/app/config/.env.production
+Environment=PYTHONUNBUFFERED=1
+# Un seul processus (le cache des données est en mémoire et doit rester cohérent) et 8 fils
+# pour les requêtes simultanées. 120 s : les imports Excel continuent en tâche de fond.
+ExecStart=/var/www/annuairedesimf/venv/bin/gunicorn config.wsgi:application \
+    --bind 127.0.0.1:8000 \
+    --workers 1 --threads 8 --timeout 120 \
+    --access-logfile - --error-logfile -
+StandardOutput=append:/var/www/annuairedesimf/logs/gunicorn.log
+StandardError=append:/var/www/annuairedesimf/logs/gunicorn.log
+Restart=always
+RestartSec=5
+# Protections sans effet sur le fonctionnement : pas d'élévation de privilèges, /usr /boot /etc en
+# lecture seule, dossiers personnels et /tmp des autres comptes invisibles (/var/www reste inscriptible).
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

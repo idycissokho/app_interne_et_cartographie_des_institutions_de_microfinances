@@ -1,0 +1,12 @@
+# =============================================================================
+# carto-imf.sudoers — droits LIMITÉS de deploy_app sur le seul service Carto IMF
+#
+# Installé par l'ADMINISTRATEUR (guide, § i) :
+#   install -m 440 -o root -g root carto-imf.sudoers /etc/sudoers.d/carto-imf
+#   visudo -cf /etc/sudoers.d/carto-imf
+#
+# deploy_app peut démarrer, arrêter, redémarrer et consulter CE service, sans mot de passe,
+# et rien d'autre (aucun autre service, aucune autre commande).
+# =============================================================================
+
+deploy_app ALL=(root) NOPASSWD: /usr/bin/systemctl start carto-imf-gunicorn, /usr/bin/systemctl stop carto-imf-gunicorn, /usr/bin/systemctl restart carto-imf-gunicorn, /usr/bin/systemctl status carto-imf-gunicorn

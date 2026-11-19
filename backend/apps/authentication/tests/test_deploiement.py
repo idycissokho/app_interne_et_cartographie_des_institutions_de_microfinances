@@ -127,3 +127,35 @@ def test_import_de_dirigeants_anonymise_avec_l_option(settings, client_admin):
     d = Dirigeant.objects.get()
     assert d.nom != "NDOYE" and d.email_professionnel.endswith("@example.com")
     assert "rama" not in str(reponse.data).lower()
+
+
+# ── Installation sans Docker : fichier de réglages et dossier des médias ─────────────────────
+def _reglages_lus(fichier_env, tmp_path):
+    """Charge les réglages dans un processus neuf avec DJANGO_ENV_FILE ; retourne (code, sortie)."""
+    import os
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    environnement = {k: v for k, v in os.environ.items() if k not in ("DJANGO_MEDIA_ROOT", "DJANGO_ENV_FILE")}
+    environnement.update(DJANGO_ENV_FILE=str(fichier_env), DJANGO_SETTINGS_MODULE="config.settings.test")
+    programme = "from django.conf import settings; print(settings.MEDIA_ROOT)"
+    resultat = subprocess.run(
+        [sys.executable, "-c", programme], env=environnement, capture_output=True, text=True,
+        cwd=Path(__file__).resolve().parents[3],
+    )
+    return resultat.returncode, resultat.stdout.strip() + resultat.stderr
+
+
+def test_fichier_de_reglages_impose_et_medias_hors_du_code(tmp_path):
+    """DJANGO_ENV_FILE (config/.env.production du serveur) est lu ; DJANGO_MEDIA_ROOT y est pris en compte."""
+    fichier = tmp_path / ".env.production"
+    fichier.write_text(f"DJANGO_MEDIA_ROOT={tmp_path / 'media'}\n")
+    code, sortie = _reglages_lus(fichier, tmp_path)
+    assert code == 0, sortie
+    assert sortie == str(tmp_path / "media")
+
+
+def test_fichier_de_reglages_absent_refuse(tmp_path):
+    code, sortie = _reglages_lus(tmp_path / "absent.env", tmp_path)
+    assert code != 0 and "DJANGO_ENV_FILE" in sortie
