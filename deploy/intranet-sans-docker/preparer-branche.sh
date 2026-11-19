@@ -37,7 +37,7 @@ EXCLUSIONS="deploy/intranet-sans-docker/exclusions.txt"
   || erreur "l'arbre de travail n'est pas propre (git status) : committer ou mettre de côté les modifications."
 [ -f "$EXCLUSIONS" ] || erreur "$EXCLUSIONS introuvable."
 
-info "Récupération de $DISTANT…"
+info "Récupération de ${DISTANT}…"
 git fetch --quiet "$DISTANT"
 LOCAL="$(git rev-parse "$SOURCE")"
 DISTANT_SHA="$(git rev-parse "$DISTANT/$SOURCE")"
@@ -104,7 +104,7 @@ git commit --quiet -m "deploiement: $SOURCE@$COURT" \
 info "Commit créé : $(git rev-parse --short HEAD) ($(git ls-files | wc -l | tr -d ' ') fichiers)"
 
 if [ "$ENVOI" = 1 ]; then
-  info "Envoi de $BRANCHE vers $DISTANT…"
+  info "Envoi de $BRANCHE vers ${DISTANT}…"
   git push --quiet --force-with-lease "$DISTANT" "$BRANCHE"
   info "Terminé. Sur le serveur : ./app/deploy/intranet-sans-docker/mettre-a-jour.sh"
 else
