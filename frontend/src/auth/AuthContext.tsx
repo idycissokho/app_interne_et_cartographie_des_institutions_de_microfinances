@@ -15,6 +15,8 @@ interface ContexteAuth {
   peutModifier: boolean;
   /** Créer, désactiver, Import / Export Excel, journal d'audit (ADMIN uniquement). */
   estAdmin: boolean;
+  /** Après le changement du mot de passe provisoire : l'application se débloque. */
+  motDePasseChange: () => void;
 }
 
 const Contexte = createContext<ContexteAuth | null>(null);
@@ -101,6 +103,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const motDePasseChange = useCallback(() => {
+    setUtilisateur((u) => (u ? { ...u, doit_changer_mot_de_passe: false } : u));
+  }, []);
+
   const valeur = useMemo(
     () => ({
       utilisateur,
@@ -109,8 +115,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       deconnecter,
       peutModifier: utilisateur?.role === "ADMIN" || utilisateur?.role === "SUPERVISEUR",
       estAdmin: utilisateur?.role === "ADMIN",
+      motDePasseChange,
     }),
-    [utilisateur, chargement, connecter, deconnecter],
+    [utilisateur, chargement, connecter, deconnecter, motDePasseChange],
   );
 
   return <Contexte.Provider value={valeur}>{children}</Contexte.Provider>;

@@ -24,12 +24,15 @@ const Dirigeants = lazy(PAGES.dirigeants);
 const Donnees = lazy(PAGES.donnees);
 const Audit = lazy(PAGES.audit);
 const Itineraire = lazy(PAGES.itineraire);
+const MotDePasse = lazy(PAGES.motDePasse);
 
 /** Connexion requise, et éventuellement un ensemble de rôles autorisés. */
 function Protege({ children, roles }: { children: ReactNode; roles?: Role[] }) {
   const { utilisateur, chargement } = useAuth();
   if (chargement) return <EcranSquelette />;
   if (!utilisateur) return <Navigate to="/connexion" replace />;
+  // Mot de passe provisoire : rien d'autre n'est accessible avant de l'avoir changé.
+  if (utilisateur.doit_changer_mot_de_passe) return <Navigate to="/mot-de-passe" replace />;
   if (roles && !roles.includes(utilisateur.role)) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
@@ -64,6 +67,7 @@ export function App() {
           <Route path="/dirigeants" element={<Protege><Dirigeants /></Protege>} />
           <Route path="/donnees" element={<Protege roles={ADMIN}><Donnees /></Protege>} />
           <Route path="/audit" element={<Protege roles={ADMIN}><Audit /></Protege>} />
+          <Route path="/mot-de-passe" element={<MotDePasse />} />
           <Route path="/itineraire" element={<Protege><Itineraire /></Protege>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

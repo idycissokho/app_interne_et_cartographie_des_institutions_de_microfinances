@@ -31,6 +31,13 @@ class Utilisateur(AbstractBaseUser, PermissionsMixin):
 
     is_active = models.BooleanField(default=True, verbose_name="Compte actif")
     is_staff = models.BooleanField(default=False, verbose_name="Accès admin Django")
+    # Coché à la création d'un compte (ou à la réinitialisation de son mot de passe) par un
+    # administrateur : l'utilisateur ne peut rien faire d'autre que choisir son propre mot de passe.
+    doit_changer_mot_de_passe = models.BooleanField(
+        default=False,
+        verbose_name="Doit changer son mot de passe",
+        help_text="L'utilisateur devra choisir un nouveau mot de passe à sa prochaine connexion.",
+    )
 
     date_creation = models.DateTimeField(auto_now_add=True)
     date_modification = models.DateTimeField(auto_now=True)

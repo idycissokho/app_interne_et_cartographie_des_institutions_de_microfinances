@@ -46,6 +46,7 @@ export const PAGES = {
   dirigeants: chargerPage(() => import("../pages/Dirigeants").then((m) => ({ default: m.Dirigeants }))),
   donnees: chargerPage(() => import("../pages/Donnees").then((m) => ({ default: m.Donnees }))),
   audit: chargerPage(() => import("../pages/Audit").then((m) => ({ default: m.Audit }))),
+  motDePasse: chargerPage(() => import("../pages/MotDePasse").then((m) => ({ default: m.MotDePasse }))),
   itineraire: chargerPage(() => import("../pages/Itineraire").then((m) => ({ default: m.Itineraire }))),
 };
 

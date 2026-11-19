@@ -109,6 +109,9 @@ export function Sidebar({ active, role, nomComplet, onDeconnexion }: Props) {
       <div style={{ marginTop: "auto", padding: "16px 12px 4px 12px", borderTop: "1px solid rgba(255,255,255,.08)", display: "flex", alignItems: "center", gap: 12 }}>
         <div style={{ width: 36, height: 36, flex: "none", borderRadius: "50%", background: "rgba(255,255,255,.08)", color: "#F4EFE3", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 600, fontSize: "var(--t-xs)" }}>{initials}</div>
         <div style={{ minWidth: 0, flex: 1 }}><div style={{ fontWeight: 600, fontSize: "var(--t-md)", color: "#F4EFE3" }}>{nomComplet}</div><div style={{ fontSize: "var(--t-xs)", color: "#7C889B" }}>{RL[role]}</div></div>
+        <Link to="/mot-de-passe" aria-label="Changer mon mot de passe" title="Changer mon mot de passe" style={{ display: "flex" }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8E99AB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="8" cy="15" r="4" /><path d="M10.8 12.2 20 3M16 7l3 3M14 9l2 2" /></svg>
+        </Link>
         <button type="button" onClick={onDeconnexion} aria-label="Se déconnecter" title="Se déconnecter" style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex" }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8E99AB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>
         </button>

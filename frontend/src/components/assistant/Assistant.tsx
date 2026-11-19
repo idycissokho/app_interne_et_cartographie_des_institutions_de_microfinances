@@ -178,6 +178,6 @@ export function Assistant() {
 export function AssistantGlobal() {
   const { utilisateur } = useAuth();
   const { pathname } = useLocation();
-  if (!utilisateur || pathname.startsWith("/connexion")) return null;
+  if (!utilisateur || utilisateur.doit_changer_mot_de_passe || pathname.startsWith("/connexion")) return null;
   return <Assistant />;
 }

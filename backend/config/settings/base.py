@@ -286,7 +286,7 @@ SIMPLE_JWT = {
 REST_FRAMEWORK = {
     # Authentification JWT uniquement — pas de session pour l'API
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "apps.authentication.authentification.JWTAuthentificationMotDePasse",
     ),
     # Toute requête doit être authentifiée par défaut
     "DEFAULT_PERMISSION_CLASSES": (
