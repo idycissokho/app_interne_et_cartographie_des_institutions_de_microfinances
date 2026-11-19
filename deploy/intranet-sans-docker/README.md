@@ -469,6 +469,18 @@ sleep 3; ss -tlnp | grep ':8443'
 En cas d'erreur au `configtest`, ne pas recharger : `a2dissite carto-imf` remet Apache dans son
 état précédent.
 
+**Nom affiché** : le site répond sous `annuaireimf.drs-sfd.gouv.sn`, et un accès par l'adresse IP est
+renvoyé vers ce nom (même page). Le nom doit donc exister dans le DNS interne **avant** d'installer
+ou de recharger ce fichier, sinon les postes ne joignent plus le site. Le nom figure aussi dans
+`DJANGO_ALLOWED_HOSTS` et `DJANGO_CSRF_TRUSTED_ORIGINS` (§ e). Mise à jour du fichier sur un
+serveur déjà installé **[ADMINISTRATEUR]** :
+
+```bash
+cp /var/www/annuairedesimf/app/deploy/intranet-sans-docker/carto-imf.apache.conf /etc/apache2/sites-available/carto-imf.conf
+apache2ctl configtest
+systemctl reload apache2
+```
+
 ---
 
 ## k. Liste de vérification
@@ -476,7 +488,7 @@ En cas d'erreur au `configtest`, ne pas recharger : `a2dissite carto-imf` remet 
 Depuis un poste de l'intranet (accepter l'avertissement du certificat tant que c'est `snakeoil`) :
 
 - [ ] `https://10.233.225.2:8443/api/v1/sante/` → `{"statut": "ok"}`
-- [ ] `https://10.233.225.2:8443/` → page de connexion ; connexion avec le compte administrateur
+- [ ] `https://annuaireimf.drs-sfd.gouv.sn:8443/` → page de connexion (et `https://10.233.225.2:8443/` y renvoie) ; connexion avec le compte administrateur
 - [ ] Tableau de bord, *Carte macro*, *Carte micro* : les régions et les points s'affichent
       (le fond de carte vient d'Internet : sans accès Internet sur le poste, fond uni)
 - [ ] Ouvrir `https://10.233.225.2:8443/imf` puis **recharger la page** (F5) : la page s'affiche
