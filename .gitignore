@@ -78,3 +78,18 @@ backend/donnees_initiales/*
 
 # --- Certificats HTTPS du serveur intranet (clé privée : jamais versionnée) ---
 infra/docker/nginx/certs/
+
+# --- Installation sans Docker (deploy/intranet-sans-docker/) : propres à chaque serveur ---
+# Réglages et secrets (app/config/.env.production) : déjà couverts par les motifs « .env* » ci-dessus.
+venv/
+media/
+sauvegardes/
+
+# --- Données réelles et sauvegardes : jamais versionnées, nulle part ---
+*.xlsx
+*.xls
+*.dump
+*.sql
+*.sql.gz
+# Script d'initialisation PostGIS du développement Docker (aucune donnée) : versionné.
+!infra/docker/postgres/init.sql
