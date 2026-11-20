@@ -595,3 +595,222 @@ select.fi-input.bad,select.ps-input.bad,select.di-input.bad{border-color:#DC2626
   html.app-menu-fige,html.app-menu-fige body{overflow:hidden}
 }
 @media (max-width: 760px) and (prefers-reduced-motion: reduce){.app-sidebar{transition:none !important}}
+
+/* ---------- Accueil public (pages/Accueil.tsx, components/accueil/) ----------
+ * Registre officiel : page claire, typographie affirmée, bleu nuit pour l'autorité, or en
+ * filet d'accent. Carte des sièges en SVG local. Palette Or & Nuit, Inter, échelle --t-*.     */
+@keyframes rg-entree{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.rg-page{min-height:100dvh;display:flex;flex-direction:column;background:#FFFFFF;color:#0B1424}
+.rg-page main{flex:1}
+.rg-largeur{max-width:1240px;margin:0 auto;padding-left:32px;padding-right:32px;box-sizing:border-box;width:100%}
+.rg-page kbd{flex:none;display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;margin-right:12px;border:1px solid #D6D3D1;border-bottom-width:2px;border-radius:6px;font:inherit;font-size:var(--t-xs);font-weight:600;color:#6B7280;box-sizing:border-box}
+.rg-lien{padding:0;border:none;background:none;font:inherit;font-size:var(--t-sm);font-weight:600;color:#8A6A1F;cursor:pointer;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px}
+.rg-lien:hover{color:#6E5416}
+
+/* En-tête */
+.rg-entete{position:relative;border-bottom:1px solid #ECEAE6;background:#FFFFFF}
+.rg-entete::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,#00853F 0 33.33%,#FDEF42 33.33% 66.66%,#E31B23 66.66%)}
+.rg-entete-in{display:flex;align-items:center;gap:24px;height:80px}
+.rg-marque{flex:none;display:block;border-radius:4px}
+.rg-marque img{height:46px;width:auto;display:block}
+.rg-entete-nav{margin-left:auto;display:flex;align-items:center;gap:24px}
+.rg-entete-mention{font-size:var(--t-sm);color:#6B7280}
+.rg-acces{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 16px;border:1px solid #0B1424;border-radius:8px;color:#0B1424;font-size:var(--t-sm);font-weight:600;text-decoration:none;transition:background .15s ease,color .15s ease}
+.rg-acces:hover{background:#0B1424;color:#FFFFFF}
+
+/* Tête : texte + recherche | carte des sièges */
+.rg-tete{display:grid;grid-template-columns:minmax(360px,440px) minmax(0,1fr);gap:56px;align-items:center;padding-top:64px;padding-bottom:64px}
+.rg-tete-texte{animation:rg-entree .5s ease both}
+.rg-surtitre{display:flex;align-items:center;gap:12px;margin:0 0 20px;font-size:var(--t-sm);font-weight:600;color:#8A6A1F}
+.rg-surtitre::before{content:"";width:28px;height:2px;background:#C9A44C}
+.rg-tete h1{margin:0;max-width:15ch;font-size:clamp(2.25rem,3.3vw,3.15rem);line-height:1.04;font-weight:700;letter-spacing:-0.034em;color:#0B1424}
+.rg-tete h1 em{font-style:normal;text-decoration:underline;text-decoration-color:#C9A44C;text-decoration-thickness:.09em;text-underline-offset:.12em;text-decoration-skip-ink:none}
+.rg-intro{margin:20px 0 34px;max-width:44ch;font-size:var(--t-lg);line-height:1.6;color:#4A5568}
+
+.rg-recherche{position:relative;z-index:10;max-width:560px}
+.rg-recherche > label{display:block;margin-bottom:8px;font-size:var(--t-sm);font-weight:600;color:#0B1424}
+.rg-champ{display:flex;align-items:center;height:60px;border:2px solid #0B1424;border-radius:10px;background:#FFFFFF;color:#6B7280;transition:box-shadow .15s ease}
+.rg-champ:focus-within{box-shadow:0 0 0 4px rgba(201,164,76,.45)}
+.rg-champ > svg{flex:none;margin:0 12px 0 16px}
+.rg-champ input{flex:1;min-width:0;height:100%;border:none;outline:none;background:transparent;font:inherit;font-size:var(--t-lg);font-weight:500;letter-spacing:.01em;color:#0B1424}
+.rg-champ input::placeholder{color:#A3A9B4;font-weight:400}
+.rg-champ input:focus-visible{outline:none}
+.rg-effacer{flex:none;display:flex;align-items:center;justify-content:center;width:32px;height:32px;margin-right:8px;border:none;border-radius:6px;background:transparent;color:#6B7280;cursor:pointer}
+.rg-effacer:hover{background:#F3F2EF;color:#0B1424}
+.rg-verifier{flex:none;align-self:stretch;margin:-2px -2px -2px 0;padding:0 28px;border:none;border-radius:0 10px 10px 0;background:#0B1424;color:#FFFFFF;font:inherit;font-size:var(--t-base);font-weight:600;cursor:pointer;transition:background .15s ease}
+.rg-verifier:hover{background:#1B2A45}
+.rg-aide{margin:10px 0 0;font-size:var(--t-xs);color:#6B7280}
+
+.rg-suggestions{position:absolute;left:0;right:0;top:calc(100% + 6px);background:#FFFFFF;border:1px solid #E2DFD9;border-radius:10px;box-shadow:0 20px 44px rgba(11,20,36,.16);overflow:hidden;animation:rg-entree .14s ease both}
+.rg-suggestions ul{list-style:none;margin:0;padding:6px}
+.rg-suggestions li{display:grid;grid-template-columns:118px minmax(0,1fr) auto;align-items:center;gap:14px;padding:11px 12px;border-radius:7px;cursor:pointer}
+.rg-suggestions li.actif{background:#F7F6F2;box-shadow:inset 2px 0 0 #C9A44C}
+.rg-suggestions mark{background:#F5E7BF;color:inherit;border-radius:2px}
+.rg-agr{font-weight:600;color:#0B1424;white-space:nowrap;letter-spacing:.01em}
+.rg-sugg-nom{min-width:0;font-size:var(--t-sm);font-weight:500;color:#1A2333;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rg-sugg-nom small{margin-left:8px;font-size:var(--t-xs);font-weight:400;color:#6B7280}
+.rg-statut{display:inline-flex;align-items:center;gap:6px;font-size:var(--t-xs);font-weight:500;color:#4A5568;white-space:nowrap}
+.rg-statut::before{content:"";width:7px;height:7px;border-radius:50%;background:#0B1424}
+.rg-statut.s-EN_ACTIVITE::before{background:#15803D}
+.rg-statut.s-OPR::before{background:#D97706}
+.rg-statut.s-RETRAIT_AGREMENT::before{background:#B91C1C}
+.rg-sugg-tout{display:block!important;margin-top:4px;padding:11px 12px!important;border-top:1px solid #EFEDEA;border-radius:0 0 7px 7px!important;font-size:var(--t-sm);font-weight:600;color:#8A6A1F}
+.rg-sugg-vide{margin:0;padding:16px 18px;font-size:var(--t-sm);line-height:1.55;color:#4A5568}
+.rg-sugg-vide strong{display:block;color:#0B1424;font-weight:600}
+
+.rg-chiffres{display:flex;margin:40px 0 0;padding:0}
+.rg-chiffres div{padding-right:28px;margin-right:28px;border-right:1px solid #ECEAE6}
+.rg-chiffres div:last-child{border-right:none}
+.rg-chiffres dt{font-size:var(--t-xs);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#6B7280}
+.rg-chiffres dd{margin:4px 0 0;font-size:var(--t-2xl);font-weight:700;letter-spacing:-0.02em;font-variant-numeric:tabular-nums}
+.rg-erreur{margin:20px 0 0;font-size:var(--t-sm);color:#B91C1C}
+
+/* Carte des sièges */
+.rg-tete-carte{justify-self:end;width:100%;animation:rg-entree .6s .08s ease both}
+/* Grand écran : la carte occupe l'espace libre jusqu'au bord droit de la fenêtre (marge de 24 px). */
+@media (min-width: 1025px){
+  .rg-tete-carte{--debord:calc(max(32px, (100vw - 1240px) / 2 + 32px) - 24px);width:min(880px, calc(100% + var(--debord)));margin-right:calc(-1 * var(--debord))}
+}
+.rg-carte{position:relative}
+.rg-carte > svg{display:block;width:100%;height:auto;overflow:visible}
+.rg-region{fill:#EDE8DD;stroke:#FFFFFF;stroke-width:1.6;stroke-linejoin:round;cursor:pointer;transition:fill .2s ease}
+.rg-region.survol,.rg-region:hover{fill:#E9E1CD}
+.rg-region.active{fill:#E4D5AD}
+.rg-region.estompee{fill:#F7F5F0}
+.rg-etiquette{font-size:9.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;fill:#8C94A1;paint-order:stroke;stroke:#EDE8DD;stroke-width:3px;stroke-linejoin:round;text-anchor:middle;pointer-events:none;font-family:var(--police)}
+.rg-etiquette.active{fill:#0B1424}
+.rg-cadre-dakar{fill:none;stroke:#0B1424;stroke-opacity:.45;stroke-width:.8;stroke-dasharray:2 2;pointer-events:none}
+.rg-point{cursor:pointer}
+.rg-point circle:nth-last-child(2){fill:#0B1424;fill-opacity:.82;stroke:#FFFFFF;stroke-width:.6;transition:fill-opacity .2s ease}
+.rg-point.s-OPR circle:nth-last-child(2){fill:#D97706;fill-opacity:.95}
+.rg-point.s-RETRAIT_AGREMENT circle:nth-last-child(2){fill:#FFFFFF;stroke:#B91C1C;stroke-width:1.1}
+.rg-point.eteint{opacity:.13}
+.rg-point:hover circle:nth-last-child(2){fill:#8A6A1F;fill-opacity:1}
+.rg-point.choisi circle:nth-last-child(2){fill:#C9A44C;fill-opacity:1;stroke:#0B1424;stroke-width:1.2}
+.rg-halo{fill:rgba(201,164,76,.28);stroke:#C9A44C;stroke-width:.8}
+.rg-medaillon{position:absolute;left:0;top:0;width:14%;margin:0;padding:6px 6px 4px;background:#FFFFFF;border:1px solid #E2DFD9;border-radius:8px;box-shadow:0 6px 18px rgba(11,20,36,.07)}
+.rg-medaillon svg{display:block;width:100%;height:auto}
+.rg-medaillon .rg-point circle:nth-last-child(2){stroke-width:.08}
+.rg-medaillon .rg-point.choisi circle:nth-last-child(2){stroke-width:.16}
+.rg-medaillon .rg-point.s-RETRAIT_AGREMENT circle:nth-last-child(2){stroke-width:.14}
+.rg-medaillon .rg-halo{stroke-width:.1}
+.rg-medaillon .rg-region{stroke-width:.25}
+.rg-medaillon figcaption{display:flex;justify-content:space-between;gap:6px;padding:4px 2px 0;font-size:var(--t-2xs);font-weight:600;color:#0B1424}
+.rg-medaillon figcaption span{font-weight:500;color:#6B7280}
+.rg-info{position:absolute;z-index:3;transform:translate(-50%,calc(-100% - 14px));max-width:280px;padding:8px 12px;border-radius:8px;background:#0B1424;color:#FFFFFF;pointer-events:none;box-shadow:0 10px 24px rgba(11,20,36,.25);white-space:nowrap}
+.rg-info strong{display:block;font-size:var(--t-sm);font-weight:600;overflow:hidden;text-overflow:ellipsis}
+.rg-info span{display:block;font-size:var(--t-xs);color:#C9D1DE}
+.rg-legende{display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px;margin:14px 0 0;padding:0;list-style:none;font-size:var(--t-xs);color:#4A5568}
+.rg-legende li{display:flex;align-items:center;gap:7px}
+.rg-pastille{width:8px;height:8px;border-radius:50%;background:#0B1424}
+.rg-pastille.s-OPR{background:#D97706}
+.rg-pastille.s-RETRAIT_AGREMENT{background:#FFFFFF;box-shadow:inset 0 0 0 1.5px #B91C1C}
+.rg-legende-note{margin-left:auto;color:#8E99AB}
+
+/* Extrait du registre */
+.rg-extrait{scroll-margin-top:24px;margin-bottom:64px;animation:rg-entree .4s ease both}
+.rg-extrait > *{border-left:1px solid #E2DFD9;border-right:1px solid #E2DFD9}
+.rg-extrait-bandeau{display:flex;align-items:center;gap:16px;padding:0 8px 0 22px;height:44px;border-radius:12px 12px 0 0;background:#0B1424;color:#C9D1DE;font-size:var(--t-xs);font-weight:600;letter-spacing:.06em;text-transform:uppercase;border:none!important}
+.rg-extrait-bandeau span:first-child{color:#F3D98C}
+.rg-extrait-bandeau span:nth-child(2){margin-left:auto;font-weight:500;letter-spacing:.02em;text-transform:none}
+.rg-extrait-bandeau button{display:flex;align-items:center;justify-content:center;width:32px;height:32px;border:none;border-radius:6px;background:transparent;color:#C9D1DE;cursor:pointer}
+.rg-extrait-bandeau button:hover{background:rgba(255,255,255,.08);color:#FFFFFF}
+.rg-extrait-corps{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);border-bottom:1px solid #E2DFD9;border-radius:0 0 12px 12px;overflow:hidden;box-shadow:0 18px 40px rgba(11,20,36,.07)}
+.rg-extrait-infos{padding:32px 40px 30px;display:flex;flex-direction:column}
+.rg-etat{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin:0;font-size:var(--t-sm);color:#4A5568}
+.rg-etat strong{font-weight:700;color:#0B1424}
+.rg-etat-icone{display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#0B1424;color:#FFFFFF}
+.rg-etat.s-EN_ACTIVITE .rg-etat-icone{background:#15803D}
+.rg-etat.s-OPR .rg-etat-icone{background:#D97706}
+.rg-etat.s-RETRAIT_AGREMENT .rg-etat-icone{background:#B91C1C}
+.rg-etat-texte::before{content:"·";margin-right:10px;color:#C4C0B8}
+.rg-extrait h2{margin:16px 0 0;font-size:var(--t-2xl);line-height:1.2;font-weight:700;letter-spacing:-0.022em;overflow-wrap:anywhere}
+.rg-extrait-sigle{margin:6px 0 0;font-size:var(--t-base);font-weight:500;color:#6B7280}
+.rg-numero{display:grid;grid-template-columns:1fr auto;grid-template-areas:"libelle bouton" "valeur bouton";align-items:center;column-gap:16px;margin:24px 0 0;padding:14px 16px 14px 18px;border:1px solid #E2DFD9;border-left:3px solid #C9A44C;border-radius:10px;background:#FBFAF7}
+.rg-numero-libelle{grid-area:libelle;font-size:var(--t-xs);color:#6B7280}
+.rg-numero-valeur{grid-area:valeur;margin-top:2px;font-size:var(--t-xl);font-weight:700;letter-spacing:.02em;color:#0B1424}
+.rg-numero-copier{grid-area:bouton;display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 12px;border:1px solid #E2DFD9;border-radius:8px;background:#FFFFFF;color:#0B1424;font:inherit;font-size:var(--t-sm);font-weight:600;cursor:pointer;white-space:nowrap}
+.rg-numero-copier:hover{border-color:#0B1424}
+.rg-releve{margin:22px 0 0}
+.rg-releve div{display:grid;grid-template-columns:150px minmax(0,1fr);gap:16px;align-items:baseline;padding:11px 0;border-bottom:1px solid #F0EEEA}
+.rg-releve div:last-child{border-bottom:none}
+.rg-releve dt{font-size:var(--t-sm);color:#6B7280}
+.rg-releve dd{margin:0;font-size:var(--t-md);font-weight:600;color:#0B1424;overflow-wrap:anywhere}
+.rg-nouvelle{align-self:flex-start;margin-top:22px}
+.rg-telephones{display:flex;flex-direction:column;gap:2px}
+.rg-telephones a{color:#0B1424;text-decoration:none;white-space:nowrap}
+.rg-telephones a:hover{color:#8A6A1F;text-decoration:underline;text-underline-offset:3px}
+.rg-extrait-carte{position:relative;min-height:460px;border-left:1px solid #ECEAE6;background:#FAFAF8}
+.rg-extrait-carte > div:first-child{position:absolute;inset:0}
+.rg-carte-note{position:absolute;left:14px;right:14px;bottom:14px;margin:0;padding:8px 12px;border-radius:8px;background:rgba(255,255,255,.95);border:1px solid #E7E5E4;font-size:var(--t-xs);color:#4A5568}
+
+/* Registre */
+.rg-registre{background:#F7F6F2;border-top:1px solid #ECEAE6;padding:56px 0 72px;scroll-margin-top:0}
+.rg-registre-in{display:grid;grid-template-columns:260px minmax(0,1fr);gap:40px;align-items:start}
+.rg-regions h2{margin:0 0 16px;font-size:var(--t-xl);font-weight:700;letter-spacing:-0.015em}
+.rg-regions ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.rg-regions li button{position:relative;width:100%;display:flex;justify-content:space-between;gap:12px;padding:9px 12px 11px;border:1px solid transparent;border-radius:8px;background:transparent;font:inherit;font-size:var(--t-sm);color:#4A5568;cursor:pointer;text-align:left}
+.rg-regions li button:hover{color:#0B1424;background:rgba(255,255,255,.6)}
+.rg-regions li button.actif{background:#FFFFFF;border-color:#E2DFD9;color:#0B1424;font-weight:600;box-shadow:inset 3px 0 0 #C9A44C}
+.rg-nb{font-variant-numeric:tabular-nums;color:#6B7280;font-weight:500}
+.rg-barre{position:absolute;left:12px;bottom:4px;height:2px;max-width:calc(100% - 24px);border-radius:2px;background:#D9C79A}
+.rg-regions-mobile{display:none}
+.rg-liste-titre{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin:6px 0 14px;font-size:var(--t-md);font-weight:600;color:#0B1424}
+.rg-ligne{cursor:pointer}
+.rg-ligne:hover td{background:#FBFAF7}
+.rg-ligne.choisie td{background:#FBF5E6}
+.rg-ligne:focus-visible{outline:2px solid #C9A44C;outline-offset:-2px}
+.rg-ligne-nom{display:block;font-weight:500;color:#0B1424}
+.rg-ligne-sigle{display:block;margin-top:2px;font-size:var(--t-xs);color:#6B7280}
+
+/* Pied */
+.rg-pied{border-top:1px solid #ECEAE6;background:#FFFFFF}
+.rg-pied-in{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 24px;padding-top:22px;padding-bottom:22px;font-size:var(--t-xs);color:#6B7280}
+
+@media (max-width: 1024px){
+  .rg-tete{grid-template-columns:1fr;gap:40px;padding-top:48px;padding-bottom:48px}
+  .rg-tete-carte{justify-self:stretch}
+  .rg-extrait-corps{grid-template-columns:1fr}
+  .rg-extrait-carte{min-height:340px;border-left:none;border-top:1px solid #ECEAE6}
+  .rg-registre-in{grid-template-columns:1fr;gap:20px}
+  .rg-regions ul{display:none}
+  .rg-regions-mobile{display:block;width:100%;height:44px;padding:0 12px;border:1px solid #D6D3D1;border-radius:8px;background:#FFFFFF;font:inherit;font-size:var(--t-base);color:#0B1424}
+}
+@media (max-width: 640px){
+  .rg-largeur{padding-left:16px;padding-right:16px}
+  .rg-entete-in{height:68px}
+  .rg-marque img{height:38px}
+  .rg-entete-mention{display:none}
+  .rg-tete{padding-top:36px;padding-bottom:36px}
+  .rg-intro{font-size:var(--t-base);margin-bottom:26px}
+  .rg-champ{height:56px}
+  .rg-champ input{font-size:var(--t-base)}
+  .rg-page kbd{display:none}
+  .rg-verifier{padding:0 18px}
+  .rg-suggestions li{grid-template-columns:1fr;gap:2px}
+  .rg-statut{display:none}
+  .rg-chiffres div{padding-right:18px;margin-right:18px}
+  .rg-chiffres dd{font-size:var(--t-xl)}
+  .rg-legende-note{margin-left:0;width:100%}
+  .rg-extrait-bandeau span:nth-child(2){display:none}
+  .rg-extrait-bandeau span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rg-extrait-infos{padding:24px 20px}
+  .rg-releve div{grid-template-columns:120px minmax(0,1fr)}
+  .rg-numero{grid-template-columns:1fr;grid-template-areas:"libelle" "valeur" "bouton";row-gap:2px}
+  .rg-numero-copier{justify-self:start;margin-top:10px}
+  .rg-extrait h2{font-size:var(--t-xl)}
+  .rg-etat-texte{flex-basis:100%;padding-left:32px}
+  .rg-etat-texte::before{display:none}
+  .rg-registre{padding:40px 0 56px}
+  .rg-medaillon{display:none}
+  .rg-cadre-dakar{display:none}
+  /* Cartes du registre : numéro puis dénomination en tête, alignés à gauche, sans libellé. */
+  .rg-ligne td.rg-agr,.rg-ligne td[data-label="Dénomination"]{display:block;text-align:left}
+  .rg-ligne td.rg-agr::before,.rg-ligne td[data-label="Dénomination"]::before{display:none}
+  .rg-ligne td.rg-agr{font-size:var(--t-sm);color:#8A6A1F}
+  .rg-ligne td[data-label="Dénomination"]{padding-bottom:8px !important}
+}
+@media (prefers-reduced-motion:reduce){
+  .rg-tete-texte,.rg-tete-carte,.rg-extrait,.rg-suggestions{animation:none}
+}

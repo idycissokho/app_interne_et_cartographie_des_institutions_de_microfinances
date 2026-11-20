@@ -11,6 +11,7 @@ import { EcranSquelette } from "./components/Squelette";
 import { PAGES } from "./lib/pages";
 
 // Chaque page est un fichier JavaScript séparé, téléchargé à sa première visite.
+const Accueil = lazy(PAGES.accueil);
 const Connexion = lazy(PAGES.connexion);
 const TableauDeBord = lazy(PAGES.tableauDeBord);
 const CarteMacro = lazy(PAGES.carteMacro);
@@ -30,10 +31,11 @@ const MotDePasse = lazy(PAGES.motDePasse);
 function Protege({ children, roles }: { children: ReactNode; roles?: Role[] }) {
   const { utilisateur, chargement } = useAuth();
   if (chargement) return <EcranSquelette />;
-  if (!utilisateur) return <Navigate to="/connexion" replace />;
+  // Sans connexion : retour à l'accueil public, porte d'entrée de la plateforme.
+  if (!utilisateur) return <Navigate to="/" replace />;
   // Mot de passe provisoire : rien d'autre n'est accessible avant de l'avoir changé.
   if (utilisateur.doit_changer_mot_de_passe) return <Navigate to="/mot-de-passe" replace />;
-  if (roles && !roles.includes(utilisateur.role)) return <Navigate to="/" replace />;
+  if (roles && !roles.includes(utilisateur.role)) return <Navigate to="/tableau-de-bord" replace />;
   return <>{children}</>;
 }
 
@@ -55,7 +57,10 @@ export function App() {
         <Suspense fallback={<EcranSquelette />}>
         <Routes>
           <Route path="/connexion" element={<Connexion />} />
-          <Route path="/" element={<Protege><TableauDeBord /></Protege>} />
+          {/* Accueil public : première page de la plateforme, connecté ou non. */}
+          <Route path="/" element={<Accueil />} />
+          <Route path="/accueil" element={<Navigate to="/" replace />} />
+          <Route path="/tableau-de-bord" element={<Protege><TableauDeBord /></Protege>} />
           <Route path="/carte/macro" element={<Protege><CarteMacro /></Protege>} />
           <Route path="/carte/micro" element={<Protege><CarteMicro /></Protege>} />
           <Route path="/supervision" element={<Protege roles={GESTION}><Supervision /></Protege>} />

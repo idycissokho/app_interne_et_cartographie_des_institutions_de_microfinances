@@ -35,6 +35,8 @@ urlpatterns = [
 
     # Domaines fonctionnels métier
     path(f"{API_V1}imf/", include("apps.imf.urls")),
+    # Accueil public (sans connexion) : recherche d'une institution par son numéro d'agrément.
+    path(f"{API_V1}public/", include("apps.imf.urls_public")),
     path(f"{API_V1}points-service/", include("apps.points_service.urls")),
     path(f"{API_V1}dirigeants/", include("apps.dirigeants.urls")),
     path(f"{API_V1}cartographie/", include("apps.cartographie.urls")),
