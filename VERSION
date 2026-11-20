@@ -1,0 +1,4 @@
+branche=deploiement-intranet
+source=master@9ea009e8da642cc50f36212fbed6b52c1e3f3789
+date=2026-11-20T12:09:38Z
+# Généré par deploy/intranet-sans-docker/preparer-branche.sh — ne pas modifier à la main.
