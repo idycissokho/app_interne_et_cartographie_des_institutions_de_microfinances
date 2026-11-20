@@ -620,7 +620,7 @@ select.fi-input.bad,select.ps-input.bad,select.di-input.bad{border-color:#DC2626
 .rg-acces:hover{background:#0B1424;color:#FFFFFF}
 
 /* Tête : texte + recherche | carte des sièges */
-.rg-tete{display:grid;grid-template-columns:minmax(360px,440px) minmax(0,1fr);gap:56px;align-items:center;padding-top:64px;padding-bottom:64px}
+.rg-tete{display:grid;grid-template-columns:minmax(360px,440px) minmax(0,1fr);gap:48px;align-items:center;padding-top:44px;padding-bottom:56px}
 .rg-tete-texte{animation:rg-entree .5s ease both}
 .rg-surtitre{display:flex;align-items:center;gap:12px;margin:0 0 20px;font-size:var(--t-sm);font-weight:600;color:#8A6A1F}
 .rg-surtitre::before{content:"";width:28px;height:2px;background:#C9A44C}
@@ -680,7 +680,6 @@ select.fi-input.bad,select.ps-input.bad,select.di-input.bad{border-color:#DC2626
 .rg-region.estompee{fill:#F7F5F0}
 .rg-etiquette{font-size:9.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;fill:#8C94A1;paint-order:stroke;stroke:#EDE8DD;stroke-width:3px;stroke-linejoin:round;text-anchor:middle;pointer-events:none;font-family:var(--police)}
 .rg-etiquette.active{fill:#0B1424}
-.rg-cadre-dakar{fill:none;stroke:#0B1424;stroke-opacity:.45;stroke-width:.8;stroke-dasharray:2 2;pointer-events:none}
 .rg-point{cursor:pointer}
 .rg-point circle:nth-last-child(2){fill:#0B1424;fill-opacity:.82;stroke:#FFFFFF;stroke-width:.6;transition:fill-opacity .2s ease}
 .rg-point.s-OPR circle:nth-last-child(2){fill:#D97706;fill-opacity:.95}
@@ -689,13 +688,14 @@ select.fi-input.bad,select.ps-input.bad,select.di-input.bad{border-color:#DC2626
 .rg-point:hover circle:nth-last-child(2){fill:#8A6A1F;fill-opacity:1}
 .rg-point.choisi circle:nth-last-child(2){fill:#C9A44C;fill-opacity:1;stroke:#0B1424;stroke-width:1.2}
 .rg-halo{fill:rgba(201,164,76,.28);stroke:#C9A44C;stroke-width:.8}
-.rg-medaillon{position:absolute;left:0;top:0;width:14%;margin:0;padding:6px 6px 4px;background:#FFFFFF;border:1px solid #E2DFD9;border-radius:8px;box-shadow:0 6px 18px rgba(11,20,36,.07)}
-.rg-medaillon svg{display:block;width:100%;height:auto}
-.rg-medaillon .rg-point circle:nth-last-child(2){stroke-width:.08}
-.rg-medaillon .rg-point.choisi circle:nth-last-child(2){stroke-width:.16}
-.rg-medaillon .rg-point.s-RETRAIT_AGREMENT circle:nth-last-child(2){stroke-width:.14}
-.rg-medaillon .rg-halo{stroke-width:.1}
-.rg-medaillon .rg-region{stroke-width:.25}
+.rg-medaillon{position:absolute;right:0;top:0;width:26%;box-sizing:border-box;margin:0;padding:6px 6px 4px;background:#FFFFFF;border:1px solid #E2DFD9;border-radius:8px;box-shadow:0 6px 18px rgba(11,20,36,.07)}
+.rg-medaillon svg{display:block;width:100%;aspect-ratio:1.15;height:auto}
+.rg-medaillon .rg-medaillon-voisine{fill:#F7F5F0;stroke:#FFFFFF;stroke-width:1px}
+.rg-medaillon .rg-medaillon-cible{fill:#EDE8DD;stroke:#0B1424;stroke-width:1.3px;stroke-linejoin:round}
+.rg-medaillon .rg-medaillon-cible{cursor:pointer}
+.rg-medaillon .rg-medaillon-cible:hover{fill:#E9E1CD}
+.rg-medaillon.actif{border-color:#C9A44C;box-shadow:0 0 0 2px rgba(201,164,76,.35),0 6px 18px rgba(11,20,36,.07)}
+.rg-medaillon.actif .rg-medaillon-cible{fill:#E4D5AD}
 .rg-medaillon figcaption{display:flex;justify-content:space-between;gap:6px;padding:4px 2px 0;font-size:var(--t-2xs);font-weight:600;color:#0B1424}
 .rg-medaillon figcaption span{font-weight:500;color:#6B7280}
 .rg-info{position:absolute;z-index:3;transform:translate(-50%,calc(-100% - 14px));max-width:280px;padding:8px 12px;border-radius:8px;background:#0B1424;color:#FFFFFF;pointer-events:none;box-shadow:0 10px 24px rgba(11,20,36,.25);white-space:nowrap}
@@ -803,8 +803,8 @@ select.fi-input.bad,select.ps-input.bad,select.di-input.bad{border-color:#DC2626
   .rg-etat-texte{flex-basis:100%;padding-left:32px}
   .rg-etat-texte::before{display:none}
   .rg-registre{padding:40px 0 56px}
-  .rg-medaillon{display:none}
-  .rg-cadre-dakar{display:none}
+  /* Mobile : le médaillon passe sous la carte au lieu de la recouvrir. */
+  .rg-medaillon{position:static;width:min(180px,50%);margin:12px 0 0}
   /* Cartes du registre : numéro puis dénomination en tête, alignés à gauche, sans libellé. */
   .rg-ligne td.rg-agr,.rg-ligne td[data-label="Dénomination"]{display:block;text-align:left}
   .rg-ligne td.rg-agr::before,.rg-ligne td[data-label="Dénomination"]::before{display:none}
