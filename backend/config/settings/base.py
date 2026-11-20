@@ -306,6 +306,8 @@ REST_FRAMEWORK = {
         "connexion": env("LIMITE_CONNEXION", default="10/min"),
         # Assistant (questions sur les données) : par utilisateur.
         "assistant": env("LIMITE_ASSISTANT", default="30/min"),
+        # Recherche publique de l'accueil (sans connexion) : par adresse IP.
+        "public": env("LIMITE_PUBLIC", default="60/min"),
     },
 }
 

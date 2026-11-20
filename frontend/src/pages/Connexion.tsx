@@ -6,7 +6,7 @@
  * - Page publique : la carte est un décor de démonstration (aucune donnée réelle sans authentification).
  */
 import { useEffect, useMemo, useState, type CSSProperties, type FormEvent } from "react";
-import { Navigate } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 
 import logo from "../assets/logo-drs-sfd.png";
 import { useAuth } from "../auth/AuthContext";
@@ -57,7 +57,7 @@ export function Connexion() {
     try { localStorage.setItem(CLE_THEME, theme); } catch { /* stockage indisponible */ }
   }, [theme]);
 
-  if (utilisateur) return <Navigate to="/" replace />;
+  if (utilisateur) return <Navigate to="/tableau-de-bord" replace />;
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -128,6 +128,10 @@ export function Connexion() {
         </button>
 
         <div className="ci-up d2" style={{ width: "100%", maxWidth: 420, maxHeight: "100%", display: "flex", flexDirection: "column", gap: "clamp(12px, 3.1vh, 28px)" }}>
+          <Link to="/" style={{ alignSelf: "flex-start", display: "flex", alignItems: "center", gap: 6, fontSize: "var(--t-sm)", fontWeight: 500, color: c.lien, textDecoration: "none" }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6" /></svg>
+            Retour à l'accueil
+          </Link>
           <img src={logo} alt="Direction de la Réglementation et de la Supervision des SFD"
             style={{ width: "clamp(170px, 25.5vh, 230px)", height: "auto", display: "block", ...(theme === "sombre" ? { background: "#FFFFFF", padding: "8px 10px", borderRadius: 10, boxSizing: "content-box" } : {}) }} />
           <div style={{ display: "flex", flexDirection: "column", gap: "clamp(4px, 0.9vh, 8px)" }}>

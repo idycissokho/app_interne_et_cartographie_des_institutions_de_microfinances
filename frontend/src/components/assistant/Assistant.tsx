@@ -178,6 +178,7 @@ export function Assistant() {
 export function AssistantGlobal() {
   const { utilisateur } = useAuth();
   const { pathname } = useLocation();
-  if (!utilisateur || utilisateur.doit_changer_mot_de_passe || pathname.startsWith("/connexion")) return null;
+  // Ni sur l'accueil public, ni sur la connexion, ni avant le changement du mot de passe provisoire.
+  if (!utilisateur || utilisateur.doit_changer_mot_de_passe || pathname === "/" || pathname.startsWith("/connexion")) return null;
   return <Assistant />;
 }

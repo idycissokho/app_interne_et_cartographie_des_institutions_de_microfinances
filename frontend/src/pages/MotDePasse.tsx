@@ -39,7 +39,7 @@ export function MotDePasse() {
     try {
       await api.post("/auth/change-password/", { ancien_mot_de_passe: ancien, nouveau_mot_de_passe: nouveau, confirmation });
       motDePasseChange();
-      navigate("/", { replace: true });
+      navigate("/tableau-de-bord", { replace: true });
     } catch (err) {
       setErreur((err as Error).message.replace(/^(ancien_mot_de_passe|nouveau_mot_de_passe|confirmation) : /, ""));
     } finally {
@@ -85,7 +85,7 @@ export function MotDePasse() {
         <div style={{ fontSize: "var(--t-sm)", textAlign: "center" }}>
           {obligatoire
             ? <button type="button" onClick={() => void deconnecter()} style={{ background: "none", border: "none", padding: 0, font: "inherit", color: "#8A6A1F", fontWeight: 500, cursor: "pointer" }}>Se déconnecter</button>
-            : <Link to="/" style={{ color: "#8A6A1F", fontWeight: 500 }}>Retour à l'application</Link>}
+            : <Link to="/tableau-de-bord" style={{ color: "#8A6A1F", fontWeight: 500 }}>Retour à l'application</Link>}
         </div>
       </main>
     </div>

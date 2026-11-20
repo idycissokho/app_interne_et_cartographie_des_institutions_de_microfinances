@@ -52,7 +52,7 @@ export function Sidebar({ active, role, nomComplet, onDeconnexion }: Props) {
     {
       title: "Pilotage",
       items: [
-        mk("dashboard", "Tableau de bord", "/"),
+        mk("dashboard", "Tableau de bord", "/tableau-de-bord"),
         ...(role === "consultant"
           ? [mk("consultation", "Espace consultation", "/consultation")]
           : [mk("supervision", "Espace supervision", "/supervision")]),
@@ -90,7 +90,7 @@ export function Sidebar({ active, role, nomComplet, onDeconnexion }: Props) {
         <div style={{ marginTop: 4, fontSize: "var(--t-xs)", fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: "#F4EFE3" }}>République du Sénégal</div>
         <div style={{ fontSize: "var(--t-2xs)", fontStyle: "italic", color: "#8E99AB", whiteSpace: "nowrap" }}>Un Peuple – Un But – Une Foi</div>
         <span aria-hidden="true" style={{ width: 28, height: 1, margin: "8px 0 6px 0", background: "rgba(201,164,76,.6)" }} />
-        <Link to="/" aria-label="Accueil — Direction de la Réglementation et de la Supervision des SFD" style={{ display: "block", padding: "6px 8px", borderRadius: 6, background: "#FFFFFF" }}>
+        <Link to="/tableau-de-bord" aria-label="Tableau de bord — Direction de la Réglementation et de la Supervision des SFD" style={{ display: "block", padding: "6px 8px", borderRadius: 6, background: "#FFFFFF" }}>
           <img src={logo} alt="Direction de la Réglementation et de la Supervision des SFD" style={{ display: "block", width: 140, height: "auto" }} />
         </Link>
       </header>

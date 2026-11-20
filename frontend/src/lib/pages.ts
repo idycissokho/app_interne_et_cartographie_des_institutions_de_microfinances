@@ -34,6 +34,7 @@ function chargerPage<T>(importer: () => Promise<T>) {
 }
 
 export const PAGES = {
+  accueil: chargerPage(() => import("../pages/Accueil").then((m) => ({ default: m.Accueil }))),
   connexion: chargerPage(() => import("../pages/Connexion").then((m) => ({ default: m.Connexion }))),
   tableauDeBord: chargerPage(() => import("../pages/TableauDeBord").then((m) => ({ default: m.TableauDeBord }))),
   carteMacro: chargerPage(() => import("../pages/CarteMacro").then((m) => ({ default: m.CarteMacro }))),
@@ -52,7 +53,7 @@ export const PAGES = {
 
 /** Lien du menu -> code de la page et données stables (identiques quel que soit le filtre). */
 const AU_SURVOL: Record<string, { page: () => Promise<unknown>; donnees: string[] }> = {
-  "/": { page: PAGES.tableauDeBord, donnees: [URL_STATISTIQUES, URL_REGIONS] },
+  "/tableau-de-bord": { page: PAGES.tableauDeBord, donnees: [URL_STATISTIQUES, URL_REGIONS] },
   "/supervision": { page: PAGES.supervision, donnees: [URL_STATISTIQUES, URL_REGIONS] },
   "/consultation": { page: PAGES.consultation, donnees: [URL_IMF_OPTIONS, URL_REGIONS] },
   "/carte/micro": { page: PAGES.carteMicro, donnees: ["/points-service/geojson/", URL_IMF_OPTIONS, "/imf/bailleurs/?page_size=1000"] },
