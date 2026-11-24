@@ -69,3 +69,13 @@ class TestRecherchePublique:
         assert r.status_code == 200
         assert [f["nom"] for f in r.data["institutions"]] == ["Alpha", "Zeta"]
         assert "email" not in r.data["institutions"][0]
+
+    def test_resume_points_de_service(self, client):
+        from apps.points_service.models import PointService
+
+        imf = _imf(nom="Alpha")
+        PointService.objects.create(imf=imf, nom="Siège", adresse="Dakar", localisation=Point(-17.45, 14.7, srid=4326))
+        PointService.objects.create(imf=imf, nom="Guichet", adresse="Thiès")
+        r = client.get("/api/v1/public/resume/")
+        assert r.data["points_service"] == 2
+        assert r.data["points_service_geolocalises"] == 1

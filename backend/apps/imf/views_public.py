@@ -82,12 +82,21 @@ class RecherchePubliqueView(_VuePublique):
 
 
 class ResumePublicView(_VuePublique):
+    """Chiffres d'ensemble (accueil, page de connexion) : des comptes, aucune donnée nominative."""
+
     def get(self, request):
+        from apps.points_service.models import PointService
+
         actives = IMF.objects.filter(is_active=True)
+        points = PointService.objects.filter(is_active=True)
+        geolocalises = points.exclude(localisation=None)
         return Response({
             "institutions": actives.count(),
             "en_activite": actives.filter(statut_reglementaire=IMF.StatutReglementaire.EN_ACTIVITE).count(),
             "regions": actives.exclude(region=None).values("region").distinct().count(),
+            "points_service": points.count(),
+            "points_service_geolocalises": geolocalises.count(),
+            "regions_points_service": geolocalises.exclude(region=None).values("region").distinct().count(),
         })
 
 

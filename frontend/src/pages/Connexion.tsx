@@ -9,6 +9,7 @@ import { useEffect, useMemo, useState, type CSSProperties, type FormEvent } from
 import { Link, Navigate } from "react-router-dom";
 
 import logo from "../assets/logo-drs-sfd.png";
+import { api } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import { session } from "../auth/session";
 import { SenegalMap, type StatsRegion } from "../components/carto/SenegalMap";
@@ -46,6 +47,10 @@ export function Connexion() {
   const [motif] = useState(() => session.lireMotif());
   useEffect(() => { session.oublierMotif(); }, []);
   const [theme, setTheme] = useState<Theme>(themeInitial);
+  // Chiffres réels du référentiel (résumé public, sans connexion) pour l'encart de la carte.
+  const [resume, setResume] = useState<{ points_service: number; points_service_geolocalises: number; regions_points_service: number } | null>(null);
+  useEffect(() => { api.get<typeof resume>("/public/resume/").then(setResume, () => undefined); }, []);
+  const couverture = resume && resume.points_service ? Math.round((resume.points_service_geolocalises / resume.points_service) * 100) : null;
   const c = P[theme];
   const stats = useMemo(() => {
     const s: Record<string, StatsRegion> = {};
@@ -105,9 +110,9 @@ export function Connexion() {
           </div>
           <div className="ci-float ci-kpi" style={{ flex: "none", width: 250, boxSizing: "border-box", padding: "16px 18px", borderRadius: 12, background: "rgba(19,33,58,.62)", border: "1px solid rgba(233,212,154,.22)", backdropFilter: "blur(14px)", boxShadow: "0 20px 50px rgba(0,0,0,.35)", position: "relative", zIndex: 2 }}>
             <div style={{ fontSize: "var(--t-2xs)", fontWeight: 600, letterSpacing: ".06em", textTransform: "uppercase", color: "#A9B3C4" }}>Points de service géolocalisés</div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 6 }}><span style={{ fontSize: "var(--t-3xl)", fontWeight: 700, color: "#F3D98C", letterSpacing: "-0.02em" }}>[N]</span><span style={{ fontSize: "var(--t-sm)", color: "#B9C2D0" }}>sur 14 régions</span></div>
-            <div style={{ height: 6, borderRadius: 99, background: "rgba(255,255,255,.08)", marginTop: 12, overflow: "hidden" }}><div style={{ width: "78%", height: "100%", background: "#C9A44C", borderRadius: 99 }} /></div>
-            <div style={{ fontSize: "var(--t-xs)", color: "#A9B3C4", marginTop: 8 }}>Couverture GPS du référentiel</div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 6 }}><span style={{ fontSize: "var(--t-3xl)", fontWeight: 700, color: "#F3D98C", letterSpacing: "-0.02em" }}>{resume ? resume.points_service_geolocalises.toLocaleString("fr-FR") : "—"}</span><span style={{ fontSize: "var(--t-sm)", color: "#B9C2D0" }}>{resume ? `sur ${resume.regions_points_service} région${resume.regions_points_service > 1 ? "s" : ""}` : ""}</span></div>
+            <div style={{ height: 6, borderRadius: 99, background: "rgba(255,255,255,.08)", marginTop: 12, overflow: "hidden" }}><div style={{ width: `${couverture ?? 0}%`, height: "100%", background: "#C9A44C", borderRadius: 99, transition: "width .8s ease" }} /></div>
+            <div style={{ fontSize: "var(--t-xs)", color: "#A9B3C4", marginTop: 8 }}>Couverture GPS du référentiel{couverture !== null ? `\u00a0·\u00a0${couverture}\u00a0%` : ""}</div>
           </div>
         </div>
 
