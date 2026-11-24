@@ -48,10 +48,14 @@ def _imf_ref(imf):
     return imf.sigle or imf.nom
 
 
-def lignes_export(type_import: str):
-    """Lignes d'export CSV des points de service ou des dirigeants, dans l'ordre de COLONNES[type_import]."""
+def lignes_export(type_import: str, region=None):
+    """Lignes d'export CSV des points de service ou des dirigeants, dans l'ordre de COLONNES[type_import].
+    `region` : ne garder que les points situés dans cette région, ou les mandats dans ses institutions."""
     if type_import == ImportationFichier.TypeImport.POINTS_SERVICE:
-        qs = PointService.objects.filter(is_active=True).select_related(
+        qs = PointService.objects.filter(is_active=True)
+        if region is not None:
+            qs = qs.filter(region=region)
+        qs = qs.select_related(
             "imf", "region", "departement", "commune"
         ).order_by("imf__nom", "nom")
         for ps in qs:
@@ -63,14 +67,17 @@ def lignes_export(type_import: str):
                    ps.telephone, ps.email, ps.encours, ps.depots if ps.depots is not None else "",
                    ps.nombre_membres if ps.nombre_membres is not None else "", ps.lieu_dit, ps.url_fiche]
     else:
-        qs = Mandat.objects.filter(is_active=True, dirigeant__is_active=True).select_related(
-            "dirigeant", "imf"
-        ).order_by("dirigeant__nom", "dirigeant__prenom", "-date_debut")
+        qs = Mandat.objects.filter(is_active=True, dirigeant__is_active=True)
+        if region is not None:
+            qs = qs.filter(imf__region=region)
+        qs = qs.select_related("dirigeant", "imf").order_by("dirigeant__nom", "dirigeant__prenom", "-date_debut")
         avec_mandat = set()
         for m in qs:
             d = m.dirigeant
             avec_mandat.add(d.pk)
             yield [d.nom, d.prenom, d.telephone, d.email_professionnel, d.email_secondaire, d.adresse,
                    _imf_ref(m.imf), m.imf.numero_agrement, m.fonction_mandat, m.date_debut, m.date_fin or "", m.statut_mandat]
+        if region is not None:
+            return  # dirigeants sans mandat : rattachés à aucune région
         for d in Dirigeant.objects.filter(is_active=True).exclude(pk__in=avec_mandat).order_by("nom", "prenom"):
             yield [d.nom, d.prenom, d.telephone, d.email_professionnel, d.email_secondaire, d.adresse, "", "", "", "", "", ""]

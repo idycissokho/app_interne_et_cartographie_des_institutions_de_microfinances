@@ -22,11 +22,13 @@ class ImportationFichierSerializer(serializers.ModelSerializer):
         fields = [
             "id", "utilisateur", "utilisateur_email", "type_import", "fichier",
             "statut", "nb_lignes_total", "nb_lignes_importees", "nb_lignes_erreur",
+            "nb_lignes_creees", "nb_lignes_mises_a_jour", "doublons",
             "taux_succes", "rapport_erreurs", "date_creation", "date_modification",
         ]
         read_only_fields = [
             "id", "utilisateur", "statut", "nb_lignes_total",
             "nb_lignes_importees", "nb_lignes_erreur", "rapport_erreurs",
+            "nb_lignes_creees", "nb_lignes_mises_a_jour", "doublons",
             "date_creation", "date_modification",
         ]
 

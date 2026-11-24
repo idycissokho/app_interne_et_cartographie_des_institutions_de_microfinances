@@ -103,17 +103,21 @@ def ligne(imf: IMF) -> list:
     return [None if v == "" else v for v in valeurs]
 
 
-def institutions():
-    """IMF actives avec ce qu'il faut pour la liste (régions, départements, mandats en cours)."""
+def institutions(region=None):
+    """IMF actives avec ce qu'il faut pour la liste (régions, départements, mandats en cours).
+    `region` : zone géographique de type région, pour n'exporter que ses institutions."""
     en_cours = Mandat.objects.filter(
         is_active=True, dirigeant__is_active=True, date_fin=None,
     ).select_related("dirigeant").order_by("-date_debut")
-    return IMF.objects.filter(is_active=True).select_related("region", "departement").prefetch_related(
+    qs = IMF.objects.filter(is_active=True)
+    if region is not None:
+        qs = qs.filter(region=region)
+    return qs.select_related("region", "departement").prefetch_related(
         Prefetch("mandats", queryset=en_cours, to_attr="mandats_en_cours")
     ).order_by("nom")
 
 
-def classeur(avec_donnees: bool) -> bytes:
+def classeur(avec_donnees: bool, region=None) -> bytes:
     """Classeur .xlsx de la liste officielle : en-têtes seuls (modèle) ou rempli (export)."""
     from openpyxl import Workbook
     from openpyxl.styles import Font
@@ -129,7 +133,7 @@ def classeur(avec_donnees: bool) -> bytes:
     for rang, entete in enumerate(ENTETES, start=1):
         ws.column_dimensions[get_column_letter(rang)].width = max(12, min(40, len(entete) + 4))
     if avec_donnees:
-        for imf in institutions():
+        for imf in institutions(region):
             ws.append(ligne(imf))
     sortie = io.BytesIO()
     wb.save(sortie)

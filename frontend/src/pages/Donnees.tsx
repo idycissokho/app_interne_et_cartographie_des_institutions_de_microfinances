@@ -2,25 +2,32 @@
  * Écran 11 — Import et export (maquette-carto-imf/ecrans/11-import-export.dc.html).
  * Import : POST /importation/ (type_import + fichier) ; le serveur répond aussitôt et traite le
  * fichier en tâche de fond. L'écran suit la progression (GET /importation/<id>/), puis affiche le rapport.
+ * L'import suivi est mémorisé (sessionStorage) : en quittant puis en revenant sur la page, on retrouve
+ * la même progression, puis le même rapport jusqu'à « Nouvel import ».
+ * Le rapport distingue les lignes nouvelles, celles déjà en base (mises à jour) et les doublons du fichier.
+ * Export : tout le référentiel, ou une seule région.
  */
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import { cacheRequetes } from "../api/cache";
-import { api, telecharger } from "../api/client";
+import { api, qs, telecharger } from "../api/client";
 import type { Page } from "../api/types";
+import { useAuth } from "../auth/AuthContext";
 import { Erreur, Etapes, erreursChamps } from "../components/form";
 import { AppLayout } from "../components/layout/AppLayout";
 import { CadreTableau, EnTete, PAR_PAGE, Pagination, Tableau } from "../components/tableau/Tableau";
 import { telechargerCsv } from "../lib/csv";
 import { ilYa, nombre, pourcent } from "../lib/format";
-import { URL_STATISTIQUES, type Statistiques } from "../lib/stats";
+import { URL_REGIONS, URL_STATISTIQUES, type AgregatZone, type Statistiques } from "../lib/stats";
 import { useDonnees } from "../lib/useDonnees";
 
 type TypeImport = "IMF" | "POINTS_SERVICE" | "DIRIGEANTS";
 interface Rapport { ligne: number | null; erreurs: Record<string, string>; valeurs?: Record<string, string> }
 // fichier : null quand le fichier d'origine a été effacé (démonstration : anonymisation des dirigeants).
-interface Importation { id: string; type_import: TypeImport; fichier: string | null; statut: string; nb_lignes_total: number; nb_lignes_importees: number; nb_lignes_erreur: number; taux_succes: number; rapport_erreurs: Rapport[]; utilisateur_email: string; date_creation: string }
+/** Ligne désignant un enregistrement déjà en base (« base ») ou déjà vu plus haut dans le fichier (« fichier »). */
+interface Doublon { ligne: number; libelle: string; nature: "base" | "fichier"; ligne_precedente?: number }
+interface Importation { id: string; type_import: TypeImport; fichier: string | null; statut: string; nb_lignes_total: number; nb_lignes_importees: number; nb_lignes_erreur: number; nb_lignes_creees?: number; nb_lignes_mises_a_jour?: number; doublons?: Doublon[]; taux_succes: number; rapport_erreurs: Rapport[]; utilisateur_email: string; date_creation: string }
 
 const I: Record<TypeImport, string> = {
   IMF: "M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6",
@@ -45,9 +52,19 @@ const tailleFichier = (o: number) => (o >= 1048576 ? `${(o / 1048576).toFixed(1)
 const extension = (nom: string | null | undefined) => (nom ? (nom.split(/[?#]/)[0].split(".").pop() ?? "") : "").toUpperCase();
 /** Extension affichée dans l'historique : celle du fichier, sinon celle du format attendu pour le type. */
 const extensionImport = (h: Importation) => extension(h.fichier) || (h.type_import === "IMF" ? "XLSX" : "CSV");
+/** Nom du fichier importé, tiré de son adresse sur le serveur (« importations/2026/11/liste.xlsx »). */
+const nomFichier = (url: string | null | undefined) => (url ? decodeURIComponent(url.split(/[?#]/)[0].split("/").pop() ?? "") : "");
+/** Import suivi par cet onglet : retrouvé en revenant sur la page (progression, puis rapport). */
+const CLE_SUIVI = "imf.import.suivi";
+const memoire = {
+  lire: () => { try { return sessionStorage.getItem(CLE_SUIVI); } catch { return null; } },
+  ecrire: (id: string) => { try { sessionStorage.setItem(CLE_SUIVI, id); } catch { /* stockage indisponible */ } },
+  effacer: () => { try { sessionStorage.removeItem(CLE_SUIVI); } catch { /* stockage indisponible */ } },
+};
 
 export function Donnees() {
   const [params] = useSearchParams();
+  const { utilisateur } = useAuth();
   const [tab, setTab] = useState(params.get("onglet") === "export" ? "export" : "import");
   const [step, setStep] = useState(1);
   const [type, setType] = useState<TypeImport>("IMF");
@@ -57,8 +74,10 @@ export function Donnees() {
   const [erreur, setErreur] = useState<string | null>(null);
   const [version, setVersion] = useState(0);
   const [pageErreurs, setPageErreurs] = useState(1);
-  const { donnees: d } = useDonnees<{ hist: Page<Importation>; stats: Statistiques }>({
-    hist: "/importation/?page_size=5&ordering=-date_creation", stats: URL_STATISTIQUES,
+  const [pageDoublons, setPageDoublons] = useState(1);
+  const [regionExport, setRegionExport] = useState<Record<TypeImport, string>>({ IMF: "", POINTS_SERVICE: "", DIRIGEANTS: "" });
+  const { donnees: d } = useDonnees<{ hist: Page<Importation>; stats: Statistiques; regions: AgregatZone[] }>({
+    hist: "/importation/?page_size=5&ordering=-date_creation", stats: URL_STATISTIQUES, regions: URL_REGIONS,
   }, [version]);
 
   function choisir(f: File | null) {
@@ -71,9 +90,11 @@ export function Donnees() {
     const fd = new FormData();
     fd.append("type_import", type); fd.append("fichier", fichier);
     try {
-      setPageErreurs(1);
+      setPageErreurs(1); setPageDoublons(1);
       // Réponse immédiate : la suite (progression puis rapport) est suivie par l'effet ci-dessous.
-      setSuivi(await api.post<Importation>("/importation/", fd));
+      const cree = await api.post<Importation>("/importation/", fd);
+      memoire.ecrire(cree.id);
+      setSuivi(cree);
     } catch (e) {
       const er = erreursChamps(e);
       setErreur(er.fichier || er.type_import || er.__global || "L'import a échoué."); setStep(1);
@@ -93,6 +114,26 @@ export function Donnees() {
     }, 1500);
     return () => window.clearTimeout(minuteur);
   }, [suivi]);
+  // Retour sur la page : l'import suivi par cet onglet est repris là où il en était (progression ou
+  // rapport) ; à défaut, un import encore en cours lancé par cet utilisateur.
+  const repris = useRef(false);
+  function reprendre(i: Importation) {
+    memoire.ecrire(i.id);
+    setType(i.type_import);
+    if (EN_TRAITEMENT.has(i.statut)) { setSuivi(i); setStep(2); } else { setRes(i); setStep(3); }
+  }
+  useEffect(() => {
+    if (repris.current) return;
+    const id = memoire.lire();
+    if (id) {
+      repris.current = true;
+      api.get<Importation>(`/importation/${id}/`).then(reprendre, () => memoire.effacer());
+      return;
+    }
+    const enCours = d.hist?.results.find((h) => EN_TRAITEMENT.has(h.statut) && h.utilisateur_email === utilisateur?.email);
+    if (d.hist) repris.current = true;
+    if (enCours) reprendre(enCours);
+  }, [d.hist, utilisateur?.email]);
   const traitees = suivi ? suivi.nb_lignes_importees + suivi.nb_lignes_erreur : 0;
   const progression = suivi?.statut === "EN_COURS" && suivi.nb_lignes_total ? Math.min(1, traitees / suivi.nb_lignes_total) : null;
 
@@ -104,14 +145,22 @@ export function Donnees() {
     return () => window.clearInterval(minuteur);
   }, [histEnCours]);
 
-  const reset = () => { setStep(1); setFichier(null); setRes(null); setLignes(null); setErreur(null); };
+  const reset = () => { memoire.effacer(); setStep(1); setFichier(null); setRes(null); setSuivi(null); setLignes(null); setErreur(null); };
+  const doublons = res?.doublons ?? [];
+  const nbBase = doublons.filter((x) => x.nature === "base").length;
+  const nbFichier = doublons.length - nbBase;
+  const situation = (x: Doublon) => (x.nature === "base"
+    ? "Déjà dans la base : mis à jour, aucun doublon créé"
+    : `Répété dans le fichier (même enregistrement que la ligne ${x.ligne_precedente}) : non dupliqué`);
   const lignesErreur = (res?.rapport_erreurs ?? []).flatMap((r) => Object.entries(r.erreurs).map(([c, m]) => ({ l: r.ligne, c, v: r.valeurs?.[c] ?? "", m: typeof m === "string" ? m : JSON.stringify(m) })));
   const taux = res ? (res.nb_lignes_total ? (100 * res.nb_lignes_importees) / res.nb_lignes_total : 0) : 0;
+  const zone = (t: TypeImport) => d.regions?.find((z) => z.id === regionExport[t]);
   const exports: { id: string; t: TypeImport; label: string; count: string }[] = [
-    { id: "ex-imf", t: "IMF", label: "Liste officielle des IMF", count: `${nombre(d.stats?.imf.total ?? 0)} IMF et leurs dirigeants · Excel` },
-    { id: "ex-pts", t: "POINTS_SERVICE", label: "Points de service", count: `${nombre(d.stats?.points.total ?? 0)} points` },
-    { id: "ex-dir", t: "DIRIGEANTS", label: "Dirigeants et mandats", count: `${nombre(d.stats?.mandats.total ?? 0)} mandats` },
+    { id: "ex-imf", t: "IMF", label: "Liste officielle des IMF", count: `${nombre(zone("IMF")?.nb_imf ?? d.stats?.imf.total ?? 0)} IMF et leurs dirigeants · Excel` },
+    { id: "ex-pts", t: "POINTS_SERVICE", label: "Points de service", count: `${nombre(zone("POINTS_SERVICE")?.nb_points_service ?? d.stats?.points.total ?? 0)} points` },
+    { id: "ex-dir", t: "DIRIGEANTS", label: "Dirigeants et mandats", count: zone("DIRIGEANTS") ? `Mandats dans les IMF de ${zone("DIRIGEANTS")!.nom}` : `${nombre(d.stats?.mandats.total ?? 0)} mandats` },
   ];
+  const regionsTriees = [...(d.regions ?? [])].sort((a, b) => a.nom.localeCompare(b.nom, "fr"));
 
   return (
     <AppLayout active="import" minHeight={1100}>
@@ -180,7 +229,7 @@ export function Donnees() {
                         {suivi.nb_lignes_erreur > 0 && <span style={{ color: "#B91C1C", fontWeight: 500 }}> · {nombre(suivi.nb_lignes_erreur)} rejetée{suivi.nb_lignes_erreur > 1 ? "s" : ""}</span>}
                       </span>
                     )}
-                    <span style={{ fontSize: "var(--t-sm)", fontWeight: 600, color: "#4A5568" }}>{fichier?.name}{lignes !== null ? ` · ${nombre(lignes)} lignes` : ""}</span>
+                    <span style={{ fontSize: "var(--t-sm)", fontWeight: 600, color: "#4A5568" }}>{LIB[suivi?.type_import ?? type]} · {fichier?.name ?? nomFichier(suivi?.fichier)}{lignes !== null ? ` · ${nombre(lignes)} lignes` : ""}</span>
                     <span style={{ fontSize: "var(--t-sm)", color: "#6B7280", maxWidth: 440 }}>Vous pouvez quitter cette page : l'import continue sur le serveur et son résultat apparaîtra dans l'historique.</span>
                   </div>
                 )}
@@ -192,9 +241,28 @@ export function Donnees() {
                       <div><div style={{ fontSize: "var(--t-2xl)", fontWeight: 700 }}>{pourcent(taux, 1)}</div><div style={{ fontSize: "var(--t-xs)", fontWeight: 600, color: "#6B7280" }}>Taux de succès</div></div>
                     </div>
                     <div style={{ flex: "1 1 120px", padding: 18, borderRadius: 12, background: "#FFFFFF", border: "1px solid #E7E5E4" }}><div style={{ fontSize: "var(--t-2xl)", fontWeight: 700 }}>{nombre(res.nb_lignes_total)}</div><div style={{ fontSize: "var(--t-xs)", fontWeight: 600, color: "#6B7280" }}>Lignes lues</div></div>
-                    <div style={{ flex: "1 1 120px", padding: 18, borderRadius: 12, background: "#FFFFFF", border: "1px solid #E7E5E4" }}><div style={{ fontSize: "var(--t-2xl)", fontWeight: 700, color: "#15803D" }}>{nombre(res.nb_lignes_importees)}</div><div style={{ fontSize: "var(--t-xs)", fontWeight: 600, color: "#6B7280" }}>Importées</div></div>
+                    <div style={{ flex: "1 1 120px", padding: 18, borderRadius: 12, background: "#FFFFFF", border: "1px solid #E7E5E4" }}><div style={{ fontSize: "var(--t-2xl)", fontWeight: 700, color: "#15803D" }}>{nombre(res.nb_lignes_creees ?? res.nb_lignes_importees)}</div><div style={{ fontSize: "var(--t-xs)", fontWeight: 600, color: "#6B7280" }}>Nouvelles</div></div>
+                    {res.nb_lignes_mises_a_jour !== undefined && <div style={{ flex: "1 1 120px", padding: 18, borderRadius: 12, background: "#FFFFFF", border: "1px solid #E7E5E4" }}><div style={{ fontSize: "var(--t-2xl)", fontWeight: 700, color: "#1F4E79" }}>{nombre(res.nb_lignes_mises_a_jour)}</div><div style={{ fontSize: "var(--t-xs)", fontWeight: 600, color: "#6B7280" }}>Déjà en base (mises à jour)</div></div>}
                     <div style={{ flex: "1 1 120px", padding: 18, borderRadius: 12, background: "#FFFFFF", border: "1px solid #E7E5E4" }}><div style={{ fontSize: "var(--t-2xl)", fontWeight: 700, color: "#B91C1C" }}>{nombre(res.nb_lignes_erreur)}</div><div style={{ fontSize: "var(--t-xs)", fontWeight: 600, color: "#6B7280" }}>En erreur</div></div>
                   </div>
+                  {doublons.length > 0 && (
+                    <CadreTableau
+                      pied={doublons.length > PAR_PAGE ? <Pagination page={pageDoublons} pages={Math.ceil(doublons.length / PAR_PAGE)} onPage={setPageDoublons} resume={`${nombre(doublons.length)} lignes`} /> : undefined}
+                      barre={<><div style={{ display: "flex", flexDirection: "column", gap: 2 }}><b style={{ fontSize: "var(--t-base)", fontWeight: 600 }}>Doublons détectés</b><span style={{ fontSize: "var(--t-xs)", color: "#6B7280" }}>{nombre(nbBase)} déjà dans la base · {nombre(nbFichier)} répété{nbFichier > 1 ? "s" : ""} dans le fichier · aucun enregistrement dupliqué</span></div><a href="#" onClick={(e) => { e.preventDefault(); telechargerCsv(`doublons_import_${res.id.slice(0, 8)}.csv`, [["Ligne", "Enregistrement", "Situation"], ...doublons.map((x) => [x.ligne, x.libelle, situation(x)])]); }} style={{ marginLeft: "auto", fontSize: "var(--t-sm)", fontWeight: 500, textDecoration: "none" }}>Télécharger la liste (CSV)</a></>}>
+                      <Tableau largeurMin={520}>
+                        <thead><tr><EnTete num>Ligne</EnTete><EnTete>Enregistrement</EnTete><EnTete>Situation</EnTete></tr></thead>
+                        <tbody>
+                          {doublons.slice((pageDoublons - 1) * PAR_PAGE, pageDoublons * PAR_PAGE).map((x) => (
+                            <tr key={`${x.ligne}-${x.nature}`}>
+                              <td data-label="Ligne" className="num">{x.ligne}</td>
+                              <td data-label="Enregistrement" style={{ fontWeight: 500 }}>{x.libelle}</td>
+                              <td data-label="Situation" style={{ color: x.nature === "fichier" ? "#B45309" : "#4A5568" }}>{situation(x)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </Tableau>
+                    </CadreTableau>
+                  )}
                   {lignesErreur.length > 0 && (
                     <CadreTableau
                       pied={lignesErreur.length > PAR_PAGE ? <Pagination page={pageErreurs} pages={Math.ceil(lignesErreur.length / PAR_PAGE)} onPage={setPageErreurs} resume={`${lignesErreur.length} erreurs`} /> : undefined}
@@ -217,7 +285,7 @@ export function Donnees() {
                 </>)}
               </div>
               <div style={{ padding: "16px 24px", borderTop: "1px solid #F0EFED", display: "flex", justifyContent: "space-between", gap: 10, background: "#FFFFFF" }}>
-                <button type="button" disabled={step === 2} onClick={step === 1 ? reset : () => setStep(1)} style={btnS}>{step === 1 ? "Annuler" : "Retour"}</button>
+                <button type="button" disabled={step === 2} onClick={step === 1 ? reset : () => { memoire.effacer(); setStep(1); }} style={btnS}>{step === 1 ? "Annuler" : "Retour"}</button>
                 <button type="button" className="ie-primary" disabled={step === 2} onClick={step === 1 ? lancer : reset} style={btnP}>{step === 1 ? "Lancer l’import" : step === 2 ? "Voir le rapport" : "Nouvel import"}</button>
               </div>
             </section>
@@ -244,9 +312,9 @@ export function Donnees() {
             {exports.map((x) => (
               <article key={x.id} style={{ borderRadius: 12, background: "#FFFFFF", border: "1px solid #E7E5E4", padding: 22, display: "flex", flexDirection: "column", gap: 16 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 14 }}><span style={{ width: 48, height: 48, flex: "none", borderRadius: 10, background: "#F5F5F4", color: "#0B1424", display: "flex", alignItems: "center", justifyContent: "center" }}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={I[x.t]} /></svg></span><div><h2 style={{ margin: 0, fontSize: "var(--t-lg)", fontWeight: 700 }}>{x.label}</h2><div style={{ fontSize: "var(--t-sm)", color: "#6B7280" }}>{x.count}</div></div></div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}><label htmlFor={x.id} style={{ fontSize: "var(--t-xs)", fontWeight: 600, color: "#4A5568" }}>Périmètre</label><select id={x.id} className="fi-input" disabled title="L'export porte sur tout le référentiel (filtre par région non disponible côté API)." style={{ width: "100%" }}><option>Toutes les régions</option></select></div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}><label htmlFor={x.id} style={{ fontSize: "var(--t-xs)", fontWeight: 600, color: "#4A5568" }}>Périmètre</label><select id={x.id} className="fi-input" value={regionExport[x.t]} onChange={(e) => setRegionExport((r) => ({ ...r, [x.t]: e.target.value }))} style={{ width: "100%" }}><option value="">Toutes les régions</option>{regionsTriees.map((z) => <option key={z.id} value={z.id}>{z.nom}</option>)}</select></div>
                 <label title="L'export ne contient que les éléments actifs." style={{ display: "flex", alignItems: "center", gap: 10, fontSize: "var(--t-sm)", color: "#4A5568", opacity: 0.6 }}><input type="checkbox" disabled style={{ width: 18, height: 18, accentColor: "#C9A44C" }} /> Inclure les éléments archivés</label>
-                <button type="button" className="ie-primary" onClick={() => telecharger(`/importation/export/${x.t}/`, x.t === "IMF" ? "liste_imf.xlsx" : `export_${x.t.toLowerCase()}.csv`)} style={{ marginTop: "auto", height: 46, borderRadius: 10, border: "none", background: "#C9A44C", font: "inherit", fontSize: "var(--t-md)", fontWeight: 700, color: "#0B1424", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 21h16" /></svg>{x.t === "IMF" ? "Exporter en Excel" : "Exporter en CSV"}</button>
+                <button type="button" className="ie-primary" onClick={() => telecharger(`/importation/export/${x.t}/${qs({ region: regionExport[x.t] })}`, x.t === "IMF" ? "liste_imf.xlsx" : `export_${x.t.toLowerCase()}.csv`)} style={{ marginTop: "auto", height: 46, borderRadius: 10, border: "none", background: "#C9A44C", font: "inherit", fontSize: "var(--t-md)", fontWeight: 700, color: "#0B1424", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 21h16" /></svg>{x.t === "IMF" ? "Exporter en Excel" : "Exporter en CSV"}</button>
               </article>
             ))}
           </section>

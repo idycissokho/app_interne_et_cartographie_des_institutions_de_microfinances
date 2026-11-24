@@ -43,7 +43,13 @@ class ImportationFichier(models.Model):
     nb_lignes_total = models.PositiveIntegerField(default=0)
     nb_lignes_importees = models.PositiveIntegerField(default=0)
     nb_lignes_erreur = models.PositiveIntegerField(default=0)
+    #: Répartition des lignes importées : enregistrements créés / déjà en base (mis à jour).
+    nb_lignes_creees = models.PositiveIntegerField(default=0)
+    nb_lignes_mises_a_jour = models.PositiveIntegerField(default=0)
     rapport_erreurs = models.JSONField(default=list, blank=True)
+    #: Lignes qui désignent un enregistrement déjà en base, ou déjà vu plus haut dans le fichier :
+    #: {ligne, libelle, nature: "base" | "fichier", ligne_precedente?}. Aucun doublon n'est créé.
+    doublons = models.JSONField(default=list, blank=True)
     date_creation = models.DateTimeField(auto_now_add=True)
     date_modification = models.DateTimeField(auto_now=True)
 
