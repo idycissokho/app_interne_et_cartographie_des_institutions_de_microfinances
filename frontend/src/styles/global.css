@@ -836,3 +836,8 @@ select.fi-input.bad,select.ps-input.bad,select.di-input.bad{border-color:#DC2626
 .nt-info .nt-temps{background:#DCE2EC}
 @media (max-width:640px){.nt-zone{left:16px;right:16px;bottom:92px;width:auto}}
 @media (prefers-reduced-motion:reduce){.nt-carte{animation:none}.nt-temps{display:none}}
+
+/* Bouton « œil » des champs de mot de passe (components/ChampMotDePasse.tsx) */
+.champ-mdp-oeil{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:40px;height:40px;border:none;border-radius:8px;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:.8;transition:opacity .15s ease,background .15s ease}
+.champ-mdp-oeil:hover{opacity:1;background:rgba(127,127,127,.12)}
+.champ-mdp-oeil:disabled{cursor:default;opacity:.4}

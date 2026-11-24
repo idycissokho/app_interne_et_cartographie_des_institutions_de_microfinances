@@ -10,6 +10,7 @@ import { Link, Navigate, useNavigate } from "react-router-dom";
 import logo from "../assets/logo-drs-sfd.png";
 import { api } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
+import { ChampMotDePasse } from "../components/ChampMotDePasse";
 import { EcranSquelette } from "../components/Squelette";
 import { notifier } from "../lib/notifier";
 
@@ -67,16 +68,16 @@ export function MotDePasse() {
         <form onSubmit={onSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <label htmlFor="mdp-ancien" style={libelle}>{obligatoire ? "Mot de passe provisoire" : "Mot de passe actuel"}</label>
-            <input id="mdp-ancien" className="ci-input" type="password" required autoComplete="current-password" value={ancien} disabled={envoi} onChange={(e) => setAncien(e.target.value)} style={champ} />
+            <ChampMotDePasse id="mdp-ancien" className="ci-input" required autoComplete="current-password" value={ancien} disabled={envoi} onChange={(e) => setAncien(e.target.value)} style={champ} />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <label htmlFor="mdp-nouveau" style={libelle}>Nouveau mot de passe</label>
-            <input id="mdp-nouveau" className="ci-input" type="password" required autoComplete="new-password" value={nouveau} disabled={envoi} onChange={(e) => setNouveau(e.target.value)} style={champ} aria-describedby="mdp-regles" />
+            <ChampMotDePasse id="mdp-nouveau" className="ci-input" required autoComplete="new-password" value={nouveau} disabled={envoi} onChange={(e) => setNouveau(e.target.value)} style={champ} aria-describedby="mdp-regles" />
             <span id="mdp-regles" style={{ fontSize: "var(--t-xs)", color: "#6B7280", lineHeight: 1.5 }}>8 caractères au moins, pas uniquement des chiffres, différent de l'actuel ; évitez votre nom et les mots trop courants.</span>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <label htmlFor="mdp-confirmation" style={libelle}>Confirmer le nouveau mot de passe</label>
-            <input id="mdp-confirmation" className="ci-input" type="password" required autoComplete="new-password" value={confirmation} disabled={envoi} onChange={(e) => setConfirmation(e.target.value)} style={champ} />
+            <ChampMotDePasse id="mdp-confirmation" className="ci-input" required autoComplete="new-password" value={confirmation} disabled={envoi} onChange={(e) => setConfirmation(e.target.value)} style={champ} />
           </div>
           {erreur && <div role="alert" style={{ fontSize: "var(--t-sm)", fontWeight: 500, color: "#B91C1C", lineHeight: 1.5 }}>{erreur}</div>}
           <button className="ci-btn" type="submit" disabled={envoi} aria-busy={envoi} style={{ height: 50, border: "none", borderRadius: 10, background: "#C9A44C", color: "#0B1424", font: "inherit", fontSize: "var(--t-base)", fontWeight: 700, cursor: envoi ? "progress" : "pointer" }}>
