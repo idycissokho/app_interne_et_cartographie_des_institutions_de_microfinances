@@ -13,6 +13,7 @@ import { api } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import { session } from "../auth/session";
 import { SenegalMap, type StatsRegion } from "../components/carto/SenegalMap";
+import { ChampMotDePasse } from "../components/ChampMotDePasse";
 import { DEMO_POINTS, DEMO_POINTS_REGION } from "../data/demoConnexion";
 import { cleRegion } from "../data/senegalRegions";
 
@@ -95,7 +96,6 @@ export function Connexion() {
               <span style={{ fontSize: "var(--t-xs)", fontStyle: "italic", color: "#A9B3C4" }}>Un Peuple – Un But – Une Foi</span>
             </div>
           </div>
-          <span style={{ fontSize: "var(--t-xs)", fontWeight: 500, letterSpacing: ".06em", textTransform: "uppercase", color: "#E9D49A", border: "1px solid rgba(201,164,76,.35)", borderRadius: 999, padding: "7px 14px" }}>Intranet · Accès restreint</span>
         </header>
 
         <div style={{ maxWidth: 620, display: "flex", flexDirection: "column", gap: "clamp(8px, 1.8vh, 16px)", position: "relative", zIndex: 2, flex: "none" }}>
@@ -156,7 +156,7 @@ export function Connexion() {
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "clamp(5px, 0.9vh, 8px)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}><label htmlFor="ci-pass" style={libelle}>Mot de passe</label><a href="#" style={{ fontSize: "var(--t-sm)", fontWeight: 500, color: c.lien }}>Mot de passe oublié ?</a></div>
-              <input id="ci-pass" className="ci-input" type="password" required autoComplete="current-password" placeholder="••••••••••" value={motDePasse} disabled={envoi} onChange={(e) => setMotDePasse(e.target.value)} style={champ} />
+              <ChampMotDePasse id="ci-pass" className="ci-input" couleur={c.doux} required autoComplete="current-password" placeholder="••••••••••" value={motDePasse} disabled={envoi} onChange={(e) => setMotDePasse(e.target.value)} style={champ} />
             </div>
             <label style={{ display: "flex", alignItems: "center", gap: 10, fontSize: "var(--t-md)", color: c.doux }}><input type="checkbox" checked={rester} onChange={(e) => setRester(e.target.checked)} style={{ width: 18, height: 18, accentColor: "#C9A44C" }} /> Rester connecté sur ce poste</label>
             {erreur && <div role="alert" style={{ fontSize: "var(--t-sm)", fontWeight: 500, color: theme === "clair" ? "#B91C1C" : "#FCA5A5" }}>{erreur}</div>}
