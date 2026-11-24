@@ -4,13 +4,14 @@
 import { useState, type CSSProperties } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
-import { api, qs, telecharger } from "../api/client";
+import { api, qs } from "../api/client";
 import type { Page } from "../api/types";
 import { useAuth } from "../auth/AuthContext";
 import { AppLayout } from "../components/layout/AppLayout";
-import { telechargerCsv } from "../lib/csv";
+import { exporter, exporterCsv } from "../lib/exporter";
 import { STATUT_IMF_LONG, TYPE_IMF_LONG, initiales, regionAffichee } from "../lib/metier";
 import { Badge, BoutonIcone, CadreTableau, CelluleActions, ChampRecherche, EnTete, EtatVide, LignesChargement, Pagination, Pastille, TON_STATUT, Tableau } from "../components/tableau/Tableau";
+import { notifier } from "../lib/notifier";
 import { useDonnees, type Compte } from "../lib/useDonnees";
 
 interface Ligne {
@@ -60,17 +61,29 @@ export function Institutions() {
   const recharger = () => { setSel({}); setVersion((v) => v + 1); };
 
   async function changerStatut(statut: string) {
-    await Promise.all(choisis.map((r) => api.patch(`/imf/${r.id}/`, { statut_reglementaire: statut })));
+    const n = choisis.length;
+    const id = notifier.attente("Mise à jour du statut…", `${n} institution${n > 1 ? "s" : ""}`);
+    try {
+      await Promise.all(choisis.map((r) => api.patch(`/imf/${r.id}/`, { statut_reglementaire: statut })));
+      notifier.succes("Statut mis à jour", `${n} institution${n > 1 ? "s passent" : " passe"} en « ${STATUT_IMF_LONG[statut] ?? statut} ».`, { remplace: id });
+    } catch (e) {
+      notifier.erreur("Statut non modifié", (e as Error).message, { remplace: id });
+    }
     setStatutLot(false);
     recharger();
   }
   async function archiver(r: Ligne) {
     if (!window.confirm(`Désactiver l'institution « ${r.nom} » ? Elle n'apparaîtra plus dans le référentiel.`)) return;
-    await api.delete(`/imf/${r.id}/`);
+    try {
+      await api.delete(`/imf/${r.id}/`);
+      notifier.succes("Institution désactivée", `« ${r.nom} » n'apparaît plus dans le référentiel.`);
+    } catch (e) {
+      notifier.erreur("Désactivation impossible", (e as Error).message);
+    }
     recharger();
   }
   const exporterSelection = () =>
-    telechargerCsv("institutions_selection.csv", [
+    exporterCsv("institutions_selection.csv", [
       ["nom", "sigle", "type_imf", "statut_reglementaire", "email", "region_siege", "points", "dirigeants", "bailleurs"],
       ...choisis.map((r) => [r.nom, r.sigle, r.type_imf, r.statut_reglementaire, r.email, regionAffichee(r.region_siege), r.nb_points_service, r.nb_dirigeants_en_fonction, r.bailleurs_noms.join(" · ")]),
     ]);
@@ -86,7 +99,7 @@ export function Institutions() {
           </div>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             {estAdmin && <Link to="/donnees" style={{ height: 46, padding: "0 16px", borderRadius: 10, border: "1px solid #E7E5E4", background: "#FFFFFF", fontSize: "var(--t-md)", fontWeight: 600, color: "#0B1424", display: "flex", alignItems: "center", gap: 8, textDecoration: "none", boxSizing: "border-box" }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5M4 21h16" /></svg>Importer</Link>}
-            {estAdmin && <button type="button" onClick={() => telecharger("/importation/export/IMF/", "export_imf.csv")} style={{ height: 46, padding: "0 16px", borderRadius: 10, border: "1px solid #E7E5E4", background: "#FFFFFF", font: "inherit", fontSize: "var(--t-md)", fontWeight: 600, color: "#0B1424", display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 21h16" /></svg>Exporter CSV</button>}
+            {estAdmin && <button type="button" onClick={() => void exporter("/importation/export/IMF/", "liste_imf.xlsx", "Liste officielle des IMF")} style={{ height: 46, padding: "0 16px", borderRadius: 10, border: "1px solid #E7E5E4", background: "#FFFFFF", font: "inherit", fontSize: "var(--t-md)", fontWeight: 600, color: "#0B1424", display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 21h16" /></svg>Exporter CSV</button>}
             {estAdmin && <Link to="/imf/nouveau" style={{ height: 46, padding: "0 18px", borderRadius: 10, background: "#C9A44C", fontSize: "var(--t-md)", fontWeight: 700, color: "#0B1424", display: "flex", alignItems: "center", gap: 8, textDecoration: "none", boxSizing: "border-box" }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>Nouvelle IMF</Link>}
           </div>
         </header>

@@ -8,6 +8,8 @@ import { AvisReveil, BandeauDemo } from "./components/AvisSysteme";
 import { GardeSession } from "./components/GardeSession";
 import { FiletErreur } from "./components/FiletErreur";
 import { EcranSquelette } from "./components/Squelette";
+import { Notifications } from "./components/Notifications";
+import { SuiviImport } from "./components/SuiviImport";
 import { PAGE_VISIBLE, PAGES } from "./lib/pages";
 
 // Chaque page est un fichier JavaScript séparé, téléchargé à sa première visite.
@@ -80,6 +82,8 @@ export function App() {
         </Suspense>
         </FiletErreurParPage>
         <AssistantGlobal />
+        <Notifications />
+        <SuiviImport />
       </BrowserRouter>
       <AvisReveil />
       <GardeSession />

@@ -12,7 +12,8 @@ import type { Mandat, Page } from "../api/types";
 import { useAuth } from "../auth/AuthContext";
 import { ChoixIMF } from "../components/dirigeants/ChoixIMF";
 import { FicheDirigeant, dateCourte, echeance } from "../components/dirigeants/FicheDirigeant";
-import { EMAIL_OK, Erreur, Etapes, FileDrop, Label, Modal, Toast, btnPrimaire, btnSecondaire, erreursChamps } from "../components/form";
+import { notifier } from "../lib/notifier";
+import { EMAIL_OK, Erreur, Etapes, FileDrop, Label, Modal, btnPrimaire, btnSecondaire, erreursChamps } from "../components/form";
 import { AppLayout } from "../components/layout/AppLayout";
 import { CODE_FONCTION, isoJour, nombre } from "../lib/format";
 import { FAMILLE_FONCTION, FONCTIONS, LIBELLE_FONCTION, STATUT_IMF_COURT, STATUT_MANDAT, TYPE_IMF_COURT, avancementMandat, initiales, regionAffichee } from "../lib/metier";
@@ -75,7 +76,6 @@ export function Dirigeants() {
   const [saisie, setSaisie] = useState(q);
   const [fiche, setFiche] = useState<string | null>(null);
   const [modale, setModale] = useState<null | { mandat?: Mandat; dirigeant?: DirigeantRes; retour?: string }>(null);
-  const [toast, setToast] = useState<{ titre: string; texte: string } | null>(null);
 
   // La recherche part 300 ms après la dernière frappe.
   useEffect(() => {
@@ -135,7 +135,7 @@ export function Dirigeants() {
   };
   const ouvrirModale = (m: NonNullable<typeof modale>) => { setFiche(null); setModale(m); };
   const fermerModale = () => { if (modale?.retour) setFiche(modale.retour); setModale(null); };
-  const annoncer = (titre: string, texte: string) => { setToast({ titre, texte }); setTimeout(() => setToast(null), 3500); };
+  const annoncer = (titre: string, texte: string) => notifier.succes(titre, texte);
 
   return (
     <AppLayout active="dirigeants" minHeight={1100}>
@@ -275,7 +275,6 @@ export function Dirigeants() {
         onVoirInstitution={(id) => { setFiche(null); setSaisie(""); setParams({ imf: id }, { replace: true }); }}
         onEnregistre={(texte) => annoncer("Dirigeant mis à jour", texte)} />}
       {modale && <ModaleMandat mandat={modale.mandat} dirigeant={modale.dirigeant} onClose={fermerModale} onSaved={(m) => { fermerModale(); annoncer("Mandat enregistré", m); }} />}
-      {toast && <Toast ton="ok" titre={toast.titre} texte={toast.texte} bas={28} />}
     </AppLayout>
   );
 }
