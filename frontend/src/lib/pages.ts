@@ -33,6 +33,12 @@ function chargerPage<T>(importer: () => Promise<T>) {
     );
 }
 
+/**
+ * Pages masquées pour le moment : le code reste en place, mais elles n'apparaissent ni dans le menu
+ * ni par leur adresse (renvoi au tableau de bord). Passer à true pour les réafficher.
+ */
+export const PAGE_VISIBLE = { supervision: false };
+
 export const PAGES = {
   accueil: chargerPage(() => import("../pages/Accueil").then((m) => ({ default: m.Accueil }))),
   connexion: chargerPage(() => import("../pages/Connexion").then((m) => ({ default: m.Connexion }))),

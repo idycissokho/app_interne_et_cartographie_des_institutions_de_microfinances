@@ -6,7 +6,7 @@ import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 
 import logo from "../../assets/logo-drs-sfd.png";
-import { prechargerPage } from "../../lib/pages";
+import { PAGE_VISIBLE, prechargerPage } from "../../lib/pages";
 
 export type CleMenu =
   | "dashboard" | "micro" | "macro" | "imf" | "points" | "dirigeants"
@@ -53,8 +53,9 @@ export function Sidebar({ active, role, nomComplet, onDeconnexion }: Props) {
       title: "Pilotage",
       items: [
         mk("dashboard", "Tableau de bord", "/tableau-de-bord"),
-        ...(role === "consultant"
-          ? [mk("consultation", "Espace consultation", "/consultation")]
+        // Espace supervision masqué pour le moment (PAGE_VISIBLE) : le superviseur a l'espace consultation.
+        ...(role === "consultant" || !PAGE_VISIBLE.supervision
+          ? (role === "admin" ? [] : [mk("consultation", "Espace consultation", "/consultation")])
           : [mk("supervision", "Espace supervision", "/supervision")]),
         // L'administrateur peut tout ce que peuvent les autres rôles, consultation comprise.
         ...(role === "admin" ? [mk("consultation", "Espace consultation", "/consultation")] : []),

@@ -8,7 +8,7 @@ import { AvisReveil, BandeauDemo } from "./components/AvisSysteme";
 import { GardeSession } from "./components/GardeSession";
 import { FiletErreur } from "./components/FiletErreur";
 import { EcranSquelette } from "./components/Squelette";
-import { PAGES } from "./lib/pages";
+import { PAGE_VISIBLE, PAGES } from "./lib/pages";
 
 // Chaque page est un fichier JavaScript séparé, téléchargé à sa première visite.
 const Accueil = lazy(PAGES.accueil);
@@ -63,7 +63,8 @@ export function App() {
           <Route path="/tableau-de-bord" element={<Protege><TableauDeBord /></Protege>} />
           <Route path="/carte/macro" element={<Protege><CarteMacro /></Protege>} />
           <Route path="/carte/micro" element={<Protege><CarteMicro /></Protege>} />
-          <Route path="/supervision" element={<Protege roles={GESTION}><Supervision /></Protege>} />
+          {/* Espace supervision masqué pour le moment (lib/pages.ts, PAGE_VISIBLE) : l'adresse renvoie au tableau de bord. */}
+          <Route path="/supervision" element={PAGE_VISIBLE.supervision ? <Protege roles={GESTION}><Supervision /></Protege> : <Navigate to="/tableau-de-bord" replace />} />
           <Route path="/consultation" element={<Protege><Consultation /></Protege>} />
           <Route path="/imf" element={<Protege><Institutions /></Protege>} />
           <Route path="/imf/nouveau" element={<Protege roles={ADMIN}><FormulaireIMF /></Protege>} />
