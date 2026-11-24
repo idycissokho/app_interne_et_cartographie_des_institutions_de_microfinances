@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 
 import { api, evenementDeconnexion, jetons } from "../api/client";
 import { cacheRequetes, requeteApi } from "../api/cache";
+import { notifier } from "../lib/notifier";
 import type { Utilisateur } from "../api/types";
 import { canalSession, session, type MotifDeconnexion, type ReglesSession } from "./session";
 
@@ -87,6 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     jetons.enregistrer(res.access, res.refresh, resterConnecte);
     session.demarrer(res.session);
     setUtilisateur(res.utilisateur);
+    notifier.succes(`Bienvenue, ${res.utilisateur.prenom}`, "Vous êtes connecté à l'espace des agents de la DRS-SFD.");
   }, []);
 
   const deconnecter = useCallback(async (motif?: MotifDeconnexion) => {
@@ -100,6 +102,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       nettoyer();
       setUtilisateur(null);
+      // Déconnexion volontaire (sans motif) ; les déconnexions automatiques sont expliquées sur la connexion.
+      if (!motif) notifier.info("Vous êtes déconnecté", "Votre session est fermée sur ce poste. À bientôt.");
     }
   }, []);
 

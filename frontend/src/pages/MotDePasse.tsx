@@ -11,6 +11,7 @@ import logo from "../assets/logo-drs-sfd.png";
 import { api } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import { EcranSquelette } from "../components/Squelette";
+import { notifier } from "../lib/notifier";
 
 const champ: CSSProperties = { height: 48, borderRadius: 10, border: "1.5px solid #D6D3D1", background: "#FFFFFF", padding: "0 16px", font: "inherit", fontSize: "var(--t-base)", color: "#0B1424" };
 const libelle: CSSProperties = { fontSize: "var(--t-sm)", fontWeight: 600, color: "#1A2333" };
@@ -39,6 +40,7 @@ export function MotDePasse() {
     try {
       await api.post("/auth/change-password/", { ancien_mot_de_passe: ancien, nouveau_mot_de_passe: nouveau, confirmation });
       motDePasseChange();
+      notifier.succes("Mot de passe modifié", obligatoire ? "Votre mot de passe personnel est enregistré : bienvenue sur la plateforme." : "Votre nouveau mot de passe est enregistré.");
       navigate("/tableau-de-bord", { replace: true });
     } catch (err) {
       setErreur((err as Error).message.replace(/^(ancien_mot_de_passe|nouveau_mot_de_passe|confirmation) : /, ""));

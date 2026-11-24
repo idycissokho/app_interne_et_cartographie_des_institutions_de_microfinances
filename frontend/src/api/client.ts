@@ -207,7 +207,7 @@ export function qs(params: Record<string, string | number | undefined | null>): 
 }
 
 /** Télécharge un fichier renvoyé par l'API (CSV d'export, modèle d'import). */
-export async function telecharger(chemin: string, nomParDefaut: string) {
+export async function telecharger(chemin: string, nomParDefaut: string): Promise<string> {
   const reponse = await requete<Response>(chemin, { brut: true });
   const dispo = reponse.headers.get("Content-Disposition") ?? "";
   const nom = /filename="([^"]+)"/.exec(dispo)?.[1] ?? nomParDefaut;
@@ -217,4 +217,5 @@ export async function telecharger(chemin: string, nomParDefaut: string) {
   a.download = nom;
   a.click();
   URL.revokeObjectURL(url);
+  return nom;
 }

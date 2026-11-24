@@ -109,16 +109,6 @@ export function ToggleChips({ options, valeurs, onToggle }: { options: [string, 
   );
 }
 
-/** Toast de confirmation / d'erreur (écran 08). */
-export function Toast({ ton, titre, texte, bas = 96 }: { ton: "ok" | "ko"; titre: string; texte: ReactNode; bas?: number }) {
-  return (
-    <div className="fi-toast" role="status" style={{ position: "fixed", right: 28, bottom: bas, zIndex: 60, display: "flex", gap: 12, alignItems: "center", padding: "14px 18px", borderRadius: 12, background: ton === "ko" ? "#7F1D1D" : "#0B1424", color: "#F4EFE3", boxShadow: "0 20px 50px rgba(11,20,36,.35)", maxWidth: 380 }}>
-      <span style={{ width: 32, height: 32, flex: "none", borderRadius: 10, background: ton === "ko" ? "#FCA5A5" : "#C9A44C", color: "#0B1424", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700 }}>{ton === "ko" ? "!" : "✓"}</span>
-      <div style={{ fontSize: "var(--t-sm)", lineHeight: 1.45 }}><b style={{ display: "block", fontSize: "var(--t-md)" }}>{titre}</b>{texte}</div>
-    </div>
-  );
-}
-
 /** En-tête numérotée d'une section de formulaire. */
 export function EnteteSection({ n, titre, sousTitre, extra }: { n: number; titre: ReactNode; sousTitre: string; extra?: ReactNode }) {
   return (

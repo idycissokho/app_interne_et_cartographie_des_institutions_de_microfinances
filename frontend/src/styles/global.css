@@ -136,10 +136,8 @@ a:hover { color: #6E5416; }
 
 /* ---------- Écran 08-formulaire-imf.dc.html ---------- */
 @keyframes fi-up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-@keyframes fi-toast{from{opacity:0;transform:translateY(16px) scale(.98)}to{opacity:1;transform:none}}
 .fi-up{animation:fi-up .6s cubic-bezier(.2,.7,.2,1) both}
 .fi-up.d1{animation-delay:.06s}.fi-up.d2{animation-delay:.12s}.fi-up.d3{animation-delay:.18s}.fi-up.d4{animation-delay:.24s}.fi-up.d5{animation-delay:.3s}
-.fi-toast{animation:fi-toast .4s cubic-bezier(.2,.7,.2,1) both}
 .fi-label{font-size:var(--t-sm);font-weight:600;color:#1A2333;display:flex;gap:4px;align-items:baseline}
 .fi-req{color:#B08A1E}
 .fi-help{font-size:var(--t-xs);color:#6B7280;line-height:1.45}
@@ -158,7 +156,7 @@ textarea.fi-input{height:auto;min-height:88px;padding:12px 14px;resize:vertical;
 .fi-nav:hover{background:#F5F5F4}
 .fi-ghost:hover{background:#F5F5F4}
 .fi-primary:hover{background:#D9B65E}
-@media (prefers-reduced-motion:reduce){.fi-up,.fi-toast{animation:none}}
+@media (prefers-reduced-motion:reduce){.fi-up{animation:none}}
 
 
 /* ---------- Écran 09-points-de-service.dc.html ---------- */
@@ -814,3 +812,27 @@ select.fi-input.bad,select.ps-input.bad,select.di-input.bad{border-color:#DC2626
 @media (prefers-reduced-motion:reduce){
   .rg-tete-texte,.rg-tete-carte,.rg-extrait,.rg-suggestions{animation:none}
 }
+
+/* ---------- Notifications (components/Notifications.tsx) ----------
+ * Carte bleu nuit, pastille selon le ton, barre dorée du temps restant. Au-dessus du bouton
+ * de l'assistant (bas à droite).                                                            */
+@keyframes nt-entree{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes nt-temps{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+.nt-zone{position:fixed;right:24px;bottom:100px;z-index:90;display:flex;flex-direction:column;gap:10px;width:min(380px,calc(100vw - 32px));pointer-events:none}
+.nt-carte{pointer-events:auto;position:relative;display:flex;gap:12px;align-items:flex-start;padding:14px 12px 16px 16px;border-radius:12px;background:#0B1424;color:#F4EFE3;box-shadow:0 22px 50px rgba(11,20,36,.32),0 0 0 1px rgba(233,212,154,.14);overflow:hidden;animation:nt-entree .35s cubic-bezier(.2,.7,.2,1) both}
+.nt-icone{flex:none;width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;background:#C9A44C;color:#0B1424}
+.nt-erreur .nt-icone{background:#FCA5A5;color:#7F1D1D}
+.nt-info .nt-icone{background:#DCE2EC;color:#0B1424}
+.nt-attente .nt-icone{background:rgba(233,212,154,.16);color:#F3D98C}
+.nt-corps{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;padding-top:4px}
+.nt-corps b{font-size:var(--t-md);font-weight:600;line-height:1.35;color:#FFFFFF}
+.nt-texte{font-size:var(--t-sm);line-height:1.5;color:#C9D1DE;overflow-wrap:anywhere}
+.nt-action{align-self:flex-start;margin-top:6px;font-size:var(--t-sm);font-weight:600;color:#F3D98C;text-decoration:none}
+.nt-action:hover{color:#FFFFFF}
+.nt-fermer{flex:none;width:28px;height:28px;border:none;border-radius:8px;background:transparent;color:#8E99AB;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.nt-fermer:hover{background:rgba(255,255,255,.08);color:#FFFFFF}
+.nt-temps{position:absolute;left:0;bottom:0;width:100%;height:3px;background:#C9A44C;transform-origin:left;animation-name:nt-temps;animation-timing-function:linear;animation-fill-mode:forwards}
+.nt-erreur .nt-temps{background:#FCA5A5}
+.nt-info .nt-temps{background:#DCE2EC}
+@media (max-width:640px){.nt-zone{left:16px;right:16px;bottom:92px;width:auto}}
+@media (prefers-reduced-motion:reduce){.nt-carte{animation:none}.nt-temps{display:none}}

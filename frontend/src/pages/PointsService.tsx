@@ -12,7 +12,8 @@ import { api, qs } from "../api/client";
 import type { Bailleur, Page } from "../api/types";
 import { useAuth } from "../auth/AuthContext";
 import { ChoixIMF } from "../components/dirigeants/ChoixIMF";
-import { Drawer, EMAIL_OK, Erreur, Label, Toast, btnPrimaire, btnSecondaire, erreursChamps } from "../components/form";
+import { notifier } from "../lib/notifier";
+import { Drawer, EMAIL_OK, Erreur, Label, btnPrimaire, btnSecondaire, erreursChamps } from "../components/form";
 import { AppLayout } from "../components/layout/AppLayout";
 import { FichePoint } from "../components/points/FichePoint";
 import { dansLeSenegal } from "../data/projection";
@@ -78,7 +79,6 @@ export function PointsService() {
   const [saisie, setSaisie] = useState(q);
   const [fiche, setFiche] = useState<string | null>(null);
   const [tiroir, setTiroir] = useState<null | { id?: string; retour?: string }>(params.get("nouveau") && estAdmin ? {} : null);
-  const [toast, setToast] = useState<string | null>(null);
 
   // La recherche part 300 ms après la dernière frappe.
   useEffect(() => {
@@ -290,9 +290,8 @@ export function PointsService() {
         onVoirInstitution={(id) => { setFiche(null); setSaisie(""); setParams({ imf: id }, { replace: true }); }} />}
       {tiroir && (
         <TiroirPoint id={tiroir.id} imfInitiale={tiroir.id ? "" : imf} onClose={fermerTiroir}
-          onSaved={(msg) => { fermerTiroir(); setToast(msg); setTimeout(() => setToast(null), 3500); }} />
+          onSaved={(msg) => { fermerTiroir(); notifier.succes("Point de service enregistré", msg); }} />
       )}
-      {toast && <Toast ton="ok" titre="Point de service enregistré" texte={toast} bas={28} />}
     </AppLayout>
   );
 }

@@ -9,7 +9,7 @@ import { useAuth } from "../auth/AuthContext";
 import { SenegalMap, type Indicateur } from "../components/carto/SenegalMap";
 import { AppLayout } from "../components/layout/AppLayout";
 import { SENEGAL_REGIONS, cleRegion } from "../data/senegalRegions";
-import { telechargerCsv } from "../lib/csv";
+import { exporterCsv } from "../lib/exporter";
 import { nombre } from "../lib/format";
 import { statsParRegion, type AgregatZone, URL_REGIONS, URL_STATISTIQUES, type Statistiques } from "../lib/stats";
 import { useDonnees } from "../lib/useDonnees";
@@ -55,7 +55,7 @@ export function CarteMacro() {
   ];
 
   const exporter = () =>
-    telechargerCsv("carte_macro_regions.csv", [
+    exporterCsv("carte_macro_regions.csv", [
       ["Rang", "Région", "IMF présentes", "Points de service", "Membres", "Encours (Mds FCFA)", "Principaux bailleurs"],
       ...sorted.map((r, i) => [i + 1, r.id, r.imf, r.pts, r.membres, r.encours.toFixed(2).replace(".", ","), r.bailleurs.join(" · ")]),
     ]);

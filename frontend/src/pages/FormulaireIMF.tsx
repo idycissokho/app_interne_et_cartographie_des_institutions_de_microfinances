@@ -7,10 +7,11 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { api } from "../api/client";
 import type { Page } from "../api/types";
 import { SenegalMap } from "../components/carto/SenegalMap";
-import { ChoiceCards, EMAIL_OK, EnteteSection, Erreur, Segmented, TextField, Toast, ToggleChips, erreursChamps } from "../components/form";
+import { ChoiceCards, EMAIL_OK, EnteteSection, Erreur, Segmented, TextField, ToggleChips, erreursChamps } from "../components/form";
 import { useAuth } from "../auth/AuthContext";
 import { AppLayout } from "../components/layout/AppLayout";
 import { dansLeSenegal, projeter } from "../data/projection";
+import { notifier } from "../lib/notifier";
 import { nombreFr, regionProche } from "../lib/region";
 
 const TY = [
@@ -33,7 +34,6 @@ export function FormulaireIMF() {
   const naviguer = useNavigate();
   const [f, setF] = useState(VIDE);
   const [touched, setTouched] = useState(false);
-  const [toast, setToast] = useState<null | "ok" | "next" | "ko">(null);
   const [erreursApi, setErreursApi] = useState<Record<string, string>>({});
   const [envoi, setEnvoi] = useState(false);
   const [bailleurs, setBailleurs] = useState<[string, string][]>([]);
@@ -51,7 +51,7 @@ export function FormulaireIMF() {
     });
   }, [id]);
 
-  const upd = (k: keyof typeof VIDE) => (e: { target: { value: string } }) => { setF({ ...f, [k]: e.target.value }); setToast(null); setErreursApi({}); };
+  const upd = (k: keyof typeof VIDE) => (e: { target: { value: string } }) => { setF({ ...f, [k]: e.target.value }); setErreursApi({}); };
   const lat = nombreFr(f.lat), lon = nombreFr(f.lon);
   const hasGps = f.lat !== "" && f.lon !== "" && !isNaN(lat) && !isNaN(lon);
   const inSn = hasGps && dansLeSenegal(lat, lon);
@@ -68,7 +68,7 @@ export function FormulaireIMF() {
 
   async function enregistrer(ensuite: boolean) {
     setTouched(true);
-    if (!canSave) { setToast("ko"); return; }
+    if (!canSave) { notifier.erreur("Fiche incomplète", "Corrigez les champs signalés en rouge avant d'enregistrer."); return; }
     setEnvoi(true);
     const corps = {
       nom: f.nom.trim(), sigle: f.sigle.trim(), type_imf: f.type, statut_reglementaire: f.statut, adresse_siege: f.adresse.trim(),
@@ -79,11 +79,12 @@ export function FormulaireIMF() {
     };
     try {
       const res = id ? await api.patch<{ id: string }>(`/imf/${id}/`, corps) : await api.post<{ id: string }>("/imf/", corps);
-      setToast(ensuite ? "next" : "ok");
-      setTimeout(() => naviguer(ensuite ? `/points-service?nouveau=1&imf=${res.id}` : "/imf"), 1400);
+      notifier.succes(id ? "Institution mise à jour" : "Institution créée",
+        ensuite ? `« ${corps.nom} » est enregistrée. Ajoutez maintenant son premier point de service.` : `La fiche « ${corps.nom} » est à jour dans le référentiel.`);
+      naviguer(ensuite ? `/points-service?nouveau=1&imf=${res.id}` : "/imf");
     } catch (e) {
       setErreursApi(erreursChamps(e));
-      setToast("ko");
+      notifier.erreur("Enregistrement impossible", "Le serveur a refusé certaines valeurs : vérifiez les champs signalés en rouge.");
     } finally {
       setEnvoi(false);
     }
@@ -183,10 +184,6 @@ export function FormulaireIMF() {
           </form>
         </div>
       </main>
-      {toast && (
-        <Toast ton={toast === "ko" ? "ko" : "ok"} titre={toast === "ko" ? "Fiche incomplète" : "Institution enregistrée"}
-          texte={toast === "ko" ? "Corrigez les champs signalés en rouge avant d’enregistrer." : toast === "next" ? "Redirection vers l’ajout d’un point de service…" : "La fiche est disponible dans le référentiel."} />
-      )}
     </AppLayout>
   );
 }
