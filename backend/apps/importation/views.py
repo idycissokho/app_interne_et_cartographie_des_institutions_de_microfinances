@@ -12,10 +12,13 @@ Vues DRF du module importation :
 
 import csv
 
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.http import Http404, HttpResponse, StreamingHttpResponse
 from django.utils import timezone
+from django.utils.text import slugify
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, generics, status
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -119,19 +122,39 @@ class ModeleImportView(APIView):
         return _reponse_csv(f"modele_{type_import.lower()}.csv", [COLONNES[type_import]])
 
 
+def _region_ou_400(identifiant: str | None):
+    """Zone de type région désignée par ?region= (identifiant ou code), ou None pour tout le Sénégal."""
+    if not identifiant:
+        return None
+    from apps.cartographie.models import ZoneGeographique
+
+    regions = ZoneGeographique.objects.filter(type_zone="REGION")
+    try:
+        return regions.get(pk=identifiant)
+    except (ZoneGeographique.DoesNotExist, ValueError, DjangoValidationError):
+        region = regions.filter(code__iexact=identifiant).first()
+        if region is None:
+            raise ValidationError({"region": "Région inconnue."}) from None
+        return region
+
+
 class ExportView(APIView):
-    """GET /api/v1/importation/export/<type>/ — Export (ADMIN, journalisé).
-    Institutions : liste officielle des IMF (.xlsx, réimportable) ; autres : CSV."""
+    """GET /api/v1/importation/export/<type>/[?region=<id ou code>] — Export (ADMIN, journalisé).
+    Institutions : liste officielle des IMF (.xlsx, réimportable) ; autres : CSV.
+    ?region= limite l'export à une région (institutions, points de service, mandats de ses IMF)."""
 
     permission_classes = [IsAdmin]
 
     def get(self, request, type_import):
         type_import = _type_ou_404(type_import)
+        region = _region_ou_400(request.query_params.get("region"))
         JournalAudit.enregistrer(
-            request.user, JournalAudit.Action.EXPORTATION, f"export:{type_import}"
+            request.user, JournalAudit.Action.EXPORTATION,
+            f"export:{type_import}" + (f":{region.code or region.nom}" if region else ""),
         )
         horodatage = timezone.localtime().strftime("%Y%m%d_%H%M")
+        suffixe = f"_{slugify(region.nom)}" if region else ""
         if type_import == ImportationFichier.TypeImport.IMF:
-            return _reponse_xlsx(f"liste_imf_{horodatage}.xlsx", canevas.classeur(avec_donnees=True))
-        lignes = [COLONNES[type_import], *lignes_export(type_import)]
-        return _reponse_csv(f"export_{type_import.lower()}_{horodatage}.csv", lignes)
+            return _reponse_xlsx(f"liste_imf{suffixe}_{horodatage}.xlsx", canevas.classeur(avec_donnees=True, region=region))
+        lignes = [COLONNES[type_import], *lignes_export(type_import, region)]
+        return _reponse_csv(f"export_{type_import.lower()}{suffixe}_{horodatage}.csv", lignes)

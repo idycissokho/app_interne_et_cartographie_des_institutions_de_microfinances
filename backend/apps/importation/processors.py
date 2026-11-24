@@ -132,6 +132,8 @@ class BilanImport:
     #: les dirigeants ont été traités avec leur institution, et combien ont été enregistrés.
     avec_dirigeants: bool = False
     dirigeants_enregistres: int = 0
+    #: Lignes désignant un enregistrement déjà en base ou déjà vu dans le fichier (aucun doublon créé).
+    doublons: list[dict] = field(default_factory=list)
 
     @property
     def lignes_importees(self) -> int:
@@ -376,6 +378,10 @@ class BaseImportProcessor(ABC):
         self._avertissements: dict[str, str] = {}
         # Colonne source préfixée aux avertissements (dirigeant en cours d'une ligne de la liste).
         self._prefixe_avertissement = ""
+        # Enregistrement désigné par la ligne en cours (pk, libellé), renseigné par traiter_ligne ;
+        # et première ligne du fichier pour chaque enregistrement (repérage des doublons).
+        self.enregistrement: tuple | None = None
+        self._lignes_par_enregistrement: dict = {}
 
     # -- Déroulé ------------------------------------------------------------
 
@@ -477,6 +483,7 @@ class BaseImportProcessor(ABC):
         """Traite une ligne dans son point de sauvegarde et consigne l'erreur éventuelle."""
         self.numero_ligne = ligne.numero
         self._avertissements = {}
+        self.enregistrement = None
         try:
             with transaction.atomic():
                 creee = self.traiter_ligne(self.preparer(ligne.valeurs))
@@ -490,10 +497,26 @@ class BaseImportProcessor(ABC):
                 self.bilan.lignes_creees += 1
             else:
                 self.bilan.lignes_mises_a_jour += 1
+            self._noter_doublon(ligne, creee)
             if self._avertissements:
                 self._consigner(ligne, self._avertissements, avertissement=True)
             return
         self._consigner(ligne, erreurs, avertissement=False)
+
+    def _noter_doublon(self, ligne: LigneLue, creee: bool) -> None:
+        """Signale une ligne qui désigne un enregistrement déjà vu plus haut dans le fichier, ou déjà
+        en base avant l'import. L'enregistrement est mis à jour : aucun doublon n'est créé."""
+        if not self.enregistrement:
+            return
+        pk, libelle = self.enregistrement
+        precedente = self._lignes_par_enregistrement.get(pk)
+        if precedente is not None:
+            self.bilan.doublons.append(
+                {"ligne": ligne.numero, "libelle": libelle, "nature": "fichier", "ligne_precedente": precedente}
+            )
+        elif not creee:
+            self.bilan.doublons.append({"ligne": ligne.numero, "libelle": libelle, "nature": "base"})
+        self._lignes_par_enregistrement.setdefault(pk, ligne.numero)
 
     def _consigner(self, ligne: LigneLue, erreurs: dict, avertissement: bool) -> None:
         """Ajoute au rapport une ligne rejetée, ou une ligne importée dont des valeurs ont été écartées."""
@@ -596,6 +619,8 @@ class BaseImportProcessor(ABC):
             ImportationFichier.objects.using(settings.IMPORT_ALIAS_SUIVI).filter(pk=self.importation.pk).update(
                 nb_lignes_importees=self.bilan.lignes_importees,
                 nb_lignes_erreur=len(self.bilan.erreurs),
+                nb_lignes_creees=self.bilan.lignes_creees,
+                nb_lignes_mises_a_jour=self.bilan.lignes_mises_a_jour,
                 date_modification=timezone.now(),
             )
         except Exception:  # noqa: BLE001 — le suivi est accessoire
@@ -612,6 +637,9 @@ class BaseImportProcessor(ABC):
         self.importation.statut = ImportationFichier.StatutImport.ECHEC
         self.importation.nb_lignes_importees = 0
         self.importation.nb_lignes_erreur = 0
+        self.importation.nb_lignes_creees = 0
+        self.importation.nb_lignes_mises_a_jour = 0
+        self.importation.doublons = []
         self.importation.rapport_erreurs = self.bilan.erreurs
         self.importation.save()
         return self.bilan
@@ -622,6 +650,9 @@ class BaseImportProcessor(ABC):
         bilan = self.bilan
         self.importation.nb_lignes_importees = bilan.lignes_importees
         self.importation.nb_lignes_erreur = len(bilan.erreurs)
+        self.importation.nb_lignes_creees = bilan.lignes_creees
+        self.importation.nb_lignes_mises_a_jour = bilan.lignes_mises_a_jour
+        self.importation.doublons = bilan.doublons
         self.importation.rapport_erreurs = sorted(
             bilan.erreurs + bilan.avertissements, key=lambda entree: entree["ligne"]
         )
@@ -756,6 +787,7 @@ class _DirigeantsMixin:
         """
         existant = _trouver_dirigeant(personne, imf)
         dirigeant = self._enregistrer(DirigeantDetailSerializer, existant, personne, obligatoires={"nom", "prenom"})
+        self.dernier_dirigeant = dirigeant
         if imf is None:
             return existant is None
 
@@ -930,6 +962,7 @@ class ImportIMFProcessor(_DirigeantsMixin, BaseImportProcessor):
             IMFDetailSerializer, existante, _sans_vides(champs), obligatoires=self.obligatoires
         )
         self._deja_traitees[imf.pk] = (self.numero_ligne, champs["nom"])
+        self.enregistrement = (imf.pk, " · ".join(filter(None, [imf.numero_agrement, imf.nom])))
         self._synchroniser_siege(imf)
         if self.avec_dirigeants:
             self._importer_dirigeants(imf, donnees)
@@ -1145,9 +1178,10 @@ class ImportPointServiceProcessor(BaseImportProcessor):
         if existant is None and not champs["statut_reglementaire"]:
             # À défaut d'indication, un nouveau point suit le statut de son IMF.
             champs["statut_reglementaire"] = STATUT_POINT_SELON_IMF[imf.statut_reglementaire]
-        self._enregistrer(
+        point = self._enregistrer(
             PointServiceDetailSerializer, existant, _sans_vides(champs), obligatoires={"imf", "nom", "type_point"}
         )
+        self.enregistrement = (point.pk, f"{point.nom} · {imf.sigle or imf.nom}")
         return existant is None
 
     def _deduire_region(self, imf: IMF, donnees: dict) -> str:
@@ -1240,10 +1274,15 @@ class ImportDirigeantProcessor(_DirigeantsMixin, BaseImportProcessor):
             if "fonction_mandat" not in mandat:
                 raise ErreurLigne({"fonction_mandat": "Obligatoire pour enregistrer un mandat."})
             imf = _resoudre_imf(mandat)
-        return self.enregistrer_dirigeant(
+        creee = self.enregistrer_dirigeant(
             self.personne(donnees["nom"], donnees["prenom"], donnees), imf, mandat,
             titulaire=bool(donnees.get("titulaire")),
         )
+        d = self.dernier_dirigeant
+        # Démonstration : pas de nom réel dans le rapport (les dirigeants sont aussitôt anonymisés).
+        libelle = "Dirigeant" if settings.DONNEES_FICTIVES else f"{d.prenom} {d.nom}"
+        self.enregistrement = (d.pk, f"{libelle} · {imf.sigle or imf.nom}" if imf else libelle)
+        return creee
 
 
 # ---------------------------------------------------------------------------
