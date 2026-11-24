@@ -28,3 +28,8 @@ PASSWORD_HASHERS = [
 
 # Emails silencieux pendant les tests
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+
+# Cache en mémoire pendant les tests : chaque test vide le cache sans accès à la base, et les
+# tests de performance comptent les requêtes SQL des vues seules. En dehors des tests, le cache
+# est une table partagée par tous les processus (base.py, CACHES).
+CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache", "LOCATION": "tests"}}

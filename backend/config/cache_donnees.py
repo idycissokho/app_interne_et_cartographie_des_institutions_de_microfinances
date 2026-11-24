@@ -10,9 +10,11 @@ dirigeant, mandat, zone, bailleur) incrémente ce numéro : les anciennes entré
 ne sont plus lues et expirent d'elles-mêmes. Aucun risque d'afficher une donnée
 périmée après un import ou une saisie.
 
-Le cache par défaut (mémoire locale) est propre à chaque processus : avec plusieurs
-processus (Gunicorn), configurer un cache partagé (Redis, Memcached) dans CACHES,
-sinon un autre processus peut servir l'ancienne valeur jusqu'à DUREE secondes.
+Le cache est une table de la base (settings, CACHES) : le numéro de version est partagé par
+tous les processus. Une suppression faite par une commande (manage.py shell, chargement de
+l'annuaire) périme donc aussi le cache de l'application en ligne. Avec un cache en mémoire
+(DJANGO_CACHE=memoire), chaque processus aurait sa propre version : l'application continuerait
+d'afficher les anciennes données jusqu'à DUREE secondes après un changement fait ailleurs.
 """
 
 import hashlib
