@@ -68,11 +68,17 @@ export function FichePoint({ id, onClose, onModifier, onVoirInstitution }: { id:
             </div>
           </section>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10 }} className="ps-grille3">
-            {([["Membres", p.nombre_membres != null ? nombre(p.nombre_membres) : "—"], ["Encours (FCFA)", montantCourt(p.encours)], ["Dépôts (FCFA)", montantCourt(p.depots)]] as const).map(([l, v]) => (
-              <div key={l} style={{ padding: "12px 14px", borderRadius: 10, background: "#FFFFFF", border: "1px solid #F0EFED" }}><b style={{ display: "block", fontSize: "var(--t-lg)", letterSpacing: "-0.02em" }}>{v}</b><span style={{ fontSize: "var(--t-xs)", fontWeight: 600, color: "#6B7280" }}>{l}</span></div>
-            ))}
-          </div>
+          {(() => {
+            // Chiffres renseignés seulement : pas de case « — ».
+            const chiffres = ([["Membres", p.nombre_membres ? nombre(p.nombre_membres) : ""], ["Encours (FCFA)", Number(p.encours) ? montantCourt(p.encours) : ""], ["Dépôts (FCFA)", Number(p.depots) ? montantCourt(p.depots) : ""]] as [string, string][]).filter(([, v]) => v);
+            return chiffres.length > 0 && (
+              <div style={{ display: "grid", gridTemplateColumns: `repeat(${chiffres.length}, minmax(0, 1fr))`, gap: 10 }} className="ps-grille3">
+                {chiffres.map(([l, v]) => (
+                  <div key={l} style={{ padding: "12px 14px", borderRadius: 10, background: "#FFFFFF", border: "1px solid #F0EFED" }}><b style={{ display: "block", fontSize: "var(--t-lg)", letterSpacing: "-0.02em" }}>{v}</b><span style={{ fontSize: "var(--t-xs)", fontWeight: 600, color: "#6B7280" }}>{l}</span></div>
+                ))}
+              </div>
+            );
+          })()}
 
           <section style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <h3 style={titreSection}>Localisation</h3>

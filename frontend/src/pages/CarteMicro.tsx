@@ -13,6 +13,7 @@ import { Badge, TON_STATUT } from "../components/tableau/Tableau";
 import { projeter } from "../data/projection";
 import { SENEGAL_REGIONS, cleRegion } from "../data/senegalRegions";
 import { URL_IMF_OPTIONS, type ImfOption } from "../lib/stats";
+import { montantCourt } from "../lib/format";
 import { useDonnees } from "../lib/useDonnees";
 
 interface FeaturePoint {
@@ -32,6 +33,8 @@ const tuile: CSSProperties = { padding: "10px 12px", borderRadius: 10, border: "
 const tuileLabel: CSSProperties = { fontSize: "var(--t-2xs)", color: "#6B7280", fontWeight: 600 };
 const point = (bg: string, extra: CSSProperties = {}): CSSProperties => ({ width: 10, height: 10, borderRadius: "50%", background: bg, ...extra });
 
+interface DetailPoint { date_ouverture: string | null; nombre_membres: number | null; lieu_dit: string; adresse: string; encours: string | null; depots: string | null }
+
 export function CarteMicro() {
   const [params] = useSearchParams();
   const [f, setF] = useState({ ...VIDE, region: params.get("region") ?? "" });
@@ -40,7 +43,8 @@ export function CarteMicro() {
   const [vueModifiee, setVueModifiee] = useState(false);
   const [recadrage, setRecadrage] = useState(0);
   const recentrer = () => { setF((avant) => ({ ...avant, region: "" })); setPt(null); setVueModifiee(false); setRecadrage((n) => n + 1); };
-  const [detail, setDetail] = useState<{ date_ouverture: string | null; nombre_membres: number | null } | null>(null);
+  // Fiche détaillée du point choisi : seules les informations renseignées sont affichées.
+  const [detail, setDetail] = useState<DetailPoint | null>(null);
 
   const { donnees: d } = useDonnees<{ geo: { features: FeaturePoint[] }; imfs: ImfOption[]; bailleurs: Page<{ id: string; nom: string; sigle: string }> }>({
     geo: `/points-service/geojson/${f.bailleur ? `?bailleur=${f.bailleur}` : ""}`,
@@ -66,7 +70,7 @@ export function CarteMicro() {
 
   useEffect(() => {
     setDetail(null);
-    if (pt) api.get<{ date_ouverture: string | null; nombre_membres: number | null }>(`/points-service/${pt.id}/`).then(setDetail).catch(() => setDetail(null));
+    if (pt) api.get<DetailPoint>(`/points-service/${pt.id}/`).then(setDetail).catch(() => setDetail(null));
   }, [pt]);
 
   const flt = { imf: f.imf, region: f.region, type: f.type, statut: f.statut };
@@ -149,14 +153,32 @@ export function CarteMicro() {
                   <div style={{ fontSize: "var(--t-sm)", color: "#6B7280" }}>{pt.p.imf_nom}{pt.region ? ` · Région de ${pt.region}` : ""}</div>
                 </div>
                 <div style={{ padding: "16px 18px 18px 18px", display: "flex", flexDirection: "column", gap: 12, fontSize: "var(--t-sm)" }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10 }}>
-                    <div style={tuile}><div style={tuileLabel}>Département</div><div style={{ fontWeight: 600 }}>{pt.p.departement_nom ?? "—"}</div></div>
-                    <div style={tuile}><div style={tuileLabel}>Commune</div><div style={{ fontWeight: 600 }}>{pt.p.commune_nom ?? "—"}</div></div>
-                    <div style={tuile}><div style={tuileLabel}>Ouverture</div><div style={{ fontWeight: 600 }}>{detail?.date_ouverture ? new Date(detail.date_ouverture).toLocaleDateString("fr-FR") : "—"}</div></div>
-                    <div style={tuile}><div style={tuileLabel}>Membres</div><div style={{ fontWeight: 600 }}>{detail?.nombre_membres != null ? detail.nombre_membres.toLocaleString("fr-FR") : "—"}</div></div>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, color: "#4A5568" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A6A1F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z" /></svg>{pt.p.telephone || "—"}</div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, color: "#4A5568" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A6A1F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>{pt.p.email || "—"}</div>
+                  {(() => {
+                    // Seules les informations renseignées : aucune case vide (« — ») dans la fiche.
+                    const localite = detail?.lieu_dit || "";
+                    const adresse = detail?.adresse && detail.adresse !== localite ? detail.adresse : "";
+                    const tuiles = ([
+                      ["Département", pt.p.departement_nom],
+                      ["Commune", pt.p.commune_nom],
+                      ["Localité", localite],
+                      ["Adresse", adresse],
+                      ["Ouverture", detail?.date_ouverture ? new Date(detail.date_ouverture).toLocaleDateString("fr-FR") : ""],
+                      ["Membres", detail?.nombre_membres ? detail.nombre_membres.toLocaleString("fr-FR") : ""],
+                      ["Encours (FCFA)", Number(detail?.encours) ? montantCourt(detail?.encours) : ""],
+                      ["Dépôts (FCFA)", Number(detail?.depots) ? montantCourt(detail?.depots) : ""],
+                    ] as [string, string | null | undefined][]).filter(([, v]) => v);
+                    return tuiles.length > 0 && (
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10 }}>
+                        {tuiles.map(([l, v], i) => (
+                          <div key={l} style={{ ...tuile, ...(tuiles.length % 2 === 1 && i === tuiles.length - 1 ? { gridColumn: "span 2" } : {}) }}>
+                            <div style={tuileLabel}>{l}</div><div style={{ fontWeight: 600, overflowWrap: "anywhere" }}>{v}</div>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
+                  {pt.p.telephone && <div style={{ display: "flex", alignItems: "center", gap: 10, color: "#4A5568" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A6A1F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z" /></svg>{pt.p.telephone}</div>}
+                  {pt.p.email && <div style={{ display: "flex", alignItems: "center", gap: 10, color: "#4A5568" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A6A1F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>{pt.p.email}</div>}
                   <div style={{ display: "flex", gap: 8 }}>
                     <Link to={`/consultation?imf=${pt.p.imf}`} style={{ flex: 1, height: 42, borderRadius: 10, background: "#C9A44C", color: "#0B1424", fontSize: "var(--t-sm)", fontWeight: 600, textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center" }}>Ouvrir la fiche IMF</Link>
                     {/* Ouvre la section Itinéraire vers ce point et demande aussitôt la position de l'appareil. */}

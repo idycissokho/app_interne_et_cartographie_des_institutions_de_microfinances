@@ -357,13 +357,16 @@ LOGGING = {
 
 # ---------------------------------------------------------------------------
 # Cache — statistiques, indicateurs par zone, contours, points de la carte
-# (voir config/cache_donnees.py). Mémoire locale par défaut : avec plusieurs
-# processus (Gunicorn), préférer un cache partagé (Redis, Memcached).
+# (voir config/cache_donnees.py). Table de la base de données par défaut : partagée par
+# tous les processus (Gunicorn, commandes manage.py, tâches d'import), elle est périmée
+# dès qu'une donnée change, où que ce soit. Créée par la migration cartographie 0003.
+# DJANGO_CACHE=memoire : mémoire locale (un seul processus, ou essais).
 # ---------------------------------------------------------------------------
 
 CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-        "LOCATION": "cartographie-imf",
-    }
+    "default": (
+        {"BACKEND": "django.core.cache.backends.locmem.LocMemCache", "LOCATION": "cartographie-imf"}
+        if env("DJANGO_CACHE", default="base") == "memoire"
+        else {"BACKEND": "django.core.cache.backends.db.DatabaseCache", "LOCATION": "cache_donnees"}
+    )
 }
