@@ -9,10 +9,11 @@ import type { Page } from "../api/types";
 import { useAuth } from "../auth/AuthContext";
 import { AppLayout } from "../components/layout/AppLayout";
 import { exporter, exporterCsv } from "../lib/exporter";
-import { STATUT_IMF_LONG, TYPE_IMF_LONG, initiales, regionAffichee } from "../lib/metier";
+import { STATUT_IMF_LONG, TYPE_IMF_LONG, pastilleIMF, regionAffichee } from "../lib/metier";
 import { Badge, BoutonIcone, CadreTableau, CelluleActions, ChampRecherche, EnTete, EtatVide, LignesChargement, Pagination, Pastille, TON_STATUT, Tableau } from "../components/tableau/Tableau";
 import { notifier } from "../lib/notifier";
 import { useDonnees, type Compte } from "../lib/useDonnees";
+import { pluriel, nombre } from "../lib/format";
 
 interface Ligne {
   id: string; nom: string; sigle: string; type_imf: string; statut_reglementaire: string; email: string;
@@ -24,7 +25,7 @@ const TYPES: [string, string][] = [["Tous", ""], ["Mutuelle", "MUTUELLE"], ["Coo
 // Exception demandée : le tableau des institutions affiche 8 lignes par page (6 ailleurs).
 const TAILLE = 8;
 const barreBtn: CSSProperties = { height: 30, padding: "0 12px", borderRadius: 8, border: "1px solid #D6D3D1", background: "#FFFFFF", color: "#0B1424", font: "inherit", fontSize: "var(--t-sm)", fontWeight: 500, cursor: "pointer" };
-const pastilleImf: CSSProperties = { width: 36, height: 36, flex: "none", borderRadius: 8, background: "#F5F5F4", color: "#44403C", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--t-xs)", fontWeight: 600 };
+const pastilleImf: CSSProperties = { width: 44, height: 36, letterSpacing: "-0.02em", flex: "none", borderRadius: 8, background: "#F5F5F4", color: "#44403C", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--t-xs)", fontWeight: 600 };
 
 export function Institutions() {
   const naviguer = useNavigate();
@@ -62,10 +63,10 @@ export function Institutions() {
 
   async function changerStatut(statut: string) {
     const n = choisis.length;
-    const id = notifier.attente("Mise à jour du statut…", `${n} institution${n > 1 ? "s" : ""}`);
+    const id = notifier.attente("Mise à jour du statut…", `${n} ${pluriel(n, "institution")}`);
     try {
       await Promise.all(choisis.map((r) => api.patch(`/imf/${r.id}/`, { statut_reglementaire: statut })));
-      notifier.succes("Statut mis à jour", `${n} institution${n > 1 ? "s passent" : " passe"} en « ${STATUT_IMF_LONG[statut] ?? statut} ».`, { remplace: id });
+      notifier.succes("Statut mis à jour", `${n} ${pluriel(n, "institution")} ${pluriel(n, "passe", "passent")} en « ${STATUT_IMF_LONG[statut] ?? statut} ».`, { remplace: id });
     } catch (e) {
       notifier.erreur("Statut non modifié", (e as Error).message, { remplace: id });
     }
@@ -120,17 +121,17 @@ export function Institutions() {
             <ChampRecherche libelle="Rechercher une institution" placeholder="Rechercher par nom, sigle ou adresse…" valeur={q} onChange={(v) => filtrer(() => setQ(v))} />
             {TYPES.map(([label, v]) => <Pastille key={label} actif={v === type} onClick={() => filtrer(() => setType(v))}>{label}</Pastille>)}
           </>}
-          pied={<Pagination page={page} pages={pages} onPage={(n) => { setPage(n); setSel({}); }} resume={total ? `${(page - 1) * TAILLE + 1}–${(page - 1) * TAILLE + rows.length} sur ${total} institutions` : "0 institution"} />}>
+          pied={<Pagination page={page} pages={pages} onPage={(n) => { setPage(n); setSel({}); }} resume={total ? `${(page - 1) * TAILLE + 1}–${(page - 1) * TAILLE + rows.length} sur ${nombre(total)} ${pluriel(total, "institution")}` : "0 institution"} />}>
           {peutModifier && choisis.length > 0 && (
             <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 20px", background: "#FAFAF9", borderBottom: "1px solid #E7E5E4", fontSize: "var(--t-sm)", flexWrap: "wrap" }}>
-              <b style={{ fontWeight: 600 }}>{choisis.length} sélectionnée{choisis.length > 1 ? "s" : ""}</b>
+              <b style={{ fontWeight: 600 }}>{choisis.length} {pluriel(choisis.length, "sélectionnée")}</b>
               {estAdmin && <button type="button" onClick={exporterSelection} style={barreBtn}>Exporter la sélection</button>}
               {!statutLot && <button type="button" onClick={() => setStatutLot(true)} style={barreBtn}>Changer le statut</button>}
               {statutLot && Object.entries(STATUT_IMF_LONG).map(([k, l]) => <button key={k} type="button" onClick={() => changerStatut(k)} style={barreBtn}>{l}</button>)}
               <button type="button" onClick={() => { setSel({}); setStatutLot(false); }} style={{ ...barreBtn, marginLeft: "auto", border: "none", background: "transparent", color: "#4A5568" }}>Annuler</button>
             </div>
           )}
-          <Tableau largeurMin={980}>
+          <Tableau largeurMin={880} vue={`${tab}|${type}|${q}|${page}`}>
             <thead>
               <tr>
                 {peutModifier && <EnTete style={{ width: 18 }}><input type="checkbox" className="in-check" aria-label="Tout sélectionner" checked={allSel} onChange={() => setSel(allSel ? {} : Object.fromEntries(rows.map((r) => [r.id, true])))} /></EnTete>}
@@ -142,7 +143,7 @@ export function Institutions() {
               {rows.map((r) => (
                 <tr key={r.id}>
                   {peutModifier && <td data-label=""><input type="checkbox" className="in-check" aria-label={`Sélectionner ${r.nom}`} checked={!!sel[r.id]} onChange={() => setSel({ ...sel, [r.id]: !sel[r.id] })} /></td>}
-                  <td className="principal"><div style={{ display: "flex", alignItems: "center", gap: 12 }}><span style={pastilleImf}>{initiales(r.sigle || r.nom)}</span><div style={{ minWidth: 0 }}><div style={{ fontWeight: 600 }}>{r.nom}</div><span className="muet">{r.sigle ? `${r.sigle}${r.email ? " · " : ""}` : ""}{r.email || (r.sigle ? "" : "—")}</span></div></div></td>
+                  <td className="principal"><div style={{ display: "flex", alignItems: "center", gap: 12 }}><span style={pastilleImf}>{pastilleIMF(r)}</span><div style={{ minWidth: 0 }}><div style={{ fontWeight: 600 }}>{r.nom}</div><span className="muet" style={{ overflowWrap: "anywhere" }}>{r.sigle ? `${r.sigle}${r.email ? " · " : ""}` : ""}{r.email || (r.sigle ? "" : "—")}</span></div></div></td>
                   <td data-label="Type" style={{ color: "#4A5568" }}>{TYPE_IMF_LONG[r.type_imf]}</td>
                   <td data-label="Statut"><Badge ton={TON_STATUT[r.statut_reglementaire]}>{STATUT_IMF_LONG[r.statut_reglementaire]}</Badge></td>
                   <td data-label="Siège"><div>{regionAffichee(r.region_siege) ?? "—"}</div>{!r.a_gps && <span className="muet">Sans coordonnées GPS</span>}</td>

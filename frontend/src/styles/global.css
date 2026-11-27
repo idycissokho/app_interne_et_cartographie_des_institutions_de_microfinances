@@ -241,7 +241,7 @@ button.di-kpi:hover{border-color:#A8A29E !important}
 @keyframes cs-attente{from{background-position:120% 0}to{background-position:-120% 0}}
 
 /* Boutons de zoom et mention des sources */
-.cs-carte .maplibregl-ctrl-bottom-right{display:flex;flex-direction:column;align-items:flex-end}
+.cs-carte .maplibregl-ctrl-bottom-left{display:flex;flex-direction:column;align-items:flex-start}
 .cs-carte .maplibregl-ctrl-group{border-radius:10px;overflow:hidden;background:#FFFFFF;border:1px solid #E7E5E4;box-shadow:0 10px 24px -10px rgba(11,20,36,.35)}
 .cs-carte .maplibregl-ctrl-group button{width:36px;height:36px}
 .cs-carte .maplibregl-ctrl-group button+button{border-top:1px solid #F0EFED}
@@ -258,23 +258,29 @@ button.di-kpi:hover{border-color:#A8A29E !important}
 /* Bouton « Agrandir » et mode plein écran (carte seule, ou cadre parent avec ses filtres) */
 .cs-carte .cs-agrandir{display:flex;align-items:center;justify-content:center;color:#0B1424;cursor:pointer}
 .cs-nuit .cs-agrandir{color:#F3D98C}
-.cs-carte .maplibregl-ctrl-bottom-right .maplibregl-ctrl{margin:0 12px 8px 0}
-.cs-carte .maplibregl-ctrl-bottom-right .maplibregl-ctrl:first-child{margin-bottom:12px}
+.cs-carte .maplibregl-ctrl-bottom-left .maplibregl-ctrl{margin:0 0 8px 12px}
+.cs-carte .maplibregl-ctrl-bottom-left .maplibregl-ctrl:first-child{margin-bottom:12px}
 html.cs-fige{overflow:hidden}
 .cs-plein{position:fixed !important;inset:0 !important;z-index:1000;width:100vw !important;height:100dvh !important;max-width:none !important;min-height:0 !important;margin:0 !important;border-radius:0 !important;border:none !important;box-sizing:border-box;animation:cs-plein .35s cubic-bezier(.2,.7,.2,1)}
 .cs-plein:fullscreen{width:100% !important;height:100% !important}
 .cs-plein .cs-carte,.cs-carte.cs-plein{border-radius:0 !important}
 @keyframes cs-plein{from{opacity:.4;transform:scale(.985)}to{opacity:1;transform:none}}
 /* Carte micro : filtres à gauche, carte sur tout le reste */
-.mi-cadre.cs-plein{flex-wrap:nowrap !important;background:#FFFFFF}
-.mi-cadre.cs-plein .mi-filtres{flex:none !important;width:290px;overflow-y:auto}
+.mi-cadre.cs-plein{grid-template-columns:290px minmax(0,1fr);background:#FFFFFF}
+.mi-cadre.cs-plein .mi-filtres{overflow-y:auto}
+/* Carte macro : niveau territorial sans aucune zone en base */
+.cm-indispo{position:absolute;inset:0;z-index:6;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:24px;text-align:center;border-radius:12px;background:rgba(255,255,255,.88);color:#6B7280;font-size:var(--t-sm)}
+.cm-indispo b{font-size:var(--t-base);font-weight:600;color:#0B1424}
 /* Carte macro : modes et indicateurs en haut, carte sur tout le reste */
 .cm-cadre.cs-plein{padding:16px !important;background:#FFFFFF;overflow:hidden}
 .cm-cadre.cs-plein .cm-carte{height:auto !important;flex:1 1 auto;min-height:0}
-@media (max-width: 760px) {
-  .mi-cadre.cs-plein{flex-direction:column;overflow-y:auto}
-  .mi-cadre.cs-plein .mi-filtres{width:auto;overflow:visible}
-  .mi-cadre.cs-plein .mi-carte-pos{height:70dvh !important}
+/* Plein écran sur écran étroit : la carte d'abord (70 % de la hauteur, bouton « Réduire » visible),
+   les filtres dessous, accessibles en faisant défiler. */
+@container mi-conteneur (max-width: 699px) {
+  .mi-cadre.cs-plein{grid-template-columns:minmax(0,1fr);grid-template-rows:max-content max-content;align-content:start;overflow-y:auto}
+  .mi-cadre.cs-plein .mi-zone{order:-1}
+  .mi-cadre.cs-plein .mi-filtres{overflow:visible}
+  .mi-cadre.cs-plein .mi-carte-pos{height:70dvh}
 }
 @media (prefers-reduced-motion: reduce) { .cs-plein{animation:none} }
 
@@ -352,13 +358,25 @@ html.cs-fige{overflow:hidden}
   .tb-carte { height: 240px !important; }
 }
 @media (max-width: 760px) { .cm-carte { height: 300px !important; } }
-@media (max-width: 760px) {
-  .mi-cadre { min-height: 0 !important; }
-  .mi-filtres { max-width: none !important; border-right: none !important; border-bottom: 1px solid #F0EFED; }
-  .mi-zone { display: flex; flex-direction: column; gap: 12px; padding: 16px 12px; }
-  .mi-carte-pos { position: relative !important; inset: auto !important; height: 300px; }
-  .mi-sheet { position: relative !important; top: auto !important; right: auto !important; width: 100% !important; max-width: none !important; order: 3; }
-  .mi-legende { position: relative !important; left: auto !important; top: auto !important; bottom: auto !important; max-width: none !important; margin-right: 0 !important; order: 0; }
+/* Carte micro : grille filtres | carte. La carte occupe toute la colonne de droite, sur une hauteur
+   confortable (au moins 520 px, sinon la hauteur de l'écran sous l'en-tête). Quand la largeur
+   disponible ne permet plus les deux colonnes (conteneur < 700 px : tablette portrait, mobile),
+   les filtres passent au-dessus, en grille compacte, et la carte dessous, avec sa propre hauteur. */
+.mi-conteneur{container:mi-conteneur / inline-size;flex:1 1 auto;display:flex;flex-direction:column}
+.mi-cadre{position:relative;flex:1 1 auto;display:grid;grid-template-columns:minmax(240px,290px) minmax(0,1fr);min-height:max(520px,calc(100dvh - 190px));border-radius:12px;background:#FFFFFF;border:1px solid #E7E5E4;overflow:hidden}
+.mi-filtres{min-width:0;padding:20px;box-sizing:border-box;border-right:1px solid #F0EFED;display:flex;flex-direction:column;gap:14px;background:#FFFFFF}
+.mi-zone{container:mi-zone / inline-size;min-width:0;position:relative;overflow:hidden}
+/* Carte étroite avec la fiche d'un point ouverte : la légende n'a plus la place, elle revient à la fermeture. */
+@container mi-zone (max-width: 759px) { .mi-zone.fiche-ouverte .mi-legende{display:none} }
+.mi-carte-pos{position:absolute;inset:0}
+@container mi-conteneur (max-width: 699px) {
+  .mi-cadre{grid-template-columns:minmax(0,1fr);min-height:0}
+  .mi-filtres{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(200px,100%),1fr));align-items:end;border-right:none;border-bottom:1px solid #F0EFED;padding:16px}
+  .mi-filtres>:first-child,.mi-filtres>:last-child{grid-column:1 / -1}
+  .mi-zone{display:flex;flex-direction:column;gap:12px;padding:16px 12px}
+  .mi-carte-pos{position:relative;inset:auto;height:clamp(360px,60vh,520px);border-radius:10px;overflow:hidden}
+  .mi-sheet{position:relative !important;top:auto !important;right:auto !important;width:100% !important;max-width:none !important;order:3}
+  .mi-legende{position:relative !important;left:auto !important;top:auto !important;bottom:auto !important;max-width:none !important;margin-right:0 !important;order:0}
 }
 @media (max-width: 760px) { .su-carte { height: 260px !important; flex-basis: 100% !important; } }
 @media (max-width: 760px) {
@@ -394,7 +412,23 @@ html.cs-fige{overflow:hidden}
 .tbl-cadre{background:#FFFFFF;border:1px solid #E7E5E4;border-radius:12px;overflow:hidden}
 .tbl-barre{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 20px;border-bottom:1px solid #E7E5E4}
 .tbl-pied{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 20px;border-top:1px solid #E7E5E4;font-size:var(--t-sm);color:#6B7280}
-.tbl-defile{overflow-x:auto}
+.tbl-defile{overflow-x:auto;scrollbar-width:thin;scrollbar-color:#D6D3D1 transparent}
+.tbl-defile::-webkit-scrollbar{height:10px}
+.tbl-defile::-webkit-scrollbar-thumb{background:#D6D3D1;border-radius:8px;border:2px solid #FFFFFF}
+.tbl-defile::-webkit-scrollbar-track{background:transparent}
+/* Tableau plus large que son cadre (ordinateur, tablette) : ombres sur les bords tant qu'il reste
+   des colonnes à faire défiler, colonne d'actions fixée à droite, intertitres de groupe visibles. */
+@media (min-width:641px){
+  .tbl-defile[data-deborde]{background:
+    linear-gradient(to right,#FFFFFF 30%,rgba(255,255,255,0)) left center / 40px 100% no-repeat local,
+    linear-gradient(to left,#FFFFFF 30%,rgba(255,255,255,0)) right center / 40px 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%,rgba(11,20,36,.14),rgba(11,20,36,0)) left center / 12px 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%,rgba(11,20,36,.14),rgba(11,20,36,0)) right center / 12px 100% no-repeat scroll}
+  .tbl-defile[data-deborde] .tbl-actions,.tbl-defile[data-deborde] thead th:has(>.sr-only){position:sticky;right:0;z-index:1;background:#FFFFFF;box-shadow:inset 1px 0 0 #F0EFED}
+  .tbl-defile[data-deborde] tbody tr:not(.tbl-groupe):hover>.tbl-actions{background:#FAFAF9}
+  .tbl-defile[data-deborde] .tbl .tbl-icone{opacity:1}
+  .tbl-defile[data-deborde] .tbl-groupe>td>*{position:sticky;left:20px;max-width:calc(var(--tbl-visible,100%) - 40px);box-sizing:border-box}
+}
 .tbl{width:100%;border-collapse:separate;border-spacing:0;font-size:var(--t-md);color:#0B1424}
 .tbl-legende{caption-side:top;text-align:left;padding:0 0 8px}
 .tbl th{text-align:left;font-size:var(--t-xs);font-weight:500;color:#6B7280;padding:10px 12px;border-bottom:1px solid #E7E5E4;white-space:nowrap;background:#FFFFFF}

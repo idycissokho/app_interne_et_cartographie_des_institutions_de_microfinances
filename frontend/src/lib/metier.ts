@@ -69,6 +69,15 @@ export const regionAffichee = (nom: string | null | undefined) =>
 export const initiales = (texte: string) =>
   texte.split(/\s+/).filter(Boolean).slice(0, 2).map((m) => m[0]!.toUpperCase()).join("");
 
+/**
+ * Texte de la pastille d'une IMF, identique sur tous les écrans (liste, annuaire, fiches) :
+ * le sigle s'il est court (premier mot, 5 caractères au plus), sinon les initiales du nom.
+ */
+export function pastilleIMF(imf: { sigle?: string | null; nom: string }) {
+  const sigle = (imf.sigle ?? "").trim().split(/\s+/)[0] ?? "";
+  return sigle && sigle.length <= 5 ? sigle.toUpperCase() : initiales(imf.nom);
+}
+
 /** Avancement d'un mandat (0–100) et couleur de barre de la maquette. */
 export function avancementMandat(debut: string, fin: string | null) {
   if (!fin) return { prog: 30, color: "#C9A44C" };

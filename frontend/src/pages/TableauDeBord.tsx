@@ -8,7 +8,7 @@ import type { Page } from "../api/types";
 import { useAuth } from "../auth/AuthContext";
 import { SenegalMap } from "../components/carto/SenegalMap";
 import { AppLayout } from "../components/layout/AppLayout";
-import { CODE_FONCTION, dateLongue, ilYa, isoJour, joursAvant, nombre, pourcent } from "../lib/format";
+import { CODE_FONCTION, dateLongue, ilYa, isoJour, joursAvant, nombre, pluriel, pourcent } from "../lib/format";
 import { statsParRegion, type AgregatZone, URL_REGIONS, URL_STATISTIQUES, type Statistiques } from "../lib/stats";
 import { Squelette } from "../components/Squelette";
 import { useDonnees } from "../lib/useDonnees";
@@ -131,12 +131,17 @@ export function TableauDeBord() {
           <article className="tb-card tb-up d3" style={carte}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><span style={{ fontSize: "var(--t-sm)", fontWeight: 600, color: "#4A5568" }}>Dirigeants en fonction</span><span style={icone}>{svg(<><circle cx="12" cy="8" r="3.5" /><path d="M5 20c.8-3.5 3.6-5.5 7-5.5s6.2 2 7 5.5" /></>)}</span></div>
             <div style={{ fontSize: "var(--t-3xl)", fontWeight: 700, letterSpacing: "-0.022em" }}>{st ? nombre(st.dirigeants.en_fonction) : <Squelette largeur={96} hauteur={38} />}</div>
-            <div style={{ fontSize: "var(--t-sm)", color: "#B45309", fontWeight: 600 }}>{nombre(d.echeances?.count ?? 0)} mandats <span style={{ color: "#6B7280", fontWeight: 500 }}>expirent sous 90 j</span></div>
+            <div style={{ fontSize: "var(--t-sm)", color: "#B45309", fontWeight: 600 }}>{nombre(d.echeances?.count ?? 0)} {pluriel(d.echeances?.count, "mandat")} <span style={{ color: "#6B7280", fontWeight: 500 }}>{pluriel(d.echeances?.count, "expire", "expirent")} sous 90 j</span></div>
           </article>
           <article className="tb-card tb-up d4" style={carte}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><span style={{ fontSize: "var(--t-sm)", fontWeight: 600, color: "#4A5568" }}>Communes couvertes</span><span style={icone}>{svg(<path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z" />)}</span></div>
-            <div style={{ fontSize: "var(--t-3xl)", fontWeight: 700, letterSpacing: "-0.022em" }}>{nombre(couvertes)} <span style={{ fontSize: "var(--t-lg)", color: "#6B7280", fontWeight: 500 }}>/ {nombre(totalCommunes)}</span></div>
-            <div style={{ height: 6, borderRadius: 99, background: "#F0EFED", overflow: "hidden" }}><div className="tb-bar" style={{ width: `${totalCommunes ? Math.round((100 * couvertes) / totalCommunes) : 0}%`, height: "100%", borderRadius: 99, background: "#C9A44C" }} /></div>
+            {/* Aucune commune dans le référentiel : un état vide plutôt que « 0 / 0 » et une barre vide. */}
+            {st && totalCommunes === 0
+              ? <div style={{ display: "flex", flexDirection: "column", gap: 4 }}><span style={{ fontSize: "var(--t-lg)", fontWeight: 600, color: "#0B1424" }}>Aucune commune référencée</span><span style={{ fontSize: "var(--t-sm)", color: "#6B7280" }}>Le découpage communal n'est pas encore chargé.</span></div>
+              : (<>
+                <div style={{ fontSize: "var(--t-3xl)", fontWeight: 700, letterSpacing: "-0.022em" }}>{nombre(couvertes)} <span style={{ fontSize: "var(--t-lg)", color: "#6B7280", fontWeight: 500 }}>/ {nombre(totalCommunes)}</span></div>
+                <div style={{ height: 6, borderRadius: 99, background: "#F0EFED", overflow: "hidden" }}><div className="tb-bar" style={{ width: `${totalCommunes ? Math.round((100 * couvertes) / totalCommunes) : 0}%`, height: "100%", borderRadius: 99, background: "#C9A44C" }} /></div>
+              </>)}
           </article>
         </section>
 

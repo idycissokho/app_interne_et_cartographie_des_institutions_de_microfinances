@@ -96,6 +96,24 @@ interface Props {
    * chaîne vide : la carte seule ; false : pas de bouton.
    */
   agrandir?: string | false;
+  /**
+   * Niveau administratif plus fin que la région (départements, communes) : contours GeoJSON
+   * (GET /cartographie/zones/geojson/?type_zone=…), couleur et indicateurs de chaque zone (par id).
+   * Quand il est fourni, il remplace le remplissage des régions (leurs limites restent tracées).
+   */
+  zones?: ZonesCarte | null;
+}
+
+export interface ZonesCarte {
+  /** « Département », « Commune » : titre de la fiche de survol. */
+  libelle: string;
+  geojson: { type: "FeatureCollection"; features: { id?: string | number; type: "Feature"; geometry: unknown; properties: Record<string, unknown> }[] };
+  couleurs: Record<string, string>;
+  opacite: number;
+  stats: Record<string, StatsRegion>;
+  noms: Record<string, string>;
+  selected?: string;
+  onPick?: (id: string) => void;
 }
 
 /* ---------- Géométrie (chargée une fois pour toutes les cartes) ---------- */
@@ -144,7 +162,7 @@ function mix(a: string, b: string, t: number) {
   return "#" + pa.map((v, i) => Math.round(v + (pb[i] - v) * t).toString(16).padStart(2, "0")).join("");
 }
 const S = ["#F7EED3", "#EBD594", "#D9B65E", "#C29433", "#9A7124", "#6E4F17", "#43300D"];
-function scale(t: number) {
+export function scale(t: number) {
   const x = Math.max(0, Math.min(1, t)) * (S.length - 1);
   const i = Math.floor(x);
   return i >= S.length - 1 ? S[S.length - 1] : mix(S[i], S[i + 1], x - i);
@@ -235,6 +253,13 @@ function installer(carte: Carte, style: StyleSpecification, geo: { regions: Coll
     paint: { "fill-color": "#C9A44C", "fill-opacity": 0, "fill-color-transition": fondu, "fill-opacity-transition": fondu } }, avant);
   carte.addLayer({ id: "regions-line", type: "line", source: "regions", layout: { "line-join": "round" },
     paint: { "line-color": "#C9A44C", "line-width": ["interpolate", ["linear"], ["zoom"], 5, 0.9, 9, 1.8], "line-opacity": 0.9 } }, avant);
+  carte.addSource("zones", { type: "geojson", data: data(VIDE_GEO), promoteId: "zid" });
+  carte.addLayer({ id: "zones-fill", type: "fill", source: "zones", layout: { visibility: "none" },
+    paint: { "fill-color": "#C9A44C", "fill-opacity": 0.5, "fill-color-transition": fondu, "fill-opacity-transition": fondu } }, avant);
+  carte.addLayer({ id: "zones-line", type: "line", source: "zones", layout: { "line-join": "round", visibility: "none" },
+    paint: { "line-color": "#FFFFFF", "line-width": ["interpolate", ["linear"], ["zoom"], 5, 0.6, 9, 1.4], "line-opacity": 0.95 } }, avant);
+  carte.addLayer({ id: "zones-sel", type: "line", source: "zones", filter: ["==", ["get", "zid"], ""], layout: { "line-join": "round", visibility: "none" },
+    paint: { "line-color": dark ? "#F3D98C" : "#0B1424", "line-width": 2.6 } }, avant);
   carte.addLayer({ id: "sel-fill", type: "fill", source: "regions", filter: ["==", ["get", "nom"], ""],
     paint: { "fill-color": dark ? "#F3D98C" : "#C9A44C", "fill-opacity": 0.3 } }, avant);
   carte.addLayer({ id: "sel-halo", type: "line", source: "regions", filter: ["==", ["get", "nom"], ""], layout: { "line-join": "round" },
@@ -280,7 +305,7 @@ function installer(carte: Carte, style: StyleSpecification, geo: { regions: Coll
 export function SenegalMap({
   theme = "light", fillMode = "regions", indicator = "pts", stats = {}, selected = "",
   flow = true, showPoints = false, showLabels = true, points = [], pointFilter = {},
-  selectedPoint = null, onPick, onPickPoint, infos, zoomSelection = false, zoomPoint = false, recadrage = 0, onVueModifiee, molette = false, rayon = 18, agrandir = "",
+  selectedPoint = null, onPick, onPickPoint, infos, zoomSelection = false, zoomPoint = false, recadrage = 0, onVueModifiee, molette = false, rayon = 18, agrandir = "", zones = null,
 }: Props) {
   const dark = theme === "dark";
   const cadre = useRef<HTMLDivElement>(null);
@@ -292,6 +317,11 @@ export function SenegalMap({
   const [pret, setPret] = useState(false);
   const [horsLigne, setHorsLigne] = useState(false);
   const [survol, setSurvol] = useState("");
+  // Zone survolée quand un niveau plus fin que la région est affiché (identifiant de zone).
+  const [survolZone, setSurvolZone] = useState("");
+  const survolZoneId = useRef<string | null>(null);
+  const zonesRef = useRef(zones);
+  zonesRef.current = zones;
 
   // Dernières valeurs des rappels et des points, lues par les écouteurs de la carte.
   const rappels = useRef({ onPick, onPickPoint, zoomPoint, onVueModifiee });
@@ -299,6 +329,7 @@ export function SenegalMap({
   const parId = useRef(new Map<string, PointCarte>());
   const recadrer = useRef<(duree: number) => void>(() => {});
   const avecAgrandir = agrandir !== false;
+  const avecZones = !!zones;
   const parentAgrandi = agrandir || "";
 
   const sigStats = JSON.stringify(stats);
@@ -350,9 +381,11 @@ export function SenegalMap({
       const c = carte;
       c.touchZoomRotate.disableRotation();
       c.keyboard.disableRotation();
-      c.addControl(new NavigationControl({ showCompass: false }), "bottom-right");
+      // Contrôles en bas à GAUCHE : le bouton flottant de l'assistant (fixé en bas à droite de l'écran)
+      // recouvrait « Agrandir » et le zoom, et recevait le clic à leur place.
+      c.addControl(new NavigationControl({ showCompass: false }), "bottom-left");
       if (!fond.horsLigne) {
-        c.addControl(new AttributionControl({ compact: true }), "bottom-right");
+        c.addControl(new AttributionControl({ compact: true }), "bottom-left");
       }
 
       /* Bouton « Agrandir » : plein écran du navigateur, avec repli en superposition fixe s'il est refusé. */
@@ -390,7 +423,7 @@ export function SenegalMap({
         };
         peindre();
         bouton.addEventListener("click", () => basculer(!plein));
-        c.addControl({ onAdd: () => groupe, onRemove: () => groupe.remove() }, "bottom-right");
+        c.addControl({ onAdd: () => groupe, onRemove: () => groupe.remove() }, "bottom-left");
       }
       const surPleinEcran = () => {
         if (!document.fullscreenElement) { basculer(false); return; }
@@ -432,12 +465,14 @@ export function SenegalMap({
         sources?.classList.remove("maplibregl-compact-show");
         sources?.removeAttribute("open");
         c.on("mousemove", "regions-fill", (e) => {
+          if (zonesRef.current) return;
           const cle = e.features?.[0]?.properties?.cle as string | undefined;
           if (cle) survoler(cle, e.point);
           c.getCanvas().style.cursor = rappels.current.onPick ? "pointer" : "";
         });
         c.on("mouseleave", "regions-fill", () => { survoler(null); c.getCanvas().style.cursor = ""; });
         c.on("click", "regions-fill", (e) => {
+          if (zonesRef.current) return;
           if (c.queryRenderedFeatures(e.point, { layers: ["points"] }).length) return;
           const nom = e.features?.[0]?.properties?.nom as string | undefined;
           if (nom) rappels.current.onPick?.(nom);
@@ -450,6 +485,26 @@ export function SenegalMap({
             c.flyTo({ center: lonLat(p), zoom: 17, duration: mouvementReduit() ? 0 : 1400, essential: true });
           }
         });
+        const survolerZone = (id: string | null, pt?: { x: number; y: number }) => {
+          if (pt) curseur.current = pt;
+          if (id !== survolZoneId.current) {
+            if (survolZoneId.current) c.setFeatureState({ source: "zones", id: survolZoneId.current }, { survol: false });
+            if (id) c.setFeatureState({ source: "zones", id }, { survol: true });
+            survolZoneId.current = id;
+            setSurvolZone(id ?? "");
+          }
+          placerFiche();
+        };
+        c.on("mousemove", "zones-fill", (e) => {
+          const id = e.features?.[0]?.properties?.zid as string | undefined;
+          if (id) survolerZone(id, e.point);
+          c.getCanvas().style.cursor = zonesRef.current?.onPick ? "pointer" : "";
+        });
+        c.on("mouseleave", "zones-fill", () => { survolerZone(null); c.getCanvas().style.cursor = ""; });
+        c.on("click", "zones-fill", (e) => {
+          const id = e.features?.[0]?.properties?.zid as string | undefined;
+          if (id) zonesRef.current?.onPick?.(id);
+        });
         c.on("mouseenter", "points", () => { if (rappels.current.onPickPoint) c.getCanvas().style.cursor = "pointer"; });
         carteRef.current = c;
         setPret(true);
@@ -460,8 +515,10 @@ export function SenegalMap({
       nettoyer();
       carteRef.current = null;
       survolCle.current = null;
+      survolZoneId.current = null;
       setPret(false);
       setSurvol("");
+      setSurvolZone("");
       carte?.remove();
     };
   }, [theme, molette, avecAgrandir, parentAgrandi]);
@@ -477,7 +534,7 @@ export function SenegalMap({
     if (y < 8) y = p.y + 20;
     el.style.transform = `translate(${Math.max(8, x)}px, ${Math.max(8, Math.min(y, c.clientHeight - h - 8))}px)`;
   }
-  useLayoutEffect(placerFiche, [survol]);
+  useLayoutEffect(placerFiche, [survol, survolZone]);
 
   /* --- Couleurs des régions --- */
   useEffect(() => {
@@ -487,13 +544,35 @@ export function SenegalMap({
     const repos = new Map(teintes.map((t) => [t.cle, t.op]));
     const actif = new Map(teintes.map((t) => [t.cle, t.opSurvol]));
     c.setPaintProperty("regions-fill", "fill-color", parRegion(couleurs, "#C9A44C"));
-    c.setPaintProperty("regions-fill", "fill-opacity", ["case", ["boolean", ["feature-state", "survol"], false], parRegion(actif, 0.3), parRegion(repos, 0.1)]);
-    const plein = fillMode !== "muted";
+    c.setPaintProperty("regions-fill", "fill-opacity", avecZones ? 0 : ["case", ["boolean", ["feature-state", "survol"], false], parRegion(actif, 0.3), parRegion(repos, 0.1)]);
+    const plein = fillMode !== "muted" && !avecZones;
     c.setPaintProperty("regions-line", "line-color", plein ? (dark ? "#0B1424" : "#FFFFFF") : dark ? "#C9A44C" : "#B08A35");
     c.setPaintProperty("regions-line", "line-opacity", plein ? 0.95 : dark ? 0.6 : 0.75);
     c.setPaintProperty("sel-fill", "fill-opacity", plein ? 0 : dark ? 0.26 : 0.3);
     c.setPaintProperty("regions-flow", "line-color", dark ? "#F3D98C" : fillMode === "choro" ? "#0B1424" : "#8A6A1F");
-  }, [pret, teintes, fillMode, dark]);
+  }, [pret, teintes, fillMode, dark, avecZones]);
+
+  /* --- Niveau plus fin que la région (départements, communes) --- */
+  const sigZones = zones ? JSON.stringify([zones.couleurs, zones.opacite, zones.geojson.features.length]) : "";
+  useEffect(() => {
+    const c = carteRef.current;
+    if (!pret || !c) return;
+    const visible = avecZones ? "visible" : "none";
+    ["zones-fill", "zones-line", "zones-sel"].forEach((id) => c.setLayoutProperty(id, "visibility", visible));
+    const features = (zones?.geojson.features ?? []).map((f) => ({ ...f, properties: { ...f.properties, zid: String(f.id ?? f.properties.id ?? "") } }));
+    (c.getSource("zones") as GeoJSONSource).setData(collection(features as Entite[]) as unknown as DonneesGeo);
+    if (!zones) return;
+    const couleurs = ["match", ["get", "zid"], ...Object.entries(zones.couleurs).flat(), "#E7E5E4"] as unknown as ExpressionSpecification;
+    c.setPaintProperty("zones-fill", "fill-color", Object.keys(zones.couleurs).length ? couleurs : "#E7E5E4");
+    c.setPaintProperty("zones-fill", "fill-opacity", ["case", ["boolean", ["feature-state", "survol"], false], Math.min(0.92, zones.opacite + 0.18), zones.opacite]);
+    c.setPaintProperty("zones-line", "line-color", dark ? "#0B1424" : "#FFFFFF");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pret, avecZones, sigZones, dark]);
+  useEffect(() => {
+    const c = carteRef.current;
+    if (!pret || !c) return;
+    c.setFilter("zones-sel", ["==", ["get", "zid"], zones?.selected ?? ""]);
+  }, [pret, zones?.selected]);
 
   /* --- Région sélectionnée --- */
   useEffect(() => {
@@ -554,7 +633,7 @@ export function SenegalMap({
   useEffect(() => {
     const c = carteRef.current;
     if (!pret || !c) return;
-    const anime = flow && !mouvementReduit();
+    const anime = flow && !mouvementReduit() && !avecZones;
     c.setLayoutProperty("regions-flow", "visibility", anime ? "visible" : "none");
     if (mouvementReduit() || (!flow && !showPoints)) return;
     let raf = 0, pas = -1, dernier = 0;
@@ -575,7 +654,7 @@ export function SenegalMap({
     };
     raf = requestAnimationFrame(boucle);
     return () => cancelAnimationFrame(raf);
-  }, [pret, flow, showPoints]);
+  }, [pret, flow, showPoints, avecZones]);
 
   /* --- Contenu de la fiche de survol --- */
   const aDesStats = Object.keys(stats).length > 0;
@@ -586,13 +665,28 @@ export function SenegalMap({
     if (!lignes.length && showPoints) lignes.push({ label: "Points affichés", valeur: nombre(visibles.filter((p) => p.region === survol).length) });
   }
   const teinte = teintes.find((t) => t.id === survol);
+  const zoneSurvolee = zones && survolZone ? { nom: zones.noms[survolZone] ?? "", s: zones.stats[survolZone] ?? VIDE, couleur: zones.couleurs[survolZone] ?? "#C9A44C" } : null;
 
   return (
     <div ref={cadre} className={`cs-carte ${dark ? "cs-nuit" : "cs-jour"}${pret ? " cs-prete" : ""}`} style={{ borderRadius: rayon }}>
       <div ref={conteneur} className="cs-fond" />
       {horsLigne && pret && <span className="cs-hors-ligne">Fond de carte indisponible (hors connexion)</span>}
-      <div ref={fiche} className={`cs-fiche${survol ? " on" : ""}`} role="status" aria-live="polite">
-        {survol && (
+      <div ref={fiche} className={`cs-fiche${(zones ? survolZone : survol) ? " on" : ""}`} role="status" aria-live="polite">
+        {zoneSurvolee && zones && (
+          <div key={survolZone} className="cs-fiche-corps">
+            <div className="cs-fiche-tete">
+              <span className="cs-fiche-pastille" style={{ background: zoneSurvolee.couleur }} />
+              <div><div className="cs-fiche-sur">{zones.libelle}</div><div className="cs-fiche-nom">{zoneSurvolee.nom}</div></div>
+            </div>
+            <div className="cs-fiche-grille">
+              {(["imf", "pts", "membres", "encours"] as Indicateur[]).map((k) => (
+                <div key={k} className="cs-fiche-case"><div className="cs-fiche-val">{formater(k, zoneSurvolee.s[k])}</div><div className="cs-fiche-lib">{LIBELLE[k]}</div></div>
+              ))}
+            </div>
+            {zones.onPick && <div className="cs-fiche-pied">Cliquez pour afficher son profil</div>}
+          </div>
+        )}
+        {survol && !zones && (
           <div key={survol} className="cs-fiche-corps">
             <div className="cs-fiche-tete">
               <span className="cs-fiche-pastille" style={{ background: fillMode === "muted" ? "#C9A44C" : teinte?.fill }} />

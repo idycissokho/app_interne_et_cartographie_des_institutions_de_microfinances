@@ -8,7 +8,7 @@ import { useState, type CSSProperties } from "react";
 import { api } from "../../api/client";
 import type { Dirigeant, Mandat } from "../../api/types";
 import { useAuth } from "../../auth/AuthContext";
-import { CODE_FONCTION, joursAvant } from "../../lib/format";
+import { CODE_FONCTION, joursAvant, pluriel } from "../../lib/format";
 import { LIBELLE_FONCTION, STATUT_MANDAT, initiales } from "../../lib/metier";
 import { useDonnees } from "../../lib/useDonnees";
 import { Squelette } from "../Squelette";
@@ -94,7 +94,7 @@ export function FicheDirigeant({ id, onClose, onModifierMandat, onAjouterMandat,
             <span style={{ width: 54, height: 54, flex: "none", borderRadius: "50%", background: "#F5F5F4", color: "#44403C", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--t-base)", fontWeight: 600 }}>{initiales(f.nom_complet)}</span>
             <div style={{ flex: 1, minWidth: 0 }}>
               <b style={{ display: "block", fontSize: "var(--t-lg)", overflowWrap: "anywhere" }}>{f.nom_complet}</b>
-              <span style={{ fontSize: "var(--t-sm)", color: "#6B7280" }}>{f.mandats.length} mandat{f.mandats.length > 1 ? "s" : ""} · {new Set(f.mandats.map((m) => m.imf)).size} institution{new Set(f.mandats.map((m) => m.imf)).size > 1 ? "s" : ""}</span>
+              <span style={{ fontSize: "var(--t-sm)", color: "#6B7280" }}>{f.mandats.length} {pluriel(f.mandats.length, "mandat")} · {new Set(f.mandats.map((m) => m.imf)).size} {pluriel(new Set(f.mandats.map((m) => m.imf)).size, "institution")}</span>
             </div>
             {peutModifier && !edition && <button type="button" onClick={() => setEdition({ prenom: f.prenom, nom: f.nom, telephone: f.telephone, email_professionnel: f.email_professionnel, email_secondaire: f.email_secondaire, adresse: f.adresse })} style={{ height: 38, padding: "0 14px", borderRadius: 10, border: "1px solid #E7E5E4", background: "#FFFFFF", color: "#0B1424", font: "inherit", fontSize: "var(--t-sm)", fontWeight: 600, cursor: "pointer", flex: "none" }}>Modifier</button>}
           </section>

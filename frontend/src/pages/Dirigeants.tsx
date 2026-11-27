@@ -15,8 +15,8 @@ import { FicheDirigeant, dateCourte, echeance } from "../components/dirigeants/F
 import { notifier } from "../lib/notifier";
 import { EMAIL_OK, Erreur, Etapes, FileDrop, Label, Modal, btnPrimaire, btnSecondaire, erreursChamps } from "../components/form";
 import { AppLayout } from "../components/layout/AppLayout";
-import { CODE_FONCTION, isoJour, nombre } from "../lib/format";
-import { FAMILLE_FONCTION, FONCTIONS, LIBELLE_FONCTION, STATUT_IMF_COURT, STATUT_MANDAT, TYPE_IMF_COURT, avancementMandat, initiales, regionAffichee } from "../lib/metier";
+import { CODE_FONCTION, isoJour, nombre, pluriel } from "../lib/format";
+import { FAMILLE_FONCTION, FONCTIONS, LIBELLE_FONCTION, STATUT_IMF_COURT, STATUT_MANDAT, TYPE_IMF_COURT, avancementMandat, initiales, pastilleIMF, regionAffichee } from "../lib/metier";
 import { URL_IMF_OPTIONS, URL_REGIONS, URL_STATISTIQUES, type AgregatZone, type ImfOption, type Statistiques } from "../lib/stats";
 import { Badge, BoutonIcone, CadreTableau, CelluleActions, EnTete, EtatVide, LigneGroupe, LignesChargement, Pagination, TON_STATUT, Tableau, PAR_PAGE } from "../components/tableau/Tableau";
 import { useDonnees } from "../lib/useDonnees";
@@ -197,14 +197,14 @@ export function Dirigeants() {
         {/* Institution filtrée : rappel de son identité et accès à sa fiche */}
         {institution && (
           <section className="di-up" style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", padding: "16px 20px", borderRadius: 12, background: "#FFFFFF", border: "1px solid #E7E5E4" }}>
-            <span style={{ width: 46, height: 46, flex: "none", borderRadius: 8, background: "#F5F5F4", color: "#44403C", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--t-sm)", fontWeight: 600 }}>{initiales(institution.sigle || institution.nom)}</span>
+            <span style={{ width: 46, height: 46, flex: "none", borderRadius: 8, background: "#F5F5F4", color: "#44403C", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--t-sm)", fontWeight: 600 }}>{pastilleIMF(institution)}</span>
             <div style={{ flex: "1 1 280px", minWidth: 0 }}>
               <b style={{ display: "block", fontSize: "var(--t-base)", overflowWrap: "anywhere" }}>{institution.nom}</b>
               <span style={{ fontSize: "var(--t-sm)", color: "#6B7280" }}>{[TYPE_IMF_COURT[institution.type_imf], STATUT_IMF_COURT[institution.statut_reglementaire], regionAffichee(institution.region_siege), institution.numero_agrement].filter(Boolean).join(" · ")}</span>
             </div>
             <div style={{ display: "flex", gap: 22 }}>
-              <div><b style={{ display: "block", fontSize: "var(--t-xl)", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{d.rows ? nombre(total) : "—"}</b><span style={{ fontSize: "var(--t-xs)", color: "#6B7280" }}>mandat{total > 1 ? "s" : ""}</span></div>
-              <div><b style={{ display: "block", fontSize: "var(--t-xl)", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{nombre(institution.nb_points_service)}</b><span style={{ fontSize: "var(--t-xs)", color: "#6B7280" }}>point{institution.nb_points_service > 1 ? "s" : ""} de service</span></div>
+              <div><b style={{ display: "block", fontSize: "var(--t-xl)", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{d.rows ? nombre(total) : "—"}</b><span style={{ fontSize: "var(--t-xs)", color: "#6B7280" }}>{pluriel(total, "mandat")}</span></div>
+              <div><b style={{ display: "block", fontSize: "var(--t-xl)", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{nombre(institution.nb_points_service)}</b><span style={{ fontSize: "var(--t-xs)", color: "#6B7280" }}>{pluriel(institution.nb_points_service, "point")} de service</span></div>
             </div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               {[[`/points-service?imf=${institution.id}`, "Ses points de service →"], [`/consultation?imf=${institution.id}`, "Fiche de l'institution →"]].map(([to, l]) => <Link key={to} to={to} style={{ height: 40, padding: "0 14px", borderRadius: 10, border: "1px solid #E7E5E4", color: "#0B1424", fontSize: "var(--t-sm)", fontWeight: 500, textDecoration: "none", display: "flex", alignItems: "center", boxSizing: "border-box" }}>{l}</Link>)}
@@ -214,7 +214,7 @@ export function Dirigeants() {
 
         <CadreTableau className="di-up d1"
           barre={<>
-            <span aria-live="polite" style={{ fontSize: "var(--t-md)", fontWeight: 600 }}>{d.rows ? `${nombre(total)} mandat${total > 1 ? "s" : ""}` : "Chargement…"}</span>
+            <span aria-live="polite" style={{ fontSize: "var(--t-md)", fontWeight: 600 }}>{d.rows ? `${nombre(total)} ${pluriel(total, "mandat")}` : "Chargement…"}</span>
             {actifs.map(([libelle, retrait]) => (
               <button key={libelle} type="button" className="tbl-filtre" title="Retirer ce filtre" onClick={() => { if ("q" in retrait) setSaisie(""); maj(retrait); }}><span>{libelle}</span><span aria-hidden="true">×</span></button>
             ))}
@@ -223,8 +223,8 @@ export function Dirigeants() {
               {([["", "Liste"], ["imf", "Par institution"], ["dirigeant", "Par dirigeant"]] as const).map(([k, l]) => <button key={k} type="button" role="radio" aria-checked={groupe === k} onClick={() => maj({ groupe: k })}>{l}</button>)}
             </div>
           </>}
-          pied={<Pagination page={page} pages={pages} onPage={(n) => maj({ page: n === 1 ? "" : String(n) })} resume={total ? `${(page - 1) * TAILLE + 1}–${(page - 1) * TAILLE + rows.length} sur ${nombre(total)} mandats` : "0 mandat"} />}>
-          <Tableau largeurMin={980}>
+          pied={<Pagination page={page} pages={pages} onPage={(n) => maj({ page: n === 1 ? "" : String(n) })} resume={total ? `${(page - 1) * TAILLE + 1}–${(page - 1) * TAILLE + rows.length} sur ${nombre(total)} ${pluriel(total, "mandat")}` : "0 mandat"} />}>
+          <Tableau largeurMin={colDirigeant && colImf ? 900 : 760} vue={`${groupe}|${cleTri}|${desc}|${page}|${imf}`}>
             <thead><tr>
               {colDirigeant && <Th cle="dirigeant">Dirigeant</Th>}
               <Th cle="fonction">Fonction</Th>
@@ -249,13 +249,13 @@ export function Dirigeants() {
                     </LigneGroupe>
                   ),
                   <tr key={r.id} tabIndex={0} title="Ouvrir la fiche du dirigeant" onClick={() => setFiche(r.dirigeant)} onKeyDown={(e) => e.key === "Enter" && e.target === e.currentTarget && setFiche(r.dirigeant)}>
-                    {colDirigeant && <td className="principal"><div style={{ display: "flex", alignItems: "center", gap: 12 }}><span style={avatar}>{initiales(r.dirigeant_nom_complet)}</span><div style={{ minWidth: 0 }}><div style={{ fontWeight: 600 }}>{r.dirigeant_nom_complet}</div><span className="muet" style={{ overflowWrap: "break-word" }}>{contact || "—"}</span></div></div></td>}
-                    <td data-label="Fonction" className={colDirigeant ? undefined : "principal"}><div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>{CODE_FONCTION[r.fonction_mandat] && <span style={badgeFonction}>{CODE_FONCTION[r.fonction_mandat]}</span>}<span style={{ fontSize: "var(--t-sm)", color: "#4A5568" }}>{LIBELLE_FONCTION[r.fonction_mandat] ?? r.fonction_mandat}</span></div></td>
+                    {colDirigeant && <td className="principal"><div style={{ display: "flex", alignItems: "center", gap: 12 }}><span style={avatar}>{initiales(r.dirigeant_nom_complet)}</span><div style={{ minWidth: 0 }}><div style={{ fontWeight: 600 }}>{r.dirigeant_nom_complet}</div><span className="muet" style={{ overflowWrap: "anywhere" }}>{contact || "—"}</span></div></div></td>}
+                    <td data-label="Fonction" className={colDirigeant ? undefined : "principal"}><div style={{ display: "flex", flexWrap: "wrap", alignItems: "baseline", gap: "4px 8px" }}>{CODE_FONCTION[r.fonction_mandat] && <span style={badgeFonction}>{CODE_FONCTION[r.fonction_mandat]}</span>}<span style={{ fontSize: "var(--t-sm)", color: "#4A5568" }}>{LIBELLE_FONCTION[r.fonction_mandat] ?? r.fonction_mandat}</span></div></td>
                     {colImf && <td data-label="Institution"><button type="button" className="di-lien" title="Voir tous les dirigeants de cette institution" onClick={(e) => { e.stopPropagation(); maj({ imf: r.imf }); }} style={{ fontSize: "var(--t-sm)", fontWeight: 500, lineHeight: 1.4, textAlign: "inherit" }}>{r.imf_nom}</button>{r.imf_region && <span className="muet">{[r.imf_sigle, regionAffichee(r.imf_region)].filter(Boolean).join(" · ")}</span>}</td>}
-                    <td data-label="Mandat" style={{ minWidth: 180 }}><div style={{ display: "flex", justifyContent: "space-between", gap: 8, fontSize: "var(--t-sm)", color: "#4A5568", marginBottom: 6, whiteSpace: "nowrap" }}><span>{dateCourte(r.date_debut)}</span><span>{r.date_fin ? dateCourte(r.date_fin) : "sans échéance"}</span></div><div className="tbl-jauge"><div style={{ background: av.color, width: `${av.prog}%` }} /></div>{ech && <div style={{ fontSize: "var(--t-xs)", fontWeight: 600, color: ech.couleur, marginTop: 4 }}>{ech.texte}</div>}</td>
+                    <td data-label="Mandat" style={{ minWidth: 110 }}><div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: "0 8px", fontSize: "var(--t-sm)", color: "#4A5568", marginBottom: 6, whiteSpace: "nowrap" }}><span>{dateCourte(r.date_debut)}</span><span>{r.date_fin ? dateCourte(r.date_fin) : "sans échéance"}</span></div><div className="tbl-jauge"><div style={{ background: av.color, width: `${av.prog}%` }} /></div>{ech && <div style={{ fontSize: "var(--t-xs)", fontWeight: 600, color: ech.couleur, marginTop: 4 }}>{ech.texte}</div>}</td>
                     <td data-label="Statut"><Badge ton={TON_STATUT[r.statut_mandat]}>{STATUT_MANDAT[r.statut_mandat] ?? r.statut_mandat}</Badge></td>
                     <td data-label="Justificatif">{lien
-                      ? <a href={lien} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: "var(--t-sm)", fontWeight: 500, textDecoration: "none" }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6z" /><path d="M14 3v6h6" /></svg>{r.fichier_justificatif ? nomFichier(r.fichier_justificatif) : "Lien externe"}</a>
+                      ? <a href={lien} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} title={r.fichier_justificatif ? nomFichier(r.fichier_justificatif) : "Lien externe"} style={{ display: "inline-flex", alignItems: "center", gap: 6, maxWidth: 180, fontSize: "var(--t-sm)", fontWeight: 500, textDecoration: "none" }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flex: "none" }}><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6z" /><path d="M14 3v6h6" /></svg><span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.fichier_justificatif ? nomFichier(r.fichier_justificatif) : "Lien externe"}</span></a>
                       : <Badge ton="alerte">Manquant</Badge>}</td>
                     <CelluleActions>
                       <BoutonIcone libelle={`Voir la fiche de ${r.dirigeant_nom_complet}`} onClick={(e) => { e.stopPropagation(); setFiche(r.dirigeant); }}><Icone d={I_OEIL} /></BoutonIcone>
@@ -377,7 +377,7 @@ function ModaleMandat({ mandat, dirigeant, onClose, onSaved }: { mandat?: Mandat
                 return (
                   <button key={t.id} type="button" role="radio" aria-checked={on} onClick={() => setChoisi(t)} style={{ display: "flex", alignItems: "center", gap: 12, padding: 12, borderRadius: 10, font: "inherit", color: "#0B1424", cursor: "pointer", textAlign: "left", ...(on ? { border: "1.5px solid #C9A44C", background: "#FAFAF9" } : { border: "1.5px solid #D6D3D1", background: "#FFFFFF" }) }}>
                     <span style={{ width: 38, height: 38, flex: "none", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--t-xs)", fontWeight: 700, ...(on ? { background: "#0B1424", color: "#FFFFFF" } : { background: "#F5F5F4", color: "#44403C" }) }}>{initiales(t.nom_complet)}</span>
-                    <span style={{ flex: 1 }}><b style={{ display: "block", fontSize: "var(--t-md)" }}>{t.nom_complet}</b><span style={{ fontSize: "var(--t-xs)", color: "#6B7280" }}>{t.nb_mandats} mandat{t.nb_mandats > 1 ? "s" : ""}{t.email_professionnel ? ` · ${t.email_professionnel}` : ""}</span></span>
+                    <span style={{ flex: 1 }}><b style={{ display: "block", fontSize: "var(--t-md)" }}>{t.nom_complet}</b><span style={{ fontSize: "var(--t-xs)", color: "#6B7280" }}>{t.nb_mandats} {pluriel(t.nb_mandats, "mandat")}{t.email_professionnel ? ` · ${t.email_professionnel}` : ""}</span></span>
                     <span style={{ width: 18, height: 18, flex: "none", borderRadius: "50%", boxSizing: "border-box", ...(on ? { border: "5px solid #C9A44C" } : { border: "2px solid #A8A29E" }) }} />
                   </button>
                 );

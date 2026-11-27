@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 
 import { regionAffichee } from "../../lib/metier";
 import type { ImfOption } from "../../lib/stats";
+import { pluriel } from "../../lib/format";
 
 const MAX = 8;
 /** Comparaison sans accents ni majuscules. */
@@ -46,7 +47,7 @@ export function ChoixIMF({ imfs, valeur, onChange }: { imfs: ImfOption[]; valeur
             <button key={i.id} type="button" role="option" aria-selected={false} className="di-opt" onMouseDown={(e) => { e.preventDefault(); choisir(i.id); }}
               style={{ display: "block", width: "100%", textAlign: "left", padding: "9px 12px", borderRadius: 10, border: "none", background: "transparent", font: "inherit", color: "#0B1424", cursor: "pointer" }}>
               <b style={{ display: "block", fontSize: "var(--t-sm)", lineHeight: 1.35 }}>{i.sigle ? `${i.sigle} — ` : ""}{i.nom}</b>
-              <span style={{ fontSize: "var(--t-xs)", color: "#6B7280" }}>{[regionAffichee(i.region_siege), i.numero_agrement, `${i.nb_points_service} point${i.nb_points_service > 1 ? "s" : ""} de service`].filter(Boolean).join(" · ")}</span>
+              <span style={{ fontSize: "var(--t-xs)", color: "#6B7280" }}>{[regionAffichee(i.region_siege), i.numero_agrement, `${i.nb_points_service} ${pluriel(i.nb_points_service, "point")} de service`].filter(Boolean).join(" · ")}</span>
             </button>
           ))}
           {trouvees.length === 0 && <div style={{ padding: "12px", fontSize: "var(--t-sm)", color: "#6B7280" }}>Aucune institution trouvée.</div>}

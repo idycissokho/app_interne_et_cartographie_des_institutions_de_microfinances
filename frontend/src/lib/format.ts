@@ -2,6 +2,13 @@
 
 export const nombre = (n: number | null | undefined) => (n ?? 0).toLocaleString("fr-FR").replace(/ /g, " ");
 
+/**
+ * Accord en nombre, règle française : 0 et 1 au singulier, à partir de 2 au pluriel.
+ * pluriel(1, "point") → « point » ; pluriel(2, "point affiché", "points affichés") → « points affichés ».
+ */
+export const pluriel = (n: number | null | undefined, singulier: string, formePlurielle = `${singulier}s`) =>
+  Math.abs(n ?? 0) >= 2 ? formePlurielle : singulier;
+
 export const pourcent = (n: number, decimales = 0) => `${n.toFixed(decimales).replace(".", ",")} %`;
 
 export function dateLongue(d = new Date()) {

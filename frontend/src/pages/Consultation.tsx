@@ -9,11 +9,11 @@ import type { Page } from "../api/types";
 import { SenegalMap } from "../components/carto/SenegalMap";
 import { dansLeSenegal, projeter } from "../data/projection";
 import { AppLayout } from "../components/layout/AppLayout";
-import { Badge, PAR_PAGE, Pagination, TON_STATUT } from "../components/tableau/Tableau";
-import { CODE_FONCTION, nombre } from "../lib/format";
+import { Badge, EtatVide, PAR_PAGE, Pagination, TON_STATUT } from "../components/tableau/Tableau";
+import { CODE_FONCTION, nombre, pluriel } from "../lib/format";
 import {
   FAMILLE_FONCTION, LIBELLE_FONCTION, STATUT_IMF_COURT, STATUT_MANDAT, STATUT_POINT, TYPE_IMF_COURT, TYPE_POINT,
-  avancementMandat, initiales, regionAffichee,
+  avancementMandat, pastilleIMF, regionAffichee,
 } from "../lib/metier";
 import { statsParRegion, type AgregatZone, URL_IMF_OPTIONS, URL_REGIONS } from "../lib/stats";
 import { useDonnees } from "../lib/useDonnees";
@@ -65,13 +65,18 @@ export function Consultation() {
 
   const qq = q.toLowerCase();
   const list = imfs.filter((m) => (!type || m.type_imf === type) && (!qq || `${m.nom} ${m.sigle} ${m.region_siege ?? ""} ${TYPE_IMF_COURT[m.type_imf]}`.toLowerCase().includes(qq)));
-  const cur = f.fiche && f.fiche.id === sel ? f.fiche : null;
-  // Pastille : sigle court (5 lettres au plus) sinon initiales, pour rester lisible dans le carré.
-  const court = (m: ImfLigne) => { const s = (m.sigle || "").trim().split(/\s+/)[0]; return s && s.length <= 5 ? s : initiales(m.nom); };
+  // La fiche n'est affichée que si l'IMF sélectionnée fait partie des résultats filtrés.
+  const selDansListe = !!sel && list.some((m) => m.id === sel);
+  const cur = f.fiche && f.fiche.id === sel && selDansListe ? f.fiche : null;
   const dirs = (f.dirs?.results ?? []).filter((d) => dchip === "Tous" || FAMILLE_FONCTION[d.fonction_mandat] === dchip);
   const tranche = <T,>(liste: T[], page: number) => liste.slice((page - 1) * PAR_PAGE, page * PAR_PAGE);
   const nbPages = (n: number) => Math.max(1, Math.ceil(n / PAR_PAGE));
   const pts = f.pts?.results ?? [];
+  // Filtre qui exclut l'IMF sélectionnée : la sélection passe au premier résultat.
+  useEffect(() => {
+    if (l.imfs && list.length > 0 && !selDansListe) setSel(list[0].id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q, type, l.imfs]);
 
   return (
     <AppLayout active="consultation" minHeight={1300}>
@@ -94,31 +99,33 @@ export function Consultation() {
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               {CHIPS.map(([v, label]) => <button key={label} type="button" aria-pressed={v === type} onClick={() => setType(v)} style={chip(v === type)}>{label}</button>)}
             </div>
-            <div style={{ fontSize: "var(--t-xs)", fontWeight: 600, color: "#6B7280", padding: "4px 4px 0 4px" }}>{list.length} institution{list.length > 1 ? "s" : ""}</div>
+            <div style={{ fontSize: "var(--t-xs)", fontWeight: 600, color: "#6B7280", padding: "4px 4px 0 4px" }}>{list.length} {pluriel(list.length, "institution")}</div>
             {tranche(list, pageListe).map((m) => {
               const on = m.id === sel;
               return (
                 <button key={m.id} type="button" className="co-item" aria-pressed={on} onClick={() => { setSel(m.id); setDchip("Tous"); if (window.innerWidth < 900) document.querySelector(".co-fiche")?.scrollIntoView({ behavior: "smooth" }); }} style={{ display: "flex", alignItems: "center", gap: 14, width: "100%", font: "inherit", color: "#0B1424", padding: 14, borderRadius: 12, cursor: "pointer", ...(on ? { background: "#FFFFFF", border: "1.5px solid #C9A44C" } : { background: "#FFFFFF", border: "1px solid #E7E5E4" }) }}>
-                  <span style={{ width: 46, height: 46, flex: "none", borderRadius: 10, background: "#F5F5F4", color: "#44403C", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--t-sm)", fontWeight: 700 }}>{court(m)}</span>
+                  <span style={{ width: 46, height: 46, flex: "none", borderRadius: 10, background: "#F5F5F4", color: "#44403C", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--t-sm)", fontWeight: 700 }}>{pastilleIMF(m)}</span>
                   <span style={{ flex: 1, minWidth: 0, textAlign: "left", display: "flex", flexDirection: "column", gap: 3 }}>
                     <span style={{ fontSize: "var(--t-base)", fontWeight: 700 }}>{m.nom}</span>
                     <span style={{ fontSize: "var(--t-xs)", color: "#6B7280" }}>{TYPE_IMF_COURT[m.type_imf]} · {regionAffichee(m.region_siege) ?? "Région non renseignée"}</span>
                   </span>
                   <span style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
                     <Badge ton={TON_STATUT[m.statut_reglementaire]}>{STATUT_IMF_COURT[m.statut_reglementaire]}</Badge>
-                    <span style={{ fontSize: "var(--t-xs)", color: "#6B7280" }}><b style={{ color: "#0B1424" }}>{m.nb_points_service}</b> points</span>
+                    <span style={{ fontSize: "var(--t-xs)", color: "#6B7280" }}><b style={{ color: "#0B1424" }}>{m.nb_points_service}</b> {pluriel(m.nb_points_service, "point")}</span>
                   </span>
                 </button>
               );
             })}
+            {l.imfs && list.length === 0 && <div style={{ padding: "18px 16px", borderRadius: 12, border: "1px dashed #D6D3D1", color: "#6B7280", fontSize: "var(--t-sm)", textAlign: "center" }}>Aucune institution ne correspond à ces critères.</div>}
             {list.length > PAR_PAGE && <div className="liste-pied"><Pagination page={pageListe} pages={nbPages(list.length)} onPage={setPageListe} resume={`${(pageListe - 1) * PAR_PAGE + 1}–${Math.min(pageListe * PAR_PAGE, list.length)} sur ${list.length}`} /></div>}
           </section>
 
           <section className="co-in d2 co-fiche" style={{ flex: "999 1 520px", minWidth: 0, borderRadius: 12, background: "#FFFFFF", border: "1px solid #E7E5E4", overflow: "hidden" }}>
+            {l.imfs && list.length === 0 && <EtatVide titre="Aucune institution à afficher">Aucune institution ne correspond à la recherche ou au type choisi. Modifiez les filtres pour afficher une fiche.</EtatVide>}
             {cur && (<>
               <div style={{ position: "relative", padding: "26px 26px 0 26px", background: "#FFFFFF", borderBottom: "1px solid #E7E5E4" }}>
                 <div style={{ position: "relative", display: "flex", gap: 18, alignItems: "center", flexWrap: "wrap" }}>
-                  <span style={{ width: 64, height: 64, borderRadius: 12, background: "#F5F5F4", color: "#44403C", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--t-base)", fontWeight: 600 }}>{court(cur)}</span>
+                  <span style={{ width: 64, height: 64, borderRadius: 12, background: "#F5F5F4", color: "#44403C", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--t-base)", fontWeight: 600 }}>{pastilleIMF(cur)}</span>
                   <div style={{ flex: 1, minWidth: 200 }}>
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 6 }}><Badge ton={TON_STATUT[cur.statut_reglementaire]}>{STATUT_IMF_COURT[cur.statut_reglementaire]}</Badge><Badge point={false}>{TYPE_IMF_COURT[cur.type_imf]}</Badge></div>
                     <div style={{ fontSize: "var(--t-2xl)", fontWeight: 700, letterSpacing: "-0.02em" }}>{cur.nom}</div>
@@ -191,7 +198,7 @@ export function Consultation() {
                               <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: "var(--t-md)", fontWeight: 700 }}>{d.dirigeant_nom_complet}</div><div style={{ fontSize: "var(--t-xs)", color: "#6B7280" }}>{LIBELLE_FONCTION[d.fonction_mandat]}</div></div>
                               <Badge ton={TON_STATUT[d.statut_mandat]}>{STATUT_MANDAT[d.statut_mandat]}</Badge>
                             </div>
-                            <div><div style={{ display: "flex", justifyContent: "space-between", fontSize: "var(--t-2xs)", color: "#6B7280", marginBottom: 5 }}><span>Mandat {d.date_debut.slice(0, 4)}</span><span>{d.date_fin ? d.date_fin.slice(0, 4) : "[à définir]"}</span></div><div style={{ height: 6, borderRadius: 99, background: "#E7E5E4", overflow: "hidden" }}><div className="co-bar" style={{ height: "100%", borderRadius: 99, background: av.color, width: `${av.prog}%` }} /></div></div>
+                            <div><div style={{ display: "flex", justifyContent: "space-between", fontSize: "var(--t-2xs)", color: "#6B7280", marginBottom: 5 }}><span>Mandat {d.date_debut.slice(0, 4)}</span><span>{d.date_fin ? d.date_fin.slice(0, 4) : "sans échéance"}</span></div><div style={{ height: 6, borderRadius: 99, background: "#E7E5E4", overflow: "hidden" }}><div className="co-bar" style={{ height: "100%", borderRadius: 99, background: av.color, width: `${av.prog}%` }} /></div></div>
                             <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "var(--t-xs)", color: "#8A6A1F", fontWeight: 600 }}>
                               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6z" /><path d="M14 3v6h6" /></svg>
                               {lien ? <a href={lien} target="_blank" rel="noreferrer" style={{ color: "#8A6A1F" }}>Justificatif</a> : <span style={{ color: "#6B7280" }}>Aucun justificatif</span>}
@@ -201,7 +208,7 @@ export function Consultation() {
                       })}
                       {f.dirs && dirs.length === 0 && <div style={{ fontSize: "var(--t-sm)", color: "#6B7280" }}>Aucun dirigeant pour ce filtre.</div>}
                     </div>
-                    {dirs.length > PAR_PAGE && <div className="liste-pied"><Pagination page={pageDirs} pages={nbPages(dirs.length)} onPage={setPageDirs} resume={`${(pageDirs - 1) * PAR_PAGE + 1}–${Math.min(pageDirs * PAR_PAGE, dirs.length)} sur ${dirs.length} mandats`} /></div>}
+                    {dirs.length > PAR_PAGE && <div className="liste-pied"><Pagination page={pageDirs} pages={nbPages(dirs.length)} onPage={setPageDirs} resume={`${(pageDirs - 1) * PAR_PAGE + 1}–${Math.min(pageDirs * PAR_PAGE, dirs.length)} sur ${dirs.length} ${pluriel(dirs.length, "mandat")}`} /></div>}
                     <div style={{ display: "flex", gap: 10, alignItems: "center", padding: "12px 14px", borderRadius: 10, background: "#F5F5F4", color: "#5B4A1E", fontSize: "var(--t-sm)" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flex: "none" }}><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>Votre consultation de cette fiche est enregistrée dans le journal d'audit.</div>
                   </div>
                 )}
@@ -215,7 +222,7 @@ export function Consultation() {
                       ))}
                       {f.pts && f.pts.results.length === 0 && <div style={{ fontSize: "var(--t-sm)", color: "#6B7280", padding: "12px 10px" }}>Aucun point de service.</div>}
                     </div>
-                    {pts.length > PAR_PAGE && <div className="liste-pied"><Pagination page={pagePts} pages={nbPages(pts.length)} onPage={setPagePts} resume={`${(pagePts - 1) * PAR_PAGE + 1}–${Math.min(pagePts * PAR_PAGE, pts.length)} sur ${pts.length} points`} /></div>}
+                    {pts.length > PAR_PAGE && <div className="liste-pied"><Pagination page={pagePts} pages={nbPages(pts.length)} onPage={setPagePts} resume={`${(pagePts - 1) * PAR_PAGE + 1}–${Math.min(pagePts * PAR_PAGE, pts.length)} sur ${pts.length} ${pluriel(pts.length, "point")}`} /></div>}
                   </div>
                 )}
 
@@ -224,7 +231,7 @@ export function Consultation() {
                     {cur.bailleurs_detail.map((b) => (
                       <div key={b.id} style={{ padding: 18, borderRadius: 12, border: "1px solid #E7E5E4" }}><div style={{ fontSize: "var(--t-base)", fontWeight: 700 }}>{b.sigle || b.nom}</div><div style={{ fontSize: "var(--t-xs)", color: "#6B7280", marginTop: 4 }}>{b.sigle && b.sigle !== b.nom ? b.nom : "Bailleur associé"}</div></div>
                     ))}
-                    <div style={{ padding: 18, borderRadius: 12, border: "1.5px dashed #D6D3D1", color: "#6B7280", fontSize: "var(--t-sm)", display: "flex", alignItems: "center" }}>Les bailleurs associés sont optionnels (V1).</div>
+                    {cur.bailleurs_detail.length === 0 && <div style={{ gridColumn: "1 / -1", padding: 18, borderRadius: 12, border: "1px dashed #D6D3D1", color: "#6B7280", fontSize: "var(--t-sm)", textAlign: "center" }}>Aucun bailleur renseigné pour cette institution.</div>}
                   </div>
                 )}
               </div>

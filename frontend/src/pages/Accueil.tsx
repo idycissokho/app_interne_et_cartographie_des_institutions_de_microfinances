@@ -21,6 +21,7 @@ import { Badge, CadreTableau, EnTete, EtatVide, Pagination, TON_STATUT, Tableau 
 import { dansLeSenegal, projeter } from "../data/projection";
 import { cleRegion, SENEGAL_REGIONS } from "../data/senegalRegions";
 import { regionAffichee } from "../lib/metier";
+import { pluriel } from "../lib/format";
 
 interface Institution {
   id: string;
@@ -407,7 +408,7 @@ export function Accueil() {
             <div className="rg-liste">
               <p className="rg-liste-titre">
                 <span>
-                  {recherche ? <>{nombre(liste.length)} résultat{liste.length > 1 ? "s" : ""} pour « {saisie.trim()} »</> : <>{nombre(liste.length)} institution{liste.length > 1 ? "s" : ""}</>}
+                  {recherche ? <>{nombre(liste.length)} {pluriel(liste.length, "résultat")} pour « {saisie.trim()} »</> : <>{nombre(liste.length)} {pluriel(liste.length, "institution")}</>}
                   {region && <> · {nomRegion(region)}</>}
                 </span>
                 {(recherche || region) && <button type="button" className="rg-lien" onClick={() => { setSaisie(""); setRegion(""); }}>Tout afficher</button>}

@@ -8,6 +8,7 @@
 import { useMemo, useState, type MouseEvent } from "react";
 
 import { cleRegion, SENEGAL_REGIONS } from "../../data/senegalRegions";
+import { pluriel } from "../../lib/format";
 
 export interface PointRegistre { id: string; x: number; y: number; nom: string; agrement: string; statut: string; region: string }
 
@@ -140,7 +141,7 @@ export function CarteRegistre({ points, comptes, region, onRegion, selection, on
   const survolerRegion = (id: string, e: MouseEvent) => {
     setSurvolRegion(id);
     const n = comptes[cleRegion(id)] ?? 0;
-    setInfo({ ...position(e), titre: id, detail: n ? `${n} institution${n > 1 ? "s" : ""} · cliquer pour filtrer` : "Aucune institution" });
+    setInfo({ ...position(e), titre: id, detail: n ? `${n} ${pluriel(n, "institution")} · cliquer pour filtrer` : "Aucune institution" });
   };
   const choisirRegion = (cle: string) => onRegion(region === cle ? "" : cle);
 
