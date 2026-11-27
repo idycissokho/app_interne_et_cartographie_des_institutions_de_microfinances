@@ -8,7 +8,7 @@ import { useLocation } from "react-router-dom";
 
 import { api } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
-import { nombre } from "../lib/format";
+import { nombre, pluriel } from "../lib/format";
 import { notifier } from "../lib/notifier";
 import { memoireImport, notificationImport } from "../lib/suiviImport";
 
@@ -32,17 +32,17 @@ export function SuiviImport() {
         const options = { action, remplace: notificationImport.id };
         notificationImport.id = undefined;
         if (i.statut === "ECHEC") {
-          notifier.erreur("Import échoué", i.nb_lignes_total ? `Aucune des ${nombre(i.nb_lignes_total)} lignes n'a pu être importée.` : "Le fichier n'a pas pu être lu.", options);
+          notifier.erreur("Import échoué", i.nb_lignes_total ? (i.nb_lignes_total === 1 ? "La ligne du fichier n'a pas pu être importée." : `Aucune des ${nombre(i.nb_lignes_total)} lignes n'a pu être importée.`) : "Le fichier n'a pas pu être lu.", options);
           return;
         }
         const parties = [
-          `${nombre(i.nb_lignes_creees ?? i.nb_lignes_importees)} nouvelle${(i.nb_lignes_creees ?? 0) > 1 ? "s" : ""}`,
+          `${nombre(i.nb_lignes_creees ?? i.nb_lignes_importees)} ${pluriel((i.nb_lignes_creees ?? 0), "nouvelle")}`,
           i.nb_lignes_mises_a_jour ? `${nombre(i.nb_lignes_mises_a_jour)} déjà en base` : "",
           i.nb_lignes_erreur ? `${nombre(i.nb_lignes_erreur)} en erreur` : "",
         ].filter(Boolean);
         (i.nb_lignes_erreur ? notifier.info : notifier.succes)(
           i.nb_lignes_erreur ? "Import terminé, avec des erreurs" : "Import terminé",
-          `${nombre(i.nb_lignes_total)} lignes lues · ${parties.join(" · ")}`,
+          `${nombre(i.nb_lignes_total)} ${pluriel(i.nb_lignes_total, "ligne lue", "lignes lues")} · ${parties.join(" · ")}`,
           { ...options, duree: 9000 },
         );
       }, () => undefined);

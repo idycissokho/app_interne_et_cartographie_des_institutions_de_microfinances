@@ -10,7 +10,7 @@ import { Link } from "react-router-dom";
 import { SenegalMap } from "../components/carto/SenegalMap";
 import { AppLayout } from "../components/layout/AppLayout";
 import { SENEGAL_REGIONS, cleRegion } from "../data/senegalRegions";
-import { nombre } from "../lib/format";
+import { nombre, pluriel } from "../lib/format";
 import { statsParRegion, type AgregatZone, URL_REGIONS, URL_STATISTIQUES, type Statistiques } from "../lib/stats";
 import { Squelette } from "../components/Squelette";
 import { useDonnees } from "../lib/useDonnees";
@@ -41,8 +41,8 @@ export function Supervision() {
   ];
   const quality = [
     { label: "Référentiel IMF", v: pct(totalImf - incompletes, totalImf), color: "#15803D", hint: "Contacts et position GPS du siège renseignés" },
-    { label: "Points de service", v: pct(points - sansGps, points), color: "#C9A44C", hint: `${nombre(sansGps)} points sans coordonnées GPS` },
-    { label: "Dirigeants", v: pct(mandats - sansJustif, mandats), color: "#B45309", hint: `Justificatifs manquants pour ${nombre(sansJustif)} mandats` },
+    { label: "Points de service", v: pct(points - sansGps, points), color: "#C9A44C", hint: `${nombre(sansGps)} ${pluriel(sansGps, "point")} sans coordonnées GPS` },
+    { label: "Dirigeants", v: pct(mandats - sansJustif, mandats), color: "#B45309", hint: `Justificatifs manquants pour ${nombre(sansJustif)} ${pluriel(sansJustif, "mandat")}` },
     { label: "Bailleurs associés", v: pct(avecBailleur, totalImf), color: "#B91C1C", hint: "Champ optionnel peu renseigné" },
   ];
 
@@ -75,7 +75,7 @@ export function Supervision() {
           <article className="su-in d2" style={{ flex: "1.3 1 480px", minWidth: 0, background: "#FFFFFF", border: "1px solid #E7E5E4", borderRadius: 12, padding: 22, display: "flex", flexDirection: "column", gap: 12 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
               <div><h2 style={{ margin: 0, fontSize: "var(--t-lg)", fontWeight: 700 }}>Zones sous-desservies</h2><p style={{ margin: "4px 0 0 0", fontSize: "var(--t-sm)", color: "#6B7280" }}>Points de service par région : plus la région est claire, moins elle est couverte.</p></div>
-              <span className="badge badge-alerte">{Math.min(5, R.length)} régions en alerte</span>
+              <span className="badge badge-alerte">{Math.min(5, R.length)} {pluriel(Math.min(5, R.length), "région")} en alerte</span>
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "center" }}>
               <div className="su-carte" style={{ flex: "1.4 1 320px", minWidth: 0, height: 360 }}>

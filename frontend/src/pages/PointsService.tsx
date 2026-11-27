@@ -17,8 +17,8 @@ import { Drawer, EMAIL_OK, Erreur, Label, btnPrimaire, btnSecondaire, erreursCha
 import { AppLayout } from "../components/layout/AppLayout";
 import { FichePoint } from "../components/points/FichePoint";
 import { dansLeSenegal } from "../data/projection";
-import { montantCourt, nombre } from "../lib/format";
-import { STATUTS_REGLEMENTAIRES, STATUT_IMF_COURT, STATUT_POINT, TYPE_IMF_COURT, TYPE_POINT, initiales, regionAffichee } from "../lib/metier";
+import { montantCourt, nombre, pluriel } from "../lib/format";
+import { STATUTS_REGLEMENTAIRES, STATUT_IMF_COURT, STATUT_POINT, TYPE_IMF_COURT, TYPE_POINT, pastilleIMF, regionAffichee } from "../lib/metier";
 import { nombreFr, regionProche } from "../lib/region";
 import { URL_IMF_OPTIONS, URL_STATISTIQUES, type ImfOption, type Statistiques } from "../lib/stats";
 import { Badge, BoutonIcone, CadreTableau, CelluleActions, EnTete, EtatVide, LigneGroupe, LignesChargement, Pagination, TON_STATUT, Tableau, PAR_PAGE } from "../components/tableau/Tableau";
@@ -105,8 +105,12 @@ export function PointsService() {
   const institution = imfs.find((i) => i.id === imf);
   const regions = d.regions?.results ?? [];
   const avecDepartements = (d.depts?.results ?? []).length > 0 || !!departement || !!commune;
-  const depts = (d.depts?.results ?? []).filter((z) => !region || z.parent === region);
+  // Région affichée : celle du filtre, sinon la région du département (ou de la commune) choisi.
+  // Affichage seulement : la requête reste celle des filtres de l'adresse.
+  const regionDeduite = region || (d.depts?.results ?? []).find((z) => z.id === departement)?.parent || "";
+  const depts = (d.depts?.results ?? []).filter((z) => !regionDeduite || z.parent === regionDeduite);
   const communes = (d.communes?.results ?? []).filter((z) => !departement || z.parent === departement);
+  const sansCommune = !!departement && !commune && d.communes != null && communes.length === 0;
   const nomZone = (liste: Zone[] | undefined, id: string, defaut: string) => { const z = (liste ?? []).find((x) => x.id === id); return z ? regionAffichee(z.nom) ?? z.nom : defaut; };
 
   // Filtres actifs, rappelés en pastilles au-dessus du tableau : [libellé, filtre à retirer].
@@ -180,18 +184,19 @@ export function PointsService() {
             <div style={{ flex: "1 1 260px", minWidth: 0 }}><ChoixIMF imfs={imfs} valeur={imf} onChange={(id) => maj({ imf: id })} /></div>
           </div>
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            <select className="fi-input ps-input" aria-label="Filtrer par région" value={region} onChange={(e) => maj({ region: e.target.value, departement: "", commune: "" })} style={selectFiltre}>
+            <select className="fi-input ps-input" aria-label="Filtrer par région" value={regionDeduite} onChange={(e) => maj({ region: e.target.value, departement: "", commune: "" })} style={selectFiltre}>
               <option value="">Toutes les régions</option>
               {regions.map((z) => <option key={z.id} value={z.id}>{regionAffichee(z.nom) ?? z.nom}</option>)}
             </select>
             {/* Départements et communes : proposés seulement si ces découpages sont chargés dans la base. */}
             {avecDepartements && (<>
               <select className="fi-input ps-input" aria-label="Filtrer par département" value={departement} onChange={(e) => maj({ departement: e.target.value, commune: "" })} style={selectFiltre}>
-                <option value="">{region ? "Tous ses départements" : "Tous les départements"}</option>
+                <option value="">{regionDeduite ? "Tous ses départements" : "Tous les départements"}</option>
                 {depts.map((z) => <option key={z.id} value={z.id}>{z.nom}</option>)}
               </select>
-              <select className="fi-input ps-input" aria-label="Filtrer par commune" value={commune} disabled={!departement && !commune} onChange={(e) => maj({ commune: e.target.value })} style={{ ...selectFiltre, ...(!departement && !commune ? { opacity: 0.6, cursor: "not-allowed" } : {}) }}>
-                <option value="">{departement ? "Toutes ses communes" : "Commune (choisir un département)"}</option>
+              {/* Département choisi mais aucune commune référencée (référentiel communal non chargé) : liste désactivée, libellé explicite. */}
+              <select className="fi-input ps-input" aria-label="Filtrer par commune" value={commune} disabled={(!departement && !commune) || sansCommune} onChange={(e) => maj({ commune: e.target.value })} style={{ ...selectFiltre, ...((!departement && !commune) || sansCommune ? { opacity: 0.6, cursor: "not-allowed" } : {}) }}>
+                <option value="">{sansCommune ? "Aucune commune référencée" : departement ? "Toutes ses communes" : "Commune (choisir un département)"}</option>
                 {communes.map((z) => <option key={z.id} value={z.id}>{z.nom}</option>)}
               </select>
             </>)}
@@ -217,12 +222,12 @@ export function PointsService() {
         {/* Institution filtrée : rappel de son identité et accès à ses dirigeants */}
         {institution && (
           <section className="ps-up" style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", padding: "16px 20px", borderRadius: 12, background: "#FFFFFF", border: "1px solid #E7E5E4" }}>
-            <span style={{ width: 46, height: 46, flex: "none", borderRadius: 8, background: "#F5F5F4", color: "#44403C", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--t-sm)", fontWeight: 600 }}>{initiales(institution.sigle || institution.nom)}</span>
+            <span style={{ width: 46, height: 46, flex: "none", borderRadius: 8, background: "#F5F5F4", color: "#44403C", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--t-sm)", fontWeight: 600 }}>{pastilleIMF(institution)}</span>
             <div style={{ flex: "1 1 280px", minWidth: 0 }}>
               <b style={{ display: "block", fontSize: "var(--t-base)", overflowWrap: "anywhere" }}>{institution.nom}</b>
               <span style={{ fontSize: "var(--t-sm)", color: "#6B7280" }}>{[TYPE_IMF_COURT[institution.type_imf], STATUT_IMF_COURT[institution.statut_reglementaire], regionAffichee(institution.region_siege), institution.numero_agrement].filter(Boolean).join(" · ")}</span>
             </div>
-            <div><b style={{ display: "block", fontSize: "var(--t-xl)", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{d.rows ? nombre(total) : "—"}</b><span style={{ fontSize: "var(--t-xs)", color: "#6B7280" }}>point{total > 1 ? "s" : ""} de service</span></div>
+            <div><b style={{ display: "block", fontSize: "var(--t-xl)", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{d.rows ? nombre(total) : "—"}</b><span style={{ fontSize: "var(--t-xs)", color: "#6B7280" }}>{pluriel(total, "point")} de service</span></div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               {[[`/dirigeants?imf=${institution.id}`, "Ses dirigeants →"], [`/consultation?imf=${institution.id}`, "Fiche de l'institution →"]].map(([to, l]) => <Link key={to} to={to} style={{ height: 40, padding: "0 14px", borderRadius: 10, border: "1px solid #E7E5E4", color: "#0B1424", fontSize: "var(--t-sm)", fontWeight: 500, textDecoration: "none", display: "flex", alignItems: "center", boxSizing: "border-box" }}>{l}</Link>)}
             </div>
@@ -231,7 +236,7 @@ export function PointsService() {
 
         <CadreTableau className="ps-up d2"
           barre={<>
-            <span aria-live="polite" style={{ fontSize: "var(--t-md)", fontWeight: 600 }}>{d.rows ? `${nombre(total)} point${total > 1 ? "s" : ""} de service` : "Chargement…"}</span>
+            <span aria-live="polite" style={{ fontSize: "var(--t-md)", fontWeight: 600 }}>{d.rows ? `${nombre(total)} ${pluriel(total, "point")} de service` : "Chargement…"}</span>
             {actifs.map(([libelle, retrait]) => (
               <button key={libelle} type="button" className="tbl-filtre" title="Retirer ce filtre" onClick={() => { if ("q" in retrait) setSaisie(""); maj(retrait); }}><span>{libelle}</span><span aria-hidden="true">×</span></button>
             ))}
@@ -240,8 +245,8 @@ export function PointsService() {
               {([["", "Liste"], ["imf", "Par institution"], ["region", "Par région"]] as const).map(([k, l]) => <button key={k} type="button" role="radio" aria-checked={groupe === k} onClick={() => maj({ groupe: k })}>{l}</button>)}
             </div>
           </>}
-          pied={<Pagination page={page} pages={pages} onPage={(n) => maj({ page: n === 1 ? "" : String(n) })} resume={total ? `${(page - 1) * TAILLE + 1}–${(page - 1) * TAILLE + rows.length} sur ${nombre(total)} points` : "0 point"} />}>
-          <Tableau largeurMin={1020}>
+          pied={<Pagination page={page} pages={pages} onPage={(n) => maj({ page: n === 1 ? "" : String(n) })} resume={total ? `${(page - 1) * TAILLE + 1}–${(page - 1) * TAILLE + rows.length} sur ${nombre(total)} ${pluriel(total, "point")}` : "0 point"} />}>
+          <Tableau largeurMin={colImf ? 900 : 720} vue={`${groupe}|${ordering}|${page}|${region}|${departement}|${commune}|${imf}`}>
             <thead><tr>
               {enTete("nom", "Point de service")}
               {colImf && enTete("imf", "Institution")}

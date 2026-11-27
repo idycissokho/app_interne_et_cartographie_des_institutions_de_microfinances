@@ -20,7 +20,7 @@ import { useAuth } from "../auth/AuthContext";
 import { Erreur, Etapes, erreursChamps } from "../components/form";
 import { AppLayout } from "../components/layout/AppLayout";
 import { CadreTableau, EnTete, PAR_PAGE, Pagination, Tableau } from "../components/tableau/Tableau";
-import { ilYa, nombre, pourcent } from "../lib/format";
+import { ilYa, nombre, pluriel, pourcent } from "../lib/format";
 import { URL_REGIONS, URL_STATISTIQUES, type AgregatZone, type Statistiques } from "../lib/stats";
 import { useDonnees } from "../lib/useDonnees";
 
@@ -157,8 +157,8 @@ export function Donnees() {
   const zone = (t: TypeImport) => d.regions?.find((z) => z.id === regionExport[t]);
   const exports: { id: string; t: TypeImport; label: string; count: string }[] = [
     { id: "ex-imf", t: "IMF", label: "Liste officielle des IMF", count: `${nombre(zone("IMF")?.nb_imf ?? d.stats?.imf.total ?? 0)} IMF et leurs dirigeants · Excel` },
-    { id: "ex-pts", t: "POINTS_SERVICE", label: "Points de service", count: `${nombre(zone("POINTS_SERVICE")?.nb_points_service ?? d.stats?.points.total ?? 0)} points` },
-    { id: "ex-dir", t: "DIRIGEANTS", label: "Dirigeants et mandats", count: zone("DIRIGEANTS") ? `Mandats dans les IMF de ${zone("DIRIGEANTS")!.nom}` : `${nombre(d.stats?.mandats.total ?? 0)} mandats` },
+    { id: "ex-pts", t: "POINTS_SERVICE", label: "Points de service", count: (() => { const n = zone("POINTS_SERVICE")?.nb_points_service ?? d.stats?.points.total ?? 0; return `${nombre(n)} ${pluriel(n, "point")}`; })() },
+    { id: "ex-dir", t: "DIRIGEANTS", label: "Dirigeants et mandats", count: zone("DIRIGEANTS") ? `Mandats dans les IMF de ${zone("DIRIGEANTS")!.nom}` : `${nombre(d.stats?.mandats.total ?? 0)} ${pluriel(d.stats?.mandats.total, "mandat")}` },
   ];
   const regionsTriees = [...(d.regions ?? [])].sort((a, b) => a.nom.localeCompare(b.nom, "fr"));
 
@@ -206,7 +206,7 @@ export function Donnees() {
                   {fichier && (
                     <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 10, border: "1px solid #E7E5E4" }}>
                       <span style={{ fontSize: "var(--t-2xs)", fontWeight: 700, color: "#FFFFFF", background: extension(fichier.name) === "CSV" ? "#1F4E79" : "#15803D", padding: "4px 6px", borderRadius: 6 }}>{extension(fichier.name)}</span>
-                      <span style={{ flex: 1, minWidth: 0, fontSize: "var(--t-md)", fontWeight: 500, overflowWrap: "anywhere" }}>{fichier.name} <span style={{ color: "#6B7280", fontWeight: 500 }}>· {tailleFichier(fichier.size)}{lignes !== null ? ` · ${nombre(lignes)} lignes` : ""}</span></span>
+                      <span style={{ flex: 1, minWidth: 0, fontSize: "var(--t-md)", fontWeight: 500, overflowWrap: "anywhere" }}>{fichier.name} <span style={{ color: "#6B7280", fontWeight: 500 }}>· {tailleFichier(fichier.size)}{lignes !== null ? ` · ${nombre(lignes)} ${pluriel(lignes, "ligne")}` : ""}</span></span>
                       <button type="button" aria-label="Retirer le fichier" onClick={() => choisir(null)} style={{ border: "none", background: "transparent", color: "#6B7280", cursor: "pointer", fontSize: "var(--t-lg)" }}>×</button>
                     </div>
                   )}
@@ -225,11 +225,11 @@ export function Donnees() {
                     </div>
                     {progression !== null && suivi && (
                       <span style={{ fontSize: "var(--t-md)", fontWeight: 600, color: "#0B1424" }}>
-                        {nombre(traitees)} sur {nombre(suivi.nb_lignes_total)} lignes traitées · {pourcent(progression * 100)}
-                        {suivi.nb_lignes_erreur > 0 && <span style={{ color: "#B91C1C", fontWeight: 500 }}> · {nombre(suivi.nb_lignes_erreur)} rejetée{suivi.nb_lignes_erreur > 1 ? "s" : ""}</span>}
+                        {nombre(traitees)} sur {nombre(suivi.nb_lignes_total)} {pluriel(suivi.nb_lignes_total, "ligne traitée", "lignes traitées")} · {pourcent(progression * 100)}
+                        {suivi.nb_lignes_erreur > 0 && <span style={{ color: "#B91C1C", fontWeight: 500 }}> · {nombre(suivi.nb_lignes_erreur)} {pluriel(suivi.nb_lignes_erreur, "rejetée")}</span>}
                       </span>
                     )}
-                    <span style={{ fontSize: "var(--t-sm)", fontWeight: 600, color: "#4A5568" }}>{LIB[suivi?.type_import ?? type]} · {fichier?.name ?? nomFichier(suivi?.fichier)}{lignes !== null ? ` · ${nombre(lignes)} lignes` : ""}</span>
+                    <span style={{ fontSize: "var(--t-sm)", fontWeight: 600, color: "#4A5568" }}>{LIB[suivi?.type_import ?? type]} · {fichier?.name ?? nomFichier(suivi?.fichier)}{lignes !== null ? ` · ${nombre(lignes)} ${pluriel(lignes, "ligne")}` : ""}</span>
                     <span style={{ fontSize: "var(--t-sm)", color: "#6B7280", maxWidth: 440 }}>Vous pouvez quitter cette page : l'import continue sur le serveur et son résultat apparaîtra dans l'historique.</span>
                   </div>
                 )}
@@ -247,8 +247,8 @@ export function Donnees() {
                   </div>
                   {doublons.length > 0 && (
                     <CadreTableau
-                      pied={doublons.length > PAR_PAGE ? <Pagination page={pageDoublons} pages={Math.ceil(doublons.length / PAR_PAGE)} onPage={setPageDoublons} resume={`${nombre(doublons.length)} lignes`} /> : undefined}
-                      barre={<><div style={{ display: "flex", flexDirection: "column", gap: 2 }}><b style={{ fontSize: "var(--t-base)", fontWeight: 600 }}>Doublons détectés</b><span style={{ fontSize: "var(--t-xs)", color: "#6B7280" }}>{nombre(nbBase)} déjà dans la base · {nombre(nbFichier)} répété{nbFichier > 1 ? "s" : ""} dans le fichier · aucun enregistrement dupliqué</span></div><a href="#" onClick={(e) => { e.preventDefault(); exporterCsv(`doublons_import_${res.id.slice(0, 8)}.csv`, [["Ligne", "Enregistrement", "Situation"], ...doublons.map((x) => [x.ligne, x.libelle, situation(x)])]); }} style={{ marginLeft: "auto", fontSize: "var(--t-sm)", fontWeight: 500, textDecoration: "none" }}>Télécharger la liste (CSV)</a></>}>
+                      pied={doublons.length > PAR_PAGE ? <Pagination page={pageDoublons} pages={Math.ceil(doublons.length / PAR_PAGE)} onPage={setPageDoublons} resume={`${nombre(doublons.length)} ${pluriel(doublons.length, "ligne")}`} /> : undefined}
+                      barre={<><div style={{ display: "flex", flexDirection: "column", gap: 2 }}><b style={{ fontSize: "var(--t-base)", fontWeight: 600 }}>Doublons détectés</b><span style={{ fontSize: "var(--t-xs)", color: "#6B7280" }}>{nombre(nbBase)} déjà dans la base · {nombre(nbFichier)} {pluriel(nbFichier, "répété")} dans le fichier · aucun enregistrement dupliqué</span></div><a href="#" onClick={(e) => { e.preventDefault(); exporterCsv(`doublons_import_${res.id.slice(0, 8)}.csv`, [["Ligne", "Enregistrement", "Situation"], ...doublons.map((x) => [x.ligne, x.libelle, situation(x)])]); }} style={{ marginLeft: "auto", fontSize: "var(--t-sm)", fontWeight: 500, textDecoration: "none" }}>Télécharger la liste (CSV)</a></>}>
                       <Tableau largeurMin={520}>
                         <thead><tr><EnTete num>Ligne</EnTete><EnTete>Enregistrement</EnTete><EnTete>Situation</EnTete></tr></thead>
                         <tbody>

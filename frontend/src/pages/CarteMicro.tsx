@@ -13,7 +13,7 @@ import { Badge, TON_STATUT } from "../components/tableau/Tableau";
 import { projeter } from "../data/projection";
 import { SENEGAL_REGIONS, cleRegion } from "../data/senegalRegions";
 import { URL_IMF_OPTIONS, type ImfOption } from "../lib/stats";
-import { montantCourt } from "../lib/format";
+import { montantCourt, nombre, pluriel } from "../lib/format";
 import { useDonnees } from "../lib/useDonnees";
 
 interface FeaturePoint {
@@ -98,13 +98,15 @@ export function CarteMicro() {
             <p style={{ margin: 0, fontSize: "var(--t-base)", color: "#4A5568", lineHeight: 1.55 }}>Agences et guichets géolocalisés ; les sièges sociaux sont signalés en or.</p>
           </div>
           <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-            <span style={{ fontSize: "var(--t-md)", color: "#4A5568" }}><b style={{ fontSize: "var(--t-xl)", color: "#0B1424", letterSpacing: "-0.02em" }}>{vis.length}</b> points affichés</span>
+            <span style={{ fontSize: "var(--t-md)", color: "#4A5568" }}><b style={{ fontSize: "var(--t-xl)", color: "#0B1424", letterSpacing: "-0.02em" }}>{nombre(vis.length)}</b> {pluriel(vis.length, "point affiché", "points affichés")}</span>
             <button type="button" onClick={() => { setF(VIDE); setPt(null); }} style={{ height: 44, padding: "0 16px", borderRadius: 10, border: "1px solid #E7E5E4", background: "#FFFFFF", font: "inherit", fontSize: "var(--t-sm)", fontWeight: 600, color: "#0B1424", cursor: "pointer" }}>Réinitialiser les filtres</button>
           </div>
         </header>
 
-        <section className="mi-in d1 mi-cadre" style={{ position: "relative", flex: "1 1 auto", minHeight: 780, borderRadius: 12, background: "#FFFFFF", border: "1px solid #E7E5E4", overflow: "hidden", display: "flex", flexWrap: "wrap" }}>
-          <aside style={{ flex: "1 1 260px", maxWidth: 290, minWidth: 0, padding: 20, boxSizing: "border-box", borderRight: "1px solid #F0EFED", display: "flex", flexDirection: "column", gap: 14, background: "#FFFFFF" }} className="mi-filtres">
+        {/* Filtres à gauche, carte à droite ; empilés quand la place manque (règles .mi-conteneur de global.css). */}
+        <div className="mi-conteneur">
+        <section className="mi-in d1 mi-cadre">
+          <aside className="mi-filtres">
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8A6A1F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 5h18l-7 8v6l-4 2v-8L3 5z" /></svg><h2 style={{ margin: 0, fontSize: "var(--t-base)", fontWeight: 700 }}>Filtres</h2></div>
             {filtres.map((fl) => (
               <div key={fl.id} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -124,8 +126,8 @@ export function CarteMicro() {
             </div>
           </aside>
 
-          <div className="mi-zone" style={{ flex: "999 1 480px", minWidth: 0, position: "relative", overflow: "hidden" }}>
-            <div className="mi-carte-pos" style={{ position: "absolute", inset: 0 }}>
+          <div className={`mi-zone${pt ? " fiche-ouverte" : ""}`}>
+            <div className="mi-carte-pos">
               <SenegalMap theme="light" fillMode="muted" flow showPoints showLabels={false} zoomSelection zoomPoint molette rayon={0} agrandir=".mi-cadre" selected={f.region} points={points} pointFilter={flt} selectedPoint={pt}
                 recadrage={recadrage} onVueModifiee={() => setVueModifiee(true)}
                 onPickPoint={(p) => { setPt(p as PointMicro); setVueModifiee(true); }} onPick={(id) => { setF({ ...f, region: id }); setPt(null); setVueModifiee(true); }} />
@@ -189,6 +191,7 @@ export function CarteMicro() {
             )}
           </div>
         </section>
+        </div>
       </main>
     </AppLayout>
   );

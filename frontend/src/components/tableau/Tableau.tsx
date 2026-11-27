@@ -7,7 +7,7 @@
  * - actions de ligne visibles au survol, au clavier, et toujours sur écran tactile ;
  * - sous 640 px, chaque ligne devient une carte : chaque <td> porte data-label.
  */
-import type { CSSProperties, MouseEvent, ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, type CSSProperties, type MouseEvent, type ReactNode } from "react";
 
 import { Squelette } from "../Squelette";
 
@@ -22,10 +22,32 @@ export function CadreTableau({ barre, pied, children, className = "", style }: {
   );
 }
 
-/** Le tableau lui-même. `largeurMin` : au-delà, défilement horizontal ; sous 640 px, cartes. */
-export function Tableau({ largeurMin = 760, legende, children }: { largeurMin?: number; legende?: string; children: ReactNode }) {
+/**
+ * Le tableau lui-même. `largeurMin` : en dessous, défilement horizontal ; sous 640 px, cartes.
+ * `vue` : identifiant de la vue affichée (regroupement, filtres…) ; à chaque changement, le
+ * défilement horizontal revient au début. Quand le tableau déborde, l'attribut data-deborde
+ * active les repères visuels (ombres des bords, colonne d'actions fixée à droite, barre visible).
+ */
+export function Tableau({ largeurMin = 760, legende, vue, children }: { largeurMin?: number; legende?: string; vue?: string; children: ReactNode }) {
+  const defile = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    if (defile.current) defile.current.scrollLeft = 0;
+  }, [vue]);
+  useEffect(() => {
+    const el = defile.current;
+    if (!el) return;
+    const mesurer = () => {
+      el.toggleAttribute("data-deborde", el.scrollWidth > el.clientWidth + 1);
+      el.style.setProperty("--tbl-visible", `${el.clientWidth}px`);
+    };
+    mesurer();
+    const observateur = new ResizeObserver(mesurer);
+    observateur.observe(el);
+    if (el.firstElementChild) observateur.observe(el.firstElementChild);
+    return () => observateur.disconnect();
+  }, []);
   return (
-    <div className="tbl-defile">
+    <div ref={defile} className="tbl-defile">
       <table className="tbl cartes" style={{ minWidth: largeurMin }}>
         {legende && <caption className="tbl-legende">{legende}</caption>}
         {children}
