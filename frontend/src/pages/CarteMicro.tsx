@@ -15,6 +15,7 @@ import { SENEGAL_REGIONS, cleRegion } from "../data/senegalRegions";
 import { URL_IMF_OPTIONS, type ImfOption } from "../lib/stats";
 import { montantCourt, nombre, pluriel } from "../lib/format";
 import { useDonnees } from "../lib/useDonnees";
+import { ContactListe } from "../components/ContactTelephone";
 
 interface FeaturePoint {
   id: string;
@@ -179,7 +180,7 @@ export function CarteMicro() {
                       </div>
                     );
                   })()}
-                  {pt.p.telephone && <div style={{ display: "flex", alignItems: "center", gap: 10, color: "#4A5568" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A6A1F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z" /></svg>{pt.p.telephone}</div>}
+                  {pt.p.telephone && <div style={{ display: "flex", alignItems: "center", gap: 10, color: "#4A5568" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A6A1F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z" /></svg><ContactListe telephone={pt.p.telephone} nom={pt.p.nom} /></div>}
                   {pt.p.email && <div style={{ display: "flex", alignItems: "center", gap: 10, color: "#4A5568" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A6A1F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>{pt.p.email}</div>}
                   <div style={{ display: "flex", gap: 8 }}>
                     <Link to={`/consultation?imf=${pt.p.imf}`} style={{ flex: 1, height: 42, borderRadius: 10, background: "#C9A44C", color: "#0B1424", fontSize: "var(--t-sm)", fontWeight: 600, textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center" }}>Ouvrir la fiche IMF</Link>

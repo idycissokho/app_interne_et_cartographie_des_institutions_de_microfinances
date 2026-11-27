@@ -3,6 +3,8 @@ itineraires/views.py
 ====================
 Section « Itinéraire » — ouverte à tous les utilisateurs connectés (CONSULTANT, SUPERVISEUR, ADMIN) :
   POST /api/v1/itineraires/calculer/                       — trajets à pied, moto, voiture
+  POST /api/v1/public/itineraire/                          — même calcul, SANS connexion (accueil public),
+                                                             vers le siège d'une institution uniquement
   GET  /api/v1/itineraires/destinations/?q=                — recherche d'IMF et de points géolocalisés
   GET  /api/v1/itineraires/destinations/carte/             — toutes les épingles de la carte
   GET  /api/v1/itineraires/destinations/<type>/<uuid>/     — une destination (lien direct depuis une fiche)
@@ -16,9 +18,9 @@ non configuré. (Pas de 503 : le frontend le réserve au serveur de l'applicatio
 
 from drf_spectacular.utils import OpenApiExample, OpenApiParameter, OpenApiResponse, extend_schema
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.throttling import UserRateThrottle
+from rest_framework.throttling import ScopedRateThrottle, UserRateThrottle
 from rest_framework.views import APIView
 
 from .fournisseurs import ErreurFournisseur, FournisseurNonConfigure
@@ -98,19 +100,55 @@ class CalculerItineraireView(APIView):
     def post(self, request):
         entree = CalculItineraireSerializer(data=request.data)
         entree.is_valid(raise_exception=True)
-        donnees = entree.validated_data
-        try:
-            destination = obtenir_destination(donnees["destination"]["type"], donnees["destination"]["id"])
-        except DestinationSansPosition as erreur:
-            return _sans_position(erreur)
-        origine = (donnees["origine"]["lat"], donnees["origine"]["lon"])
-        try:
-            resultat = calculer_itineraire(origine, destination, donnees["modes"])
-        except FournisseurNonConfigure as erreur:
-            return _erreur("fournisseur_non_configure", str(erreur), status.HTTP_501_NOT_IMPLEMENTED)
-        except ErreurFournisseur as erreur:
-            return _erreur("fournisseur_indisponible", str(erreur), status.HTTP_424_FAILED_DEPENDENCY)
-        return Response({"destination": destination.en_dict(), **resultat})
+        return _calculer(entree.validated_data)
+
+
+def _calculer(donnees: dict) -> Response:
+    """Calcul commun aux routes connectée et publique (mêmes règles, mêmes réponses)."""
+    try:
+        destination = obtenir_destination(donnees["destination"]["type"], donnees["destination"]["id"])
+    except DestinationSansPosition as erreur:
+        return _sans_position(erreur)
+    origine = (donnees["origine"]["lat"], donnees["origine"]["lon"])
+    try:
+        resultat = calculer_itineraire(origine, destination, donnees["modes"])
+    except FournisseurNonConfigure as erreur:
+        return _erreur("fournisseur_non_configure", str(erreur), status.HTTP_501_NOT_IMPLEMENTED)
+    except ErreurFournisseur as erreur:
+        return _erreur("fournisseur_indisponible", str(erreur), status.HTTP_424_FAILED_DEPENDENCY)
+    return Response({"destination": destination.en_dict(), **resultat})
+
+
+class ItinerairePublicView(APIView):
+    """Accueil public (sans connexion) : trajet jusqu'au SIÈGE d'une institution du registre.
+
+    Même calcul que la section Itinéraire. Seule la destination « institution » est acceptée :
+    sa position est déjà publique sur l'accueil (registre). Limite d'appels par adresse IP
+    (LIMITE_ITINERAIRE_PUBLIC) pour ménager le moteur. La position du visiteur n'est ni
+    enregistrée ni journalisée.
+    """
+
+    permission_classes = [AllowAny]
+    # Aucun jeton lu : un jeton expiré resté dans le navigateur ne doit pas provoquer de 401.
+    authentication_classes = []
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "itineraire_public"
+
+    @extend_schema(
+        tags=["Itinéraires"],
+        summary="Calculer le trajet jusqu'au siège d'une institution (accueil public, sans connexion)",
+        request=CalculItineraireSerializer,
+        responses={200: CalculReponseSerializer, 400: OpenApiResponse(description="Origine invalide, mode inconnu ou destination autre qu'une institution."), **REPONSES_ERREUR},
+    )
+    def post(self, request):
+        entree = CalculItineraireSerializer(data=request.data)
+        entree.is_valid(raise_exception=True)
+        if entree.validated_data["destination"]["type"] != "institution":
+            return Response(
+                {"destination": ["Depuis l'accueil, seul le siège d'une institution peut être choisi comme destination."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return _calculer(entree.validated_data)
 
 
 class DestinationsView(APIView):

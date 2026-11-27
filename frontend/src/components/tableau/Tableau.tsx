@@ -28,7 +28,7 @@ export function CadreTableau({ barre, pied, children, className = "", style }: {
  * défilement horizontal revient au début. Quand le tableau déborde, l'attribut data-deborde
  * active les repères visuels (ombres des bords, colonne d'actions fixée à droite, barre visible).
  */
-export function Tableau({ largeurMin = 760, legende, vue, children }: { largeurMin?: number; legende?: string; vue?: string; children: ReactNode }) {
+export function Tableau({ largeurMin = 760, legende, vue, serre = false, children }: { largeurMin?: number; legende?: string; vue?: string; serre?: boolean; children: ReactNode }) {
   const defile = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     if (defile.current) defile.current.scrollLeft = 0;
@@ -48,7 +48,8 @@ export function Tableau({ largeurMin = 760, legende, vue, children }: { largeurM
   }, []);
   return (
     <div ref={defile} className="tbl-defile">
-      <table className="tbl cartes" style={{ minWidth: largeurMin }}>
+      {/* `serre` : marges internes réduites, pour les tableaux à nombreuses colonnes. */}
+      <table className={serre ? "tbl cartes tbl-serre" : "tbl cartes"} style={{ minWidth: largeurMin }}>
         {legende && <caption className="tbl-legende">{legende}</caption>}
         {children}
       </table>

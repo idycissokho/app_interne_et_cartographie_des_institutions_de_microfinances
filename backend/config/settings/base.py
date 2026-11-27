@@ -308,6 +308,8 @@ REST_FRAMEWORK = {
         "assistant": env("LIMITE_ASSISTANT", default="30/min"),
         # Recherche publique de l'accueil (sans connexion) : par adresse IP.
         "public": env("LIMITE_PUBLIC", default="60/min"),
+        # Itinéraire depuis l'accueil public (sans connexion) : par adresse IP, ménage le moteur.
+        "itineraire_public": env("LIMITE_ITINERAIRE_PUBLIC", default="20/min"),
     },
 }
 

@@ -435,6 +435,9 @@ html.cs-fige{overflow:hidden}
 .tbl td{padding:14px 12px;border-bottom:1px solid #F0EFED;vertical-align:middle}
 .tbl tr>:first-child{padding-left:20px}
 .tbl tr>:last-child{padding-right:20px}
+.tbl.tbl-serre th:not(:first-child):not(:last-child),.tbl.tbl-serre td:not(:first-child):not(:last-child){padding-left:8px;padding-right:8px}
+.tbl.tbl-serre tr>:first-child{padding-left:14px}
+.tbl.tbl-serre tr>:last-child{padding-right:14px}
 .tbl tbody tr:last-child>td{border-bottom:none}
 .tbl tbody tr{transition:background-color .12s ease}
 .tbl tbody tr:not(.tbl-groupe):not(.tbl-attente):hover{background:#FAFAF9}
@@ -452,6 +455,7 @@ html.cs-fige{overflow:hidden}
 .tbl-groupe>td{background:#FAFAF9;padding-top:10px;padding-bottom:10px;border-bottom:1px solid #E7E5E4;font-size:var(--t-sm)}
 .tbl-attente>td{padding-top:16px;padding-bottom:16px}
 .tbl-actions{text-align:right;white-space:nowrap;width:1%}
+.tbl td[data-label="Contact"]{white-space:nowrap;width:1%}
 .tbl-actions>div{display:inline-flex;gap:2px}
 .tbl-icone{width:32px;height:32px;border-radius:8px;border:none;background:transparent;color:#6B7280;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:background-color .12s ease,color .12s ease,opacity .12s ease}
 .tbl-icone:hover{background:#F0EFED;color:#0B1424}
@@ -777,6 +781,35 @@ select.fi-input.bad,select.ps-input.bad,select.di-input.bad{border-color:#DC2626
 .rg-extrait-carte > div:first-child{position:absolute;inset:0}
 .rg-carte-note{position:absolute;left:14px;right:14px;bottom:14px;margin:0;padding:8px 12px;border-radius:8px;background:rgba(255,255,255,.95);border:1px solid #E7E5E4;font-size:var(--t-xs);color:#4A5568}
 
+/* Itinéraire jusqu'au siège, sous l'extrait (components/accueil/ItineraireAccueil.tsx) */
+.rg-extrait-corps:has(+ .rg-itineraire){border-radius:0;box-shadow:none}
+.rg-itineraire{display:grid;grid-template-columns:minmax(0,1fr);border-bottom:1px solid #E2DFD9;border-radius:0 0 12px 12px;overflow:hidden;background:#FFFFFF;box-shadow:0 18px 40px rgba(11,20,36,.07)}
+.rg-itineraire-ouvert{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.rg-itineraire-panneau{padding:28px 40px 30px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.rg-itineraire-ferme .rg-itineraire-panneau{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:32px}
+.rg-itineraire-ferme > .rg-itineraire-tete{padding:24px 40px}
+.rg-itineraire-tete{display:flex;flex-direction:column;gap:4px}
+.rg-itineraire-tete h3{margin:0;font-size:var(--t-lg);font-weight:700;letter-spacing:-0.01em;color:#0B1424}
+.rg-itineraire-tete p{margin:0;font-size:var(--t-sm);color:#4A5568;line-height:1.5}
+.rg-itineraire-actions{display:flex;flex-wrap:wrap;gap:10px}
+.rg-itineraire-actions button{display:inline-flex;align-items:center;justify-content:center;gap:8px;flex:1 1 auto}
+.rg-itineraire-actions button:disabled{opacity:.6;cursor:progress}
+.rg-itineraire-actions button[aria-pressed="true"]{border-color:#C9A44C !important;box-shadow:inset 0 0 0 1px #C9A44C}
+.rg-itineraire button:focus-visible,.rg-itineraire a:focus-visible{outline:2px solid #C9A44C;outline-offset:2px}
+.rg-itineraire-gmaps{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;font-size:var(--t-sm);font-weight:600;color:#8A6A1F;text-decoration:underline;text-underline-offset:4px}
+.rg-itineraire-gmaps:hover{color:#6E5416}
+.rg-itineraire-carte{position:relative;min-height:460px;border-left:1px solid #ECEAE6;background:#FAFAF8}
+@media (max-width: 1024px){
+  .rg-itineraire-ouvert{grid-template-columns:minmax(0,1fr)}
+  .rg-itineraire-carte{min-height:360px;border-left:none;border-top:1px solid #ECEAE6}
+  .rg-itineraire-ferme .rg-itineraire-panneau{grid-template-columns:minmax(0,1fr);row-gap:16px}
+}
+@media (max-width: 640px){
+  .rg-itineraire-panneau,.rg-itineraire-ferme > .rg-itineraire-tete{padding:22px 20px}
+  .rg-itineraire-carte{min-height:300px}
+  .rg-itineraire-actions button{flex-basis:100%}
+}
+
 /* Registre */
 .rg-registre{background:#F7F6F2;border-top:1px solid #ECEAE6;padding:56px 0 72px;scroll-margin-top:0}
 .rg-registre-in{display:grid;grid-template-columns:260px minmax(0,1fr);gap:40px;align-items:start}
@@ -875,3 +908,23 @@ select.fi-input.bad,select.ps-input.bad,select.di-input.bad{border-color:#DC2626
 .champ-mdp-oeil{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:40px;height:40px;border:none;border-radius:8px;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:.8;transition:opacity .15s ease,background .15s ease}
 .champ-mdp-oeil:hover{opacity:1;background:rgba(127,127,127,.12)}
 .champ-mdp-oeil:disabled{cursor:default;opacity:.4}
+
+/* Contact par téléphone : Appeler / WhatsApp (components/ContactTelephone.tsx) */
+.ct-boutons{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}
+.ct-bouton{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:34px;height:34px;padding:0 9px;border-radius:999px;border:1px solid #E7E5E4;background:#FFFFFF;color:#0B1424;font-size:var(--t-sm);font-weight:600;text-decoration:none;white-space:nowrap;box-sizing:border-box;transition:border-color .12s ease,background-color .12s ease,color .12s ease}
+.ct-bouton:hover{border-color:#A8A29E;background:#FAFAF9}
+.ct-appel{color:#8A6A1F}
+.ct-whatsapp{color:#15803D}
+.ct-whatsapp:hover{border-color:#16A34A;background:#F0FDF4}
+.ct-bouton:focus-visible{outline:2px solid #C9A44C;outline-offset:2px}
+.ct-libelles .ct-bouton{height:32px;padding:0 12px}
+.ct-liste{display:flex;flex-direction:column;gap:8px}
+.ct-ligne{display:flex;align-items:center;justify-content:inherit;gap:8px 12px;flex-wrap:wrap}
+.ct-numero{white-space:nowrap;font-variant-numeric:tabular-nums}
+.ct-aucun{color:#9AA3B2}
+/* Dans les tableaux : même taille que les boutons d'action (32 px) */
+.tbl .ct-boutons{gap:4px}
+.tbl .ct-bouton{min-width:32px;height:32px;padding:0 6px}
+@media (pointer:coarse){.tbl .ct-bouton{min-width:44px;height:44px}}
+/* Écran tactile : cibles d'au moins 44 px */
+@media (pointer:coarse){.ct-bouton{min-width:44px;height:44px}.ct-libelles .ct-bouton{height:40px}}

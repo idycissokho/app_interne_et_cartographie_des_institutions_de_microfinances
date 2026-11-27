@@ -20,6 +20,7 @@ import { FAMILLE_FONCTION, FONCTIONS, LIBELLE_FONCTION, STATUT_IMF_COURT, STATUT
 import { URL_IMF_OPTIONS, URL_REGIONS, URL_STATISTIQUES, type AgregatZone, type ImfOption, type Statistiques } from "../lib/stats";
 import { Badge, BoutonIcone, CadreTableau, CelluleActions, EnTete, EtatVide, LigneGroupe, LignesChargement, Pagination, TON_STATUT, Tableau, PAR_PAGE } from "../components/tableau/Tableau";
 import { useDonnees } from "../lib/useDonnees";
+import { ContactIcones } from "../components/ContactTelephone";
 
 interface DirigeantRes { id: string; nom_complet: string; email_professionnel: string; nb_mandats: number }
 
@@ -127,7 +128,7 @@ export function Dirigeants() {
   ];
 
   const colDirigeant = groupe !== "dirigeant", colImf = groupe !== "imf";
-  const nbColonnes = 5 + Number(colDirigeant) + Number(colImf);
+  const nbColonnes = 6 + Number(colDirigeant) + Number(colImf);
   const cleGroupe = (r: Mandat) => (groupe === "imf" ? r.imf : groupe === "dirigeant" ? r.dirigeant : "");
   const Th = ({ cle, children }: { cle?: string; children: ReactNode }) => {
     const actif = !!cle && !groupe && cleTri === cle;
@@ -224,12 +225,14 @@ export function Dirigeants() {
             </div>
           </>}
           pied={<Pagination page={page} pages={pages} onPage={(n) => maj({ page: n === 1 ? "" : String(n) })} resume={total ? `${(page - 1) * TAILLE + 1}–${(page - 1) * TAILLE + rows.length} sur ${nombre(total)} ${pluriel(total, "mandat")}` : "0 mandat"} />}>
-          <Tableau largeurMin={colDirigeant && colImf ? 900 : 760} vue={`${groupe}|${cleTri}|${desc}|${page}|${imf}`}>
+          <Tableau serre largeurMin={colDirigeant && colImf ? 900 : 760} vue={`${groupe}|${cleTri}|${desc}|${page}|${imf}`}>
             <thead><tr>
               {colDirigeant && <Th cle="dirigeant">Dirigeant</Th>}
               <Th cle="fonction">Fonction</Th>
               {colImf && <Th cle="imf">Institution</Th>}
               <Th cle="debut">Mandat</Th><Th cle="statut">Statut</Th><Th>Justificatif</Th>
+              {/* Contact direct du dirigeant (appel, WhatsApp) : colonne à part, les actions restent dédiées à la gestion. */}
+              <Th>Contact</Th>
               <EnTete><span className="sr-only">Actions</span></EnTete>
             </tr></thead>
             <tbody>
@@ -249,14 +252,15 @@ export function Dirigeants() {
                     </LigneGroupe>
                   ),
                   <tr key={r.id} tabIndex={0} title="Ouvrir la fiche du dirigeant" onClick={() => setFiche(r.dirigeant)} onKeyDown={(e) => e.key === "Enter" && e.target === e.currentTarget && setFiche(r.dirigeant)}>
-                    {colDirigeant && <td className="principal"><div style={{ display: "flex", alignItems: "center", gap: 12 }}><span style={avatar}>{initiales(r.dirigeant_nom_complet)}</span><div style={{ minWidth: 0 }}><div style={{ fontWeight: 600 }}>{r.dirigeant_nom_complet}</div><span className="muet" style={{ overflowWrap: "anywhere" }}>{contact || "—"}</span></div></div></td>}
+                    {colDirigeant && <td className="principal"><div style={{ display: "flex", alignItems: "center", gap: 10 }}><span style={avatar}>{initiales(r.dirigeant_nom_complet)}</span><div style={{ minWidth: 0 }}><div style={{ fontWeight: 600 }}>{r.dirigeant_nom_complet}</div><span className="muet" style={{ overflowWrap: "anywhere" }}>{contact || "—"}</span></div></div></td>}
                     <td data-label="Fonction" className={colDirigeant ? undefined : "principal"}><div style={{ display: "flex", flexWrap: "wrap", alignItems: "baseline", gap: "4px 8px" }}>{CODE_FONCTION[r.fonction_mandat] && <span style={badgeFonction}>{CODE_FONCTION[r.fonction_mandat]}</span>}<span style={{ fontSize: "var(--t-sm)", color: "#4A5568" }}>{LIBELLE_FONCTION[r.fonction_mandat] ?? r.fonction_mandat}</span></div></td>
                     {colImf && <td data-label="Institution"><button type="button" className="di-lien" title="Voir tous les dirigeants de cette institution" onClick={(e) => { e.stopPropagation(); maj({ imf: r.imf }); }} style={{ fontSize: "var(--t-sm)", fontWeight: 500, lineHeight: 1.4, textAlign: "inherit" }}>{r.imf_nom}</button>{r.imf_region && <span className="muet">{[r.imf_sigle, regionAffichee(r.imf_region)].filter(Boolean).join(" · ")}</span>}</td>}
-                    <td data-label="Mandat" style={{ minWidth: 110 }}><div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: "0 8px", fontSize: "var(--t-sm)", color: "#4A5568", marginBottom: 6, whiteSpace: "nowrap" }}><span>{dateCourte(r.date_debut)}</span><span>{r.date_fin ? dateCourte(r.date_fin) : "sans échéance"}</span></div><div className="tbl-jauge"><div style={{ background: av.color, width: `${av.prog}%` }} /></div>{ech && <div style={{ fontSize: "var(--t-xs)", fontWeight: 600, color: ech.couleur, marginTop: 4 }}>{ech.texte}</div>}</td>
+                    <td data-label="Mandat" style={{ minWidth: 84 }}><div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: "0 8px", fontSize: "var(--t-sm)", color: "#4A5568", marginBottom: 6, whiteSpace: "nowrap" }}><span>{dateCourte(r.date_debut)}</span><span>{r.date_fin ? dateCourte(r.date_fin) : "sans échéance"}</span></div><div className="tbl-jauge"><div style={{ background: av.color, width: `${av.prog}%` }} /></div>{ech && <div style={{ fontSize: "var(--t-xs)", fontWeight: 600, color: ech.couleur, marginTop: 4 }}>{ech.texte}</div>}</td>
                     <td data-label="Statut"><Badge ton={TON_STATUT[r.statut_mandat]}>{STATUT_MANDAT[r.statut_mandat] ?? r.statut_mandat}</Badge></td>
                     <td data-label="Justificatif">{lien
                       ? <a href={lien} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} title={r.fichier_justificatif ? nomFichier(r.fichier_justificatif) : "Lien externe"} style={{ display: "inline-flex", alignItems: "center", gap: 6, maxWidth: 180, fontSize: "var(--t-sm)", fontWeight: 500, textDecoration: "none" }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flex: "none" }}><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6z" /><path d="M14 3v6h6" /></svg><span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.fichier_justificatif ? nomFichier(r.fichier_justificatif) : "Lien externe"}</span></a>
                       : <Badge ton="alerte">Manquant</Badge>}</td>
+                    <td data-label="Contact"><ContactIcones telephone={r.dirigeant_telephone} nom={r.dirigeant_nom_complet} /></td>
                     <CelluleActions>
                       <BoutonIcone libelle={`Voir la fiche de ${r.dirigeant_nom_complet}`} onClick={(e) => { e.stopPropagation(); setFiche(r.dirigeant); }}><Icone d={I_OEIL} /></BoutonIcone>
                       {peutModifier && <BoutonIcone libelle={`Modifier le mandat de ${r.dirigeant_nom_complet}`} onClick={(e) => { e.stopPropagation(); ouvrirModale({ mandat: r }); }}><Icone d={I_CRAYON} /></BoutonIcone>}
