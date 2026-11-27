@@ -14,6 +14,7 @@ import { useDonnees } from "../../lib/useDonnees";
 import { Squelette } from "../Squelette";
 import { Badge, TON_STATUT } from "../tableau/Tableau";
 import { Drawer, EMAIL_OK, Erreur, Label, btnPrimaire, btnSecondaire, erreursChamps } from "../form";
+import { ContactListe } from "../ContactTelephone";
 
 const champ: CSSProperties = { display: "flex", flexDirection: "column", gap: 8, minWidth: 0 };
 const lienBouton: CSSProperties = { border: "none", background: "transparent", padding: 0, font: "inherit", fontSize: "var(--t-sm)", fontWeight: 600, color: "#8A6A1F", cursor: "pointer", textAlign: "left" };
@@ -115,7 +116,7 @@ export function FicheDirigeant({ id, onClose, onModifierMandat, onAjouterMandat,
               {coordonnees.map(([libelle, valeur, href]) => (
                 <div key={libelle} style={{ minWidth: 0 }}>
                   <dt style={{ fontSize: "var(--t-sm)", fontWeight: 400, color: "#6B7280" }}>{libelle}</dt>
-                  <dd style={{ margin: "4px 0 0 0", fontSize: "var(--t-md)", fontWeight: 500, overflowWrap: "anywhere", color: valeur ? "#0B1424" : "#9AA3B2" }}>{valeur ? (href ? <a href={href} style={{ color: "inherit" }}>{valeur}</a> : valeur) : "Non renseigné"}</dd>
+                  <dd style={{ margin: "4px 0 0 0", fontSize: "var(--t-md)", fontWeight: 500, overflowWrap: "anywhere", color: valeur ? "#0B1424" : "#9AA3B2" }}>{libelle === "Téléphone" && valeur ? <ContactListe telephone={valeur} nom={f?.nom_complet} /> : valeur ? (href ? <a href={href} style={{ color: "inherit" }}>{valeur}</a> : valeur) : "Non renseigné"}</dd>
                 </div>
               ))}
             </dl>

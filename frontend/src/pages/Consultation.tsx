@@ -17,6 +17,7 @@ import {
 } from "../lib/metier";
 import { statsParRegion, type AgregatZone, URL_IMF_OPTIONS, URL_REGIONS } from "../lib/stats";
 import { useDonnees } from "../lib/useDonnees";
+import { ContactListe } from "../components/ContactTelephone";
 
 interface ImfLigne { id: string; nom: string; sigle: string; type_imf: string; statut_reglementaire: string; region_siege: string | null; nb_points_service: number }
 const VIDE: ImfLigne[] = [];
@@ -153,7 +154,7 @@ export function Consultation() {
                       </div>
                       <div style={{ display: "flex", flexDirection: "column", gap: 10, fontSize: "var(--t-md)" }}>
                         <div style={ligne}><span style={{ color: "#6B7280" }}>Sigle</span><b>{cur.sigle || "—"}</b></div>
-                        <div style={ligne}><span style={{ color: "#6B7280" }}>Téléphone</span><b>{cur.telephone || "—"}</b></div>
+                        <div style={ligne}><span style={{ color: "#6B7280" }}>Téléphone</span><b style={{ textAlign: "right" }}><ContactListe telephone={cur.telephone} nom={cur.sigle || cur.nom} vide="—" /></b></div>
                         <div style={ligne}><span style={{ color: "#6B7280" }}>Email</span><b style={{ overflowWrap: "anywhere" }}>{cur.email || "—"}</b></div>
                         {/* Informations de l'annuaire DRS-SFD : affichées seulement si elles sont renseignées. */}
                         {([

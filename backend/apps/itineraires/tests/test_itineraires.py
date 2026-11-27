@@ -341,3 +341,56 @@ def test_valhalla_reponse_illisible():
 def test_decoder_polyline():
     # Exemple de référence de l'algorithme (précision 5) : (38.5, -120.2), (40.7, -120.95), (43.252, -126.453)
     assert decoder_polyline("_p~iF~ps|U_ulLnnqC_mqNvxq`@", precision=5) == [[-120.2, 38.5], [-120.95, 40.7], [-126.453, 43.252]]
+
+
+# ── Accueil public : trajet jusqu'au siège, sans connexion ────────────────────
+URL_PUBLIC = "/api/v1/public/itineraire/"
+
+
+@VALHALLA
+def test_public_sans_connexion_vers_un_siege(client, imf):
+    with simuler(pied=trajet("pied", 90), moto=trajet("moto", 15), voiture=trajet("voiture", 20)):
+        reponse = client.post(URL_PUBLIC, corps(imf, modes=["pied", "moto", "voiture"]), content_type="application/json")
+    assert reponse.status_code == 200
+    assert reponse.data["destination"]["type"] == "institution"
+    assert reponse.data["plus_rapide"] == "moto"
+
+
+@VALHALLA
+def test_public_jeton_expire_ignore(client, imf):
+    """Un jeton périmé resté dans le navigateur ne bloque pas l'accueil (aucune authentification lue)."""
+    with simuler():
+        reponse = client.post(URL_PUBLIC, corps(imf), content_type="application/json", HTTP_AUTHORIZATION="Bearer jeton.perime")
+    assert reponse.status_code == 200
+
+
+@VALHALLA
+def test_public_point_de_service_refuse(client, point):
+    reponse = client.post(URL_PUBLIC, corps(point), content_type="application/json")
+    assert reponse.status_code == 400
+    assert "destination" in reponse.data
+
+
+@VALHALLA
+def test_public_memes_controles_que_la_section(client, imf):
+    assert client.post(URL_PUBLIC, corps(imf) | {"origine": {"lat": 48.85, "lon": 2.35}}, content_type="application/json").status_code == 400
+    imf.localisation_siege = None
+    imf.save()
+    assert client.post(URL_PUBLIC, corps(imf), content_type="application/json").status_code == 422
+
+
+@VALHALLA
+def test_public_position_ni_journalisee_ni_enregistree(client, imf, caplog):
+    with caplog.at_level(logging.DEBUG), simuler():
+        client.post(URL_PUBLIC, corps(imf), content_type="application/json")
+    assert "14.6928" not in caplog.text and "-17.4467" not in caplog.text
+    assert not JournalAudit.objects.exists()
+
+
+@VALHALLA
+def test_public_limite_par_adresse_ip(client, imf):
+    from rest_framework.throttling import ScopedRateThrottle
+
+    with simuler(), mock.patch.dict(ScopedRateThrottle.THROTTLE_RATES, {"itineraire_public": "2/min"}):
+        codes = [client.post(URL_PUBLIC, corps(imf), content_type="application/json").status_code for _ in range(3)]
+    assert codes == [200, 200, 429]

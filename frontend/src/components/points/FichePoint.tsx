@@ -14,6 +14,7 @@ import { dateCourte } from "../dirigeants/FicheDirigeant";
 import { Drawer, Erreur, btnPrimaire, btnSecondaire } from "../form";
 import { Squelette } from "../Squelette";
 import { Badge, TON_STATUT } from "../tableau/Tableau";
+import { ContactListe } from "../ContactTelephone";
 
 export interface PointDetail {
   id: string; imf: string; imf_nom: string; imf_sigle: string; nom: string; reference_externe: string;
@@ -97,7 +98,7 @@ export function FichePoint({ id, onClose, onModifier, onVoirInstitution }: { id:
           <section style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <h3 style={titreSection}>Contact et suivi</h3>
             <dl style={grille} className="ps-grille2">
-              <Champ libelle="Téléphone">{p.telephone && <a href={`tel:${p.telephone.replace(/\s/g, "")}`} style={{ color: "inherit" }}>{p.telephone}</a>}</Champ>
+              <Champ libelle="Téléphone">{p.telephone && <ContactListe telephone={p.telephone} nom={p.nom} />}</Champ>
               <Champ libelle="Email">{p.email && <a href={`mailto:${p.email}`} style={{ color: "inherit" }}>{p.email}</a>}</Champ>
               <Champ libelle="Date d'ouverture">{p.date_ouverture && dateCourte(p.date_ouverture)}</Champ>
               <Champ libelle="Dernière modification">{new Date(p.date_modification).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}</Champ>

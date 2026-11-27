@@ -16,6 +16,8 @@ import logo from "../assets/logo-drs-sfd.png";
 import { api } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import { CarteRegistre, type PointRegistre } from "../components/accueil/CarteRegistre";
+import { ItineraireAccueil } from "../components/accueil/ItineraireAccueil";
+import { ContactListe } from "../components/ContactTelephone";
 import { SenegalMap } from "../components/carto/SenegalMap";
 import { Badge, CadreTableau, EnTete, EtatVide, Pagination, TON_STATUT, Tableau } from "../components/tableau/Tableau";
 import { dansLeSenegal, projeter } from "../data/projection";
@@ -51,14 +53,6 @@ const compact = (t: string) => plat(t).replace(/[^A-Z0-9]/g, "");
  * Numéros du siège, tels que saisis dans la liste officielle (« 338696965 », « 33 829 20 20 / 77 503 06 06 »,
  * « +221 33 849 02 48 ») : un numéro par entrée, chiffres groupés à la sénégalaise, lien d'appel.
  */
-function telephones(texte: string) {
-  return texte.split(/[/;,]|\bet\b/).map((t) => t.trim()).filter(Boolean).map((brut) => {
-    let chiffres = brut.replace(/\D/g, "");
-    if (chiffres.length === 12 && chiffres.startsWith("221")) chiffres = chiffres.slice(3);
-    if (chiffres.length !== 9) return { texte: brut, lien: null };
-    return { texte: chiffres.replace(/(\d{2})(\d{3})(\d{2})(\d{2})/, "$1 $2 $3 $4"), lien: `tel:+221${chiffres}` };
-  });
-}
 
 /** Position du siège dans le Sénégal (hors valeur par défaut de l'import), sinon null. */
 function lonLat(f: Institution): [number, number] | null {
@@ -212,13 +206,26 @@ export function Accueil() {
     if (e.key === "Enter" && suggestionsVisibles && suggestions[actif]) { e.preventDefault(); ouvrir(suggestions[actif]!); }
   }
 
-  async function copierLien() {
-    if (!fiche) return;
+  /** Copie le numéro d'agrément (et non un lien) ; repli pour les navigateurs sans presse-papiers asynchrone. */
+  async function copierNumero() {
+    if (!fiche?.numero_agrement) return;
+    const numero = fiche.numero_agrement;
     try {
-      await navigator.clipboard.writeText(`${location.origin}/?q=${encodeURIComponent(fiche.numero_agrement)}`);
-      setCopie(true);
-      setTimeout(() => setCopie(false), 1800);
-    } catch { /* presse-papiers indisponible (page non sécurisée) */ }
+      await navigator.clipboard.writeText(numero);
+    } catch {
+      const zoneTexte = document.createElement("textarea");
+      zoneTexte.value = numero;
+      zoneTexte.setAttribute("readonly", "");
+      zoneTexte.style.position = "fixed";
+      zoneTexte.style.opacity = "0";
+      document.body.appendChild(zoneTexte);
+      zoneTexte.select();
+      const ok = document.execCommand("copy");
+      zoneTexte.remove();
+      if (!ok) return;
+    }
+    setCopie(true);
+    setTimeout(() => setCopie(false), 1800);
   }
 
   const ll = fiche ? lonLat(fiche) : null;
@@ -343,9 +350,9 @@ export function Accueil() {
                   <span className="rg-numero-libelle">Numéro d'agrément</span>
                   <span className="rg-numero-valeur">{fiche.numero_agrement || "Non renseigné"}</span>
                   {fiche.numero_agrement && (
-                    <button type="button" className="rg-numero-copier" onClick={() => void copierLien()} title="Copier le lien de cet extrait">
-                      <Icone taille={16}>{copie ? <path d="m5 12 5 5L20 7" /> : <><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1" /><path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1" /></>}</Icone>
-                      {copie ? "Lien copié" : "Copier le lien"}
+                    <button type="button" className="rg-numero-copier" onClick={() => void copierNumero()} title="Copier le numéro d'agrément" aria-live="polite">
+                      <Icone taille={16}>{copie ? <path d="m5 12 5 5L20 7" /> : <><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" /></>}</Icone>
+                      {copie ? "Numéro copié" : "Copier le numéro"}
                     </button>
                   )}
                 </div>
@@ -359,11 +366,7 @@ export function Accueil() {
                   <div><dt>Siège</dt><dd>{fiche.localite || "—"}</dd></div>
                   <div>
                     <dt>Téléphone</dt>
-                    <dd className="rg-telephones">
-                      {fiche.telephone
-                        ? telephones(fiche.telephone).map((t) => t.lien ? <a key={t.texte} href={t.lien}>{t.texte}</a> : <span key={t.texte}>{t.texte}</span>)
-                        : "Non renseigné"}
-                    </dd>
+                    <dd><ContactListe telephone={fiche.telephone} nom={fiche.sigle || fiche.nom} /></dd>
                   </div>
                 </dl>
 
@@ -377,6 +380,8 @@ export function Accueil() {
                 {!pointFiche && <p className="rg-carte-note">Position exacte du siège non renseignée : la carte montre sa région.</p>}
               </div>
             </div>
+            {/* Itinéraire jusqu'au siège, sous l'extrait (réinitialisé à chaque institution). */}
+            <ItineraireAccueil key={fiche.id} institution={fiche} siege={ll ? { lon: ll[0], lat: ll[1] } : null} />
           </section>
         )}
 

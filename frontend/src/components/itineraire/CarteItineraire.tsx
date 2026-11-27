@@ -41,6 +41,11 @@ interface Props {
   marges: Marges;
   onOrigine: (p: Position) => void;
   onPoint: (p: PointItineraire) => void;
+  /**
+   * Carte insérée dans une page qui défile (accueil public) : la page garde le défilement
+   * (déplacement de la carte à deux doigts / Ctrl + molette) et la légende des épingles est masquée.
+   */
+  integree?: boolean;
 }
 
 const SENEGAL: LngLatBoundsLike = [[-17.56, 12.28], [-11.34, 16.71]];
@@ -53,15 +58,15 @@ const ligne = (coords: [number, number][] | null): Collection =>
 const point = (p: Position | null): Collection =>
   p ? { type: "Feature", properties: {}, geometry: { type: "Point", coordinates: [p.lon, p.lat] } } : VIDE;
 
-export function CarteItineraire({ points, origine, destination, trajet, placement, marges, onOrigine, onPoint }: Props) {
+export function CarteItineraire({ points, origine, destination, trajet, placement, marges, onOrigine, onPoint, integree = false }: Props) {
   const conteneur = useRef<HTMLDivElement>(null);
   const carteRef = useRef<Carte | null>(null);
   const repere = useRef<Marker | null>(null);
   const [pret, setPret] = useState(false);
   const [horsLigne, setHorsLigne] = useState(false);
   // Valeurs lues par les gestionnaires d'événements de la carte, créés une seule fois.
-  const etat = useRef({ placement, points, onOrigine, onPoint, marges });
-  etat.current = { placement, points, onOrigine, onPoint, marges };
+  const etat = useRef({ placement, points, onOrigine, onPoint, marges, integree });
+  etat.current = { placement, points, onOrigine, onPoint, marges, integree };
 
   /* --- Création de la carte --- */
   useEffect(() => {
@@ -76,7 +81,7 @@ export function CarteItineraire({ points, origine, destination, trajet, placemen
         // Sur téléphone, le pays est cadré dans la partie visible, au-dessus du panneau.
         fitBoundsOptions: { padding: { top: 16, right: 16, left: 16, bottom: etat.current.marges.bottom + 16 } },
         attributionControl: false, dragRotate: false, pitchWithRotate: false, touchPitch: false,
-        renderWorldCopies: false, fadeDuration: 150, locale: FR,
+        renderWorldCopies: false, fadeDuration: 150, locale: FR, cooperativeGestures: etat.current.integree,
       });
       const c = carte;
       c.touchZoomRotate.disableRotation();
@@ -228,11 +233,11 @@ export function CarteItineraire({ points, origine, destination, trajet, placemen
     <div className="cs-carte it-carte-cadre">
       <div ref={conteneur} style={{ position: "absolute", inset: 0 }} role="region" aria-label="Carte de l'itinéraire" />
       {horsLigne && <div className="cs-hors-ligne">Fond de carte indisponible (hors ligne)</div>}
-      <ul className="it-legende" aria-label="Légende">
+      {!integree && <ul className="it-legende" aria-label="Légende">
         <li><span style={{ background: COULEUR_IMF, boxShadow: "0 0 0 2px #C9A44C" }} />Institution (siège)</li>
         <li><span style={{ background: COULEUR_TYPE_POINT.AGENCE }} />Agence</li>
         <li><span style={{ background: COULEUR_TYPE_POINT.GUICHET }} />Guichet</li>
-      </ul>
+      </ul>}
     </div>
   );
 }
